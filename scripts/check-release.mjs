@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFile, stat } from 'node:fs/promises';
+const json = async file => JSON.parse(await readFile(file, 'utf8'));
+const [manifest, pkg, versions] = await Promise.all(['manifest.json', 'package.json', 'versions.json'].map(json));
+assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
+assert.equal(manifest.version, pkg.version, 'Package and manifest versions must agree');
+assert.equal(versions[manifest.version], manifest.minAppVersion, 'Update the compatibility map');
+if (process.env.GITHUB_REF_TYPE === 'tag') assert.equal(process.env.GITHUB_REF_NAME, manifest.version, 'Release tag must exactly match the manifest version');
+for (const file of ['README.md', 'LICENSE', 'main.js', 'manifest.json', 'styles.css']) assert((await stat(file)).size > 0, file + ' is missing or empty');
+const bundle = await readFile('main.js', 'utf8');
+for (const removed of ['internalPlugins', 'enableCustomScriptWidgets', 'Custom Script Widget']) assert(!bundle.includes(removed), 'Removed feature remains in release: ' + removed);
+assert(!bundle.includes('sourceMappingURL=data:'), 'Build in production mode before releasing');
+console.log('Release metadata, assets, and removed-feature checks passed for ' + manifest.version);

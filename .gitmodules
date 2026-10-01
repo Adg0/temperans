@@ -1,0 +1,3 @@
+[submodule "android-companion"]
+	path = android-companion
+	url = https://gitlab.com/adgo-group/android-companion.git

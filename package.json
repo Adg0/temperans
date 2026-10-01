@@ -1,0 +1,31 @@
+{
+  "name": "temperans-habits",
+  "version": "0.0.1",
+  "description": "A local-first habit dashboard for Obsidian.",
+  "private": true,
+  "scripts": {
+    "dev": "node esbuild.config.mjs --watch",
+    "build": "node esbuild.config.mjs --production",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:responsive": "node scripts/test-responsive.mjs",
+    "lint": "eslint src --max-warnings 0",
+    "check:release": "node scripts/check-release.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-obsidianmd": "0.4.2",
+    "moment": "2.29.4",
+    "obsidian": "1.13.1",
+    "playwright": "1.63.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "yaml": "2.9.1"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
