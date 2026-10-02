@@ -71,21 +71,21 @@ export function createTemperansDropdown<T extends string>(parent: HTMLElement, c
   };
 
   const open = (): void => {
-    // eslint-disable-next-line obsidianmd/prefer-create-el -- Create in the owning document, including pop-out windows.
-    const nextMenu = doc.createElement("div");
-    nextMenu.className = "temperans-dropdown-menu";
-    // Inline priority avoids a modal's stacking layer winning over this body
-    // portal in Obsidian's settings and nested plugin modals.
-    nextMenu.setAttribute("role", "listbox");
-    nextMenu.setAttribute("aria-label", config.ariaLabel);
+    const menuHost = trigger.closest<HTMLElement>(".modal-container") ?? doc.body;
+    const nextMenu = menuHost.createDiv({
+      cls: "temperans-dropdown-menu",
+      attr: { role: "listbox", "aria-label": config.ariaLabel }
+    });
     for (const option of config.options) {
-      // eslint-disable-next-line obsidianmd/prefer-create-el -- Match the trigger document instead of the global window.
-      const item = doc.createElement("button");
-      item.type = "button";
-      item.textContent = option.label;
-      item.className = `temperans-dropdown-option${option.value === value ? " is-selected" : ""}`;
-      item.setAttribute("role", "option");
-      item.setAttribute("aria-selected", String(option.value === value));
+      const item = nextMenu.createEl("button", {
+        cls: `temperans-dropdown-option${option.value === value ? " is-selected" : ""}`,
+        text: option.label,
+        attr: {
+          type: "button",
+          role: "option",
+          "aria-selected": String(option.value === value)
+        }
+      });
       item.onclick = () => {
         value = option.value;
         label.textContent = option.label;
@@ -93,7 +93,6 @@ export function createTemperansDropdown<T extends string>(parent: HTMLElement, c
         trigger.focus();
         config.onChange(value);
       };
-      nextMenu.appendChild(item);
     }
     nextMenu.onkeydown = (event) => {
       if (event.key === "Escape") {
@@ -115,10 +114,6 @@ export function createTemperansDropdown<T extends string>(parent: HTMLElement, c
     };
     // Keep the wheel gesture in this scrollable list, never in the modal below it.
     nextMenu.addEventListener("wheel", (event) => event.stopPropagation(), { passive: true });
-    // A menu opened from an Obsidian modal must live in that modal's stacking
-    // layer. A body-level portal can render underneath the modal backdrop.
-    const menuHost = trigger.closest<HTMLElement>(".modal-container") ?? doc.body;
-    menuHost.appendChild(nextMenu);
     menu = nextMenu;
     positionMenu();
     trigger.setAttr("aria-expanded", "true");

@@ -19,8 +19,7 @@ import {
   computeHmacProof,
   decryptPeerPayload,
   deriveSessionKeys,
-  encryptPeerPayload,
-  verifyHmacProof
+  encryptPeerPayload
 } from "./crypto";
 
 export class PeerSyncRemoteConflictError extends Error {

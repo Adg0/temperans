@@ -27,7 +27,6 @@ import {
   HabitId,
   HabitSession,
   HabitSettings,
-  HabitSource,
   HabitType,
   RESERVED_HABIT_IDS,
   TargetVersion
@@ -178,7 +177,7 @@ function asHabit(value: unknown, fallback?: HabitDefinition): HabitDefinition | 
   const logging = parseLoggingConfig(raw.logging);
   const endpoint = asEndpoint(raw.endpoint) ?? fallback?.endpoint;
   const type: HabitType = raw.type === "avoidance" || raw.type === "tracker" || raw.type === "session" || raw.type === "metric"
-    ? raw.type as HabitType
+    ? raw.type
     : fallback?.type ?? (id === "reading" ? "session" : "metric");
   const displayFormat: HabitDisplayFormat = raw.displayFormat === "duration" ? "duration" : fallback?.displayFormat ?? (id === "sleep" ? "duration" : "number");
   return {
@@ -659,7 +658,7 @@ endpoint:
     if (!(folder instanceof TFolder)) return { migrated, alreadyCurrent };
     for (const child of this.collectAllDailyFiles(folder)) {
       const contents = await this.app.vault.read(child);
-      const { frontmatter, body } = splitFrontmatter(contents);
+      const { frontmatter } = splitFrontmatter(contents);
       if (!isTemperansHabitLog(frontmatter)) continue;
       const date = isLogDate(frontmatter.date) ? frontmatter.date : child.basename;
       if (!isLogDate(date)) continue;
@@ -785,7 +784,7 @@ endpoint:
         for (const [id, value] of Object.entries(update.metrics)) {
           if (value === undefined || !Number.isFinite(value) || value < 0 || !configured.has(id)) { counts.metricsSkipped++; continue; }
           const source = update.metricSources?.[id] ?? update.source ?? "health-connect";
-          const ownedSessions = !!log.metricSources[id] && StandardDataOwnershipPolicy.isSameSource(log.metricSources[id]!, source);
+          const ownedSessions = !!log.metricSources[id] && StandardDataOwnershipPolicy.isSameSource(log.metricSources[id], source);
           const decision = hasProtectedHabitEntries(log, id, source)
             ? "protect" : decideHealthConnectWrite(log.metrics[id], log.metricSources[id], value, source);
           if (decision === "protect") { counts.metricsProtected++; continue; }

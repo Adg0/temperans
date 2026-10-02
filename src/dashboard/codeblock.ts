@@ -1,5 +1,5 @@
 import { abortable, checkAbort, isAbort } from "../async";
-import { MarkdownRenderChild, Notice } from "obsidian";
+import { App, MarkdownRenderChild, Notice } from "obsidian";
 import { daysInYear, monthOf, todayInZone, yearOf } from "../date";
 import { defaultWidgetRegistry } from "./registry";
 import { DashboardHost, WidgetContext } from "./types";
@@ -14,14 +14,15 @@ export class TemperansCodeblockChild extends MarkdownRenderChild {
   private disposed = false;
   private controller?: AbortController;
   private visibility?: VisibilityGate;
-  constructor(private readonly app: any, private readonly host: DashboardHost, private readonly source: string,
+  constructor(private readonly app: App, private readonly host: DashboardHost, private readonly source: string,
     containerEl: HTMLElement, private readonly onUnloadCallback?: (child: TemperansCodeblockChild) => void) { super(containerEl); }
-  async onload(): Promise<void> {
+  onload(): void {
     this.visibility = new VisibilityGate(this.containerEl, visible => {
       if (visible) void this.render(); else this.controller?.abort();
     });
-    await this.visibility.start();
-    if (!this.disposed) await this.render();
+    void this.visibility.start().then(() => {
+      if (!this.disposed) void this.render();
+    });
   }
   async render(): Promise<void> {
     if (this.disposed || this.visibility && !this.visibility.visible) return;
@@ -36,7 +37,7 @@ export class TemperansCodeblockChild extends MarkdownRenderChild {
   }
 }
 const renders = new WeakMap<HTMLElement, AbortController>();
-export async function renderTemperansCodeblock(app: any, host: DashboardHost, source: string, el: HTMLElement,
+export async function renderTemperansCodeblock(app: App, host: DashboardHost, source: string, el: HTMLElement,
   parentSignal?: AbortSignal, refresh?: () => Promise<void>): Promise<void> {
   renders.get(el)?.abort();
   const controller = new AbortController(); renders.set(el, controller);

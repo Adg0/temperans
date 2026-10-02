@@ -15,7 +15,7 @@ const COMPACT_PANE_MAX = 720;
 export class HabitDashboardView extends ItemView {
   private year = new Date().getFullYear();
   private month = new Date().getUTCMonth() + 1;
-  private habitFilter: "overall" | HabitId = "overall";
+  private habitFilter: HabitId = "overall";
   private selectedDate: string | null = null;
   private isCompact = Platform.isMobile;
   private hasOpened = false;

@@ -48,7 +48,7 @@ export function hasTypingData(log: DailyLog): boolean {
   return log.typing.manualTests > 0 || log.typing.manualDurationSeconds > 0 || log.typing.imported.length > 0;
 }
 
-export function periodBounds(date: string, cadence: HabitCadence | string): { startDate: string; endDate: string } {
+export function periodBounds(date: string, cadence: string): { startDate: string; endDate: string } {
   if (cadence === "daily") return { startDate: date, endDate: date };
   if (cadence === "weekly") {
     const day = new Date(`${date}T12:00:00Z`).getUTCDay();

@@ -4,9 +4,9 @@ export type DataOwnershipDecision = "import" | "protect" | "update" | "skip";
 
 export interface DataOwnershipInput {
   existingValue: number | undefined;
-  existingSource?: HabitSource | string;
+  existingSource?: HabitSource;
   incomingValue: number;
-  incomingSource: HabitSource | string;
+  incomingSource: HabitSource;
 }
 
 /**

@@ -1,4 +1,3 @@
-/* eslint-disable obsidianmd/prefer-window-timers -- This DOM-independent scheduler also serves storage and is tested in Node; its timers are explicitly stopped. */
 /** Queue by vault and logical resource, including work before the final write. */
 const queues = new WeakMap<object, Map<string, Promise<unknown>>>();
 export function serialized<T>(owner: object, key: string, run: () => Promise<T>): Promise<T> {
@@ -6,23 +5,23 @@ export function serialized<T>(owner: object, key: string, run: () => Promise<T>)
   if (!entries) { entries = new Map(); queues.set(owner, entries); }
   const next = (entries.get(key) ?? Promise.resolve()).catch(() => undefined).then(run);
   entries.set(key, next);
-  void next.finally(() => { if (entries!.get(key) === next) entries!.delete(key); }).catch(() => undefined);
+  void next.finally(() => { if (entries.get(key) === next) entries.delete(key); }).catch(() => undefined);
   return next;
 }
 
 /** Every caller settles; a new batch waits for any running batch to finish. */
 export class DebouncedTask {
-  private timer: ReturnType<typeof setTimeout> | undefined;
+  private timer: number | undefined;
   private waiters: Array<{ resolve(): void; reject(error: unknown): void }> = [];
   private running: Promise<void> = Promise.resolve();
   private stopped = false;
   constructor(private readonly run: () => Promise<void>, private readonly delay = 150) {}
   schedule(immediate = false): Promise<void> {
     if (this.stopped) return Promise.resolve();
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
     const promise = new Promise<void>((resolve, reject) => this.waiters.push({ resolve, reject }));
     if (immediate) this.flush();
-    else this.timer = setTimeout(() => this.flush(), this.delay);
+    else this.timer = window.setTimeout(() => this.flush(), this.delay);
     return promise;
   }
   private flush(): void {
@@ -35,7 +34,7 @@ export class DebouncedTask {
   }
   stop(): void {
     this.stopped = true;
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
     this.timer = undefined;
     this.waiters.splice(0).forEach(w => w.resolve());
   }
@@ -63,14 +62,20 @@ export class AsyncPool {
   }
 }
 
+function createAbortError(): Error {
+  const error = new Error("Loading cancelled");
+  error.name = "AbortError";
+  return error;
+}
+
 export function checkAbort(signal?: AbortSignal): void {
-  if (signal?.aborted) throw new DOMException("Loading cancelled", "AbortError");
+  if (signal?.aborted) throw createAbortError();
 }
 /** Detach one consumer without cancelling a read still needed by another consumer. */
 export function abortable<T>(work: Promise<T>, signal?: AbortSignal): Promise<T> {
   if (!signal) return work;
   return new Promise((resolve, reject) => {
-    const cancel = () => { cleanup(); reject(new DOMException("Loading cancelled", "AbortError")); };
+    const cancel = () => { cleanup(); reject(createAbortError()); };
     const cleanup = () => signal.removeEventListener("abort", cancel);
     signal.addEventListener("abort", cancel, { once: true });
     work.then(value => { cleanup(); resolve(value); }, error => { cleanup(); reject(error); });

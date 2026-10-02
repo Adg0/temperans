@@ -14,7 +14,7 @@ export interface PeerSyncHostInfo {
 
 function desktopRequire<T>(moduleName: string): T {
   const req = typeof require === "function" ? require : undefined;
-  if (typeof req === "function") return req(moduleName);
+  if (typeof req === "function") return req(moduleName) as T;
   throw new Error(`Cannot require "${moduleName}" outside desktop environment.`);
 }
 

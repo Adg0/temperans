@@ -86,7 +86,7 @@ export class PeerSyncModal extends Modal {
         await this.service.stopHost();
         this.comparison = null;
         await this.render();
-      })).addButton((button) => button.setButtonText("Regenerate code").setWarning().onClick(async () => {
+      })).addButton((button) => button.setButtonText("Regenerate code").setDestructive().onClick(async () => {
         await this.service.regenerateHostPairingCode();
         new Notice("Pairing code regenerated. Existing clients must enter the new code.");
         await this.render();
@@ -104,7 +104,7 @@ export class PeerSyncModal extends Modal {
           new Notice(error instanceof Error ? error.message : "Could not start the peer-sync host.");
         }
       }))
-      .addButton((button) => button.setButtonText("Regenerate pairing code").setWarning().onClick(async () => {
+      .addButton((button) => button.setButtonText("Regenerate pairing code").setDestructive().onClick(async () => {
         await this.service.regenerateHostPairingCode();
         new Notice("Pairing code regenerated. Start the host to display it, and update any paired clients.");
       }));
@@ -124,11 +124,11 @@ export class PeerSyncModal extends Modal {
       textInputEl = input.inputEl;
       input.setPlaceholder("http://192.168.1.20:43887#CODE or paste QR link");
       input.setValue(currentInput);
-      input.onChange(async (value) => {
+      input.onChange((value) => {
         currentInput = value.trim();
         const parsed = parsePairingPayload(currentInput);
         if (parsed) {
-          await this.service.saveRemoteProfile(parsed.url, parsed.secret);
+          void this.service.saveRemoteProfile(parsed.url, parsed.secret);
         }
       });
       input.inputEl.addEventListener("keydown", async (e) => {
@@ -187,7 +187,7 @@ export class PeerSyncModal extends Modal {
 
     new Setting(container)
       .addButton((button) => button.setButtonText("Compare").onClick(applyAndCompare))
-      .addButton((button) => button.setButtonText("Forget paired device").setWarning().onClick(async () => {
+      .addButton((button) => button.setButtonText("Forget paired device").setDestructive().onClick(async () => {
         await this.service.forgetRemoteProfile();
         currentInput = "";
         if (textInputEl) textInputEl.value = "";

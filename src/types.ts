@@ -1,6 +1,6 @@
 import type { NotePathSettings } from "./note-paths";
 export type HabitId = string;
-export type HabitUnit = "tests" | "minutes" | "hours" | "kcal" | "ml" | "reps" | "pages" | "chapters" | "count" | "steps" | "km" | "miles" | "glasses" | "words" | string;
+export type HabitUnit = string;
 export type HabitCadence = "daily" | "weekly" | "monthly" | "quarterly" | "annual";
 
 export interface TargetVersion {
@@ -98,7 +98,7 @@ export interface ImportedTypingResult {
   durationSeconds: number;
 }
 
-export type HabitSource = "manual" | "monkeytype" | "health-connect" | "endpoint" | string;
+export type HabitSource = string;
 
 /**
  * These names belong to the daily-log envelope, not to user-defined habits.

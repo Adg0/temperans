@@ -15,7 +15,7 @@ export function parseYamlSafe(source: string): Record<string, unknown> {
   } catch { return {}; }
 }
 
-export function parseCodeblockConfig(source: string): { habitFilter: "overall" | HabitId; year: number; widgets: DashboardWidgetConfig[] } {
+export function parseCodeblockConfig(source: string): { habitFilter: HabitId; year: number; widgets: DashboardWidgetConfig[] } {
   const currentYear = new Date().getFullYear();
   const parsed = parseYamlSafe(source);
 
@@ -42,7 +42,7 @@ export function parseCodeblockConfig(source: string): { habitFilter: "overall" |
   }
 
   return {
-    habitFilter: habit as "overall" | HabitId,
+    habitFilter: habit,
     year,
     widgets: widgets.length > 0 ? widgets : [{ widget: "stats" }, { widget: "calendar" }, { widget: "day-detail" }]
   };

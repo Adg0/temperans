@@ -5,6 +5,7 @@ import { startOfDayInZone } from "../date";
 import { addDays, todayInZone } from "../date";
 import { StandardDataOwnershipPolicy } from "../data-ownership";
 import {
+  DailyLog,
   EndpointAggregation,
   EndpointConfig,
   EndpointResponseConfig,
@@ -326,7 +327,7 @@ export async function testEndpointConnection(
       ok: response.status >= 200 && response.status < 300,
       status: response.status
     };
-  } catch (error) {
+  } catch {
     return { ok: false, error: "Connection failed. Check the URL, credentials, and network." };
   }
 }
@@ -334,7 +335,7 @@ export async function testEndpointConnection(
 export interface EndpointStoreHost {
   loadSettings(): Promise<{ timezone: string }>;
   getLog(date: string): Promise<{ metrics: Record<string, number>; metricSources: Partial<Record<string, string>> }>;
-  updateLog(date: string, update: (log: any) => any): Promise<any>;
+  updateLog(date: string, update: (log: DailyLog) => DailyLog): Promise<DailyLog | null>;
 }
 
 export async function syncHabitFromEndpoint(

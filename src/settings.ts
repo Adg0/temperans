@@ -5,13 +5,12 @@ import { renderBrowsePresets } from "./habit-presets-panel";
 import { HabitPreset } from "./habit-presets";
 import { renderPeerSyncSettings } from "./peer-sync/settings-panel";
 import { renderHealthConnectPanel } from "./integrations/health-connect-panel";
-import { App, Notice, PluginSettingTab, SecretComponent, Setting, setIcon } from "obsidian";
+import { App, Modal, Notice, PluginSettingTab, SecretComponent, Setting, setIcon } from "obsidian";
 import TemperansHabitsPlugin from "./main";
 import { EditHabitModal } from "./modals";
 import { formatSleepDuration } from "./durations";
 
-// Supports Obsidian 1.11.4; declarative settings search requires 1.13.0.
-// eslint-disable-next-line obsidianmd/settings-tab/prefer-setting-definitions
+// Supports Obsidian 1.13.0+
 export class TemperansSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: TemperansHabitsPlugin) {
     super(app, plugin);
@@ -187,15 +186,15 @@ export class TemperansSettingTab extends PluginSettingTab {
 
     const settings = await this.plugin.store.loadSettings();
 
-    // Add Habit CTA Card (Navigates to dedicated sub-sub-page)
-    const { card: addCard } = createSubpageCard(containerEl, "plus-circle", "Create a new habit");
-
-    new Setting(addCard)
-      .setName("Add habit definition")
-      .setDesc("Create a positive build habit, negative/avoidance habit, or zero-goal metric tracker.")
-      .addButton((button) => button.setButtonText("Add habit").onClick(() => {
+    // Add Habit CTA (Clickable full card)
+    renderActionCard(containerEl, {
+      icon: "plus-circle",
+      title: "Create a new habit",
+      description: "Define a positive build habit, avoidance habit, or zero-goal metric tracker.",
+      onClick: () => {
         void this.displayAddHabitSubSettings();
-      }));
+      }
+    });
 
     containerEl.createDiv({
       cls: "temperans-actions-section-title",
@@ -285,13 +284,13 @@ export class TemperansSettingTab extends PluginSettingTab {
         attr: { type: "button", "aria-label": `Delete ${habit.name}` }
       });
       setIcon(deleteBtn, "trash-2");
-      deleteBtn.onclick = async () => {
-        const confirmed = window.confirm(`Delete habit “${habit.name}”? Existing entries in your daily logs will be preserved.`);
-        if (!confirmed) return;
-        await this.plugin.store.deleteHabit(habit.id);
-        await this.plugin.refreshDashboards();
-        new Notice(`Deleted “${habit.name}”.`);
-        await this.displayHabitsSubSettings();
+      deleteBtn.onclick = () => {
+        new DeleteHabitConfirmModal(this.app, habit.name, async () => {
+          await this.plugin.store.deleteHabit(habit.id);
+          await this.plugin.refreshDashboards();
+          new Notice(`Deleted “${habit.name}”.`);
+          await this.displayHabitsSubSettings();
+        }).open();
       };
 
       // Up and Down selectors
@@ -447,8 +446,7 @@ export class TemperansSettingTab extends PluginSettingTab {
           .setName("Secret key identifier")
           .setDesc(`Stored in Obsidian Secret Storage under "${secretKey}".`);
 
-        const hasSecretComponent = typeof SecretComponent !== "undefined" && typeof (this.app as any).secretStorage !== "undefined";
-        if (hasSecretComponent && typeof (secretSetting as any).addComponent === "function") {
+        if (this.app.secretStorage) {
           secretSetting.addComponent((component) => new SecretComponent(this.app, component)
             .setValue(secretKey)
             .onChange(async (value) => {
@@ -471,5 +469,22 @@ export class TemperansSettingTab extends PluginSettingTab {
         }
       }
     }
+  }
+}
+
+class DeleteHabitConfirmModal extends Modal {
+  constructor(app: App, private habitName: string, private onConfirm: () => Promise<void>) {
+    super(app);
+  }
+  onOpen(): void {
+    this.contentEl.createEl("p", {
+      text: `Delete habit “${this.habitName}”? Existing entries in your daily logs will be preserved.`
+    });
+    new Setting(this.contentEl)
+      .addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()))
+      .addButton((b) => b.setButtonText("Delete").setDestructive().onClick(async () => {
+        this.close();
+        await this.onConfirm();
+      }));
   }
 }

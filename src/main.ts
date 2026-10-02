@@ -397,10 +397,9 @@ export default class TemperansHabitsPlugin extends Plugin {
     new HabitAnalyticsModal(this.app, this.store).open();
   }
 
-  async getSecretValue(secretName: string): Promise<string | null> {
+  getSecretValue(secretName: string): string | null {
     if (!secretName) return null;
-    const appWithSecrets = this.app as typeof this.app & { secretStorage?: { getSecret(key: string): Promise<string | null> } };
-    return appWithSecrets.secretStorage?.getSecret(secretName) ?? null;
+    return this.app.secretStorage?.getSecret(secretName) ?? null;
   }
 
   async getApeKey(): Promise<string | null> {
@@ -455,12 +454,12 @@ export default class TemperansHabitsPlugin extends Plugin {
     for (const child of this.activeCodeblocks) child.cancelRender();
   }
 
-  async onunload(): Promise<void> {
+  onunload(): void {
     this.refreshQueue.stop();
     this.cancelHistoryConsumers();
     this.store?.stop();
     for (const child of this.activeCodeblocks) child.unload();
     this.activeCodeblocks.clear();
-    await this.peerSync?.stopHost();
+    void this.peerSync?.stopHost();
   }
 }

@@ -1,10 +1,10 @@
 {
   "id": "temperans-habits",
   "name": "Temperans Habits",
-  "version": "0.0.1",
-  "minAppVersion": "1.11.4",
+  "version": "0.0.2",
+  "minAppVersion": "1.13.0",
   "description": "Track personal habits in Markdown and explore them through an annual heat map.",
   "author": "ADGO",
-  "authorUrl": "https://github.com/Adg0/temperans",
+  "authorUrl": "https://adg0.github.io/temperans/",
   "isDesktopOnly": false
 }

@@ -2,7 +2,7 @@ import { TemperansCodeblockChild } from "../../src/dashboard/codeblock";
 import { abortable } from "../../src/async";
 import { healthConnectStagePath } from "../../src/integrations/health-connect";
 import { renderNotePathSettings } from "../../src/note-path-settings";
-import { Modal, Platform } from 'obsidian';
+import { Modal, Platform, TFile } from 'obsidian';
 import { PeerSyncModal } from '../../src/peer-sync/modal';
 import { ThirdPartySyncHubModal } from '../../src/integrations/sync-hub-modal';
 import { renderAddHabitForm } from '../../src/habit-form';
@@ -35,7 +35,7 @@ const store = {
   recordMetric: async (date, id, amount, note) => { if (window.failSaves) throw new Error("Simulated save failure"); window.metricWriteCount = (window.metricWriteCount || 0) + 1; window.recordedMetric = { id, amount, note }; return log; },
   addSession: async (date, id, session) => { window.recordedSession = { id, ...session }; return log; }
 };
-const app = { vault: { getAbstractFileByPath: () => ({}) }, metadataCache: { getFileCache: () => ({ frontmatter: window.fixtureLayout ?? {} }) }, workspace: { layoutReady: true } };
+const app = { vault: { getAbstractFileByPath: () => new TFile() }, metadataCache: { getFileCache: () => ({ frontmatter: window.fixtureLayout ?? {} }) }, workspace: { layoutReady: true } };
 let dashboard;
 window.renderFixture = async (kind, options = {}) => {
   window.embeddedChild?.onunload(); window.embeddedChild = undefined;

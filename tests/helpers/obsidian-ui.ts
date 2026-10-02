@@ -1,3 +1,7 @@
+if (typeof window === "undefined") {
+  (globalThis as unknown as { window: unknown }).window = globalThis;
+}
+
 export { default as moment } from "moment";
 // A small semantic UI harness: exercises settings and callbacks without launching Obsidian.
 export class Element {
@@ -54,6 +58,11 @@ class Control {
   setValue(value: unknown) { this.value = value; return this; }
   setPlaceholder() { return this; }
   setButtonText() { return this; }
+  setWarning() { return this; }
+  setDestructive() { return this; }
+  setClass() { return this; }
+  setCta() { return this; }
+  setDisabled() { return this; }
   setIcon() { return this; }
   setTooltip() { return this; }
   onChange(callback: Control["change"]) { this.change = callback; return this; }
@@ -82,6 +91,13 @@ export class Setting {
   addToggle = this.addText;
   addButton = this.addText;
   addExtraButton = this.addText;
+  addComponent = this.addText;
+}
+
+export class SecretComponent {
+  constructor(public app: unknown, public component: unknown) {}
+  setValue() { return this; }
+  onChange() { return this; }
 }
 
 export class Modal {

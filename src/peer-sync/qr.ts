@@ -19,7 +19,7 @@ function rsGenPoly(numEc: number): number[] {
   let poly = [1];
   for (let i = 0; i < numEc; i++) {
     const factor = [1, GF256_EXP[i]];
-    const res = new Array(poly.length + 1).fill(0);
+    const res: number[] = new Array<number>(poly.length + 1).fill(0);
     for (let j = 0; j < poly.length; j++) {
       res[j] ^= gmul(poly[j], factor[0]);
       res[j + 1] ^= gmul(poly[j], factor[1]);
@@ -31,7 +31,7 @@ function rsGenPoly(numEc: number): number[] {
 
 function rsCompute(data: number[], numEc: number): number[] {
   const gen = rsGenPoly(numEc);
-  const res = new Array(numEc).fill(0);
+  const res: number[] = new Array<number>(numEc).fill(0);
   for (const b of data) {
     const factor = b ^ (res.shift() ?? 0);
     res.push(0);
@@ -104,7 +104,7 @@ export function parsePairingPayload(payload: string): { url: string; secret: str
   }
 
   // 2. Space, hash, or separator formatted connection details: http://192.168.1.20:43887#CODE
-  const matchWithCode = trimmed.match(/^(https?:\/\/[^\s#?()]+)(?:[#\s(?&]+)(?:code=)?([a-zA-Z0-9_\-]+)\)?$/i);
+  const matchWithCode = trimmed.match(/^(https?:\/\/[^\s#?()]+)(?:[#\s(?&]+)(?:code=)?([a-zA-Z0-9_-]+)\)?$/i);
   if (matchWithCode) {
     const normalized = normalizePeerUrl(matchWithCode[1]);
     const code = matchWithCode[2]?.trim();
@@ -246,8 +246,8 @@ export function generateQrMatrix(text: string): boolean[][] {
   }
 
   // Initialize modules matrix
-  const modules: boolean[][] = Array.from({ length: size }, () => new Array(size).fill(false));
-  const isFunction: boolean[][] = Array.from({ length: size }, () => new Array(size).fill(false));
+  const modules: boolean[][] = Array.from({ length: size }, (): boolean[] => new Array<boolean>(size).fill(false));
+  const isFunction: boolean[][] = Array.from({ length: size }, (): boolean[] => new Array<boolean>(size).fill(false));
 
   function setFunction(row: number, col: number, val: boolean): void {
     modules[row][col] = val;

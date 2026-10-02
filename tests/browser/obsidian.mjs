@@ -48,6 +48,8 @@ class Control {
   setPlaceholder(value) { this.inputEl.placeholder = value; return this; }
   setButtonText(value) { this.inputEl.textContent = value; return this; }
   setWarning() { this.inputEl.addClass('mod-warning'); return this; }
+  setDestructive() { this.inputEl.addClass('mod-warning'); return this; }
+  setClass(cls) { this.inputEl.addClass(cls); return this; }
   setDisabled(value) { this.inputEl.disabled = value; return this; }
   setIcon(value) { setIcon(this.inputEl, value); return this; }
   setTooltip(value) { this.inputEl.setAttribute('aria-label', value); return this; }
@@ -69,4 +71,11 @@ export class Setting {
   addToggle(callback) { const c = new Control(this.controlEl); c.inputEl.type = 'checkbox'; callback(c); return this; }
   addExtraButton(callback) { return this.addButton(callback); }
   addButton(callback) { callback(new Control(this.controlEl, 'button')); return this; }
+  addComponent(callback) { callback(new Control(this.controlEl)); return this; }
+}
+
+export class SecretComponent {
+  constructor(app, el) { this.el = el; }
+  setValue() { return this; }
+  onChange() { return this; }
 }

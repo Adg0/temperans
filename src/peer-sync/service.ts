@@ -6,11 +6,6 @@ import { PeerSyncFiles } from "./files";
 import { PeerSyncHostInfo, PeerSyncHostServer } from "./host";
 import { PeerSyncAction, PeerSyncManifest, PeerSyncPlanItem, createPairingCode, comparePeerManifests, normalizePeerUrl } from "./protocol";
 
-interface SecretStorageLike {
-  getSecret(id: string): string | null | Promise<string | null>;
-  setSecret(id: string, secret: string): void | Promise<void>;
-}
-
 export interface PeerSyncPluginHost {
   app: App;
   state: PluginState;
@@ -169,14 +164,14 @@ export class PeerSyncService {
   }
 
   private async getSecret(name: string): Promise<string> {
-    const storage = (this.plugin.app as App & { secretStorage?: SecretStorageLike }).secretStorage;
+    const storage = this.plugin.app.secretStorage;
     if (!storage) throw new Error("Peer sync requires Obsidian Secret Storage on this device.");
-    return (await storage.getSecret(name)) ?? "";
+    return storage.getSecret(name) ?? "";
   }
 
   private async setSecret(name: string, value: string): Promise<void> {
-    const storage = (this.plugin.app as App & { secretStorage?: SecretStorageLike }).secretStorage;
+    const storage = this.plugin.app.secretStorage;
     if (!storage) throw new Error("Peer sync requires Obsidian Secret Storage on this device.");
-    await storage.setSecret(name, value);
+    storage.setSecret(name, value);
   }
 }

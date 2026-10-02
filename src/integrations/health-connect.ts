@@ -1,5 +1,5 @@
 import { serialized } from "../async";
-import { operationFolder } from "../paths";
+import { hasInvalidPathChar, operationFolder } from "../paths";
 import { App, TFile, normalizePath } from "obsidian";
 import { ExternalMetricImport, HabitSettings, RESERVED_HABIT_IDS } from "../types";
 import {
@@ -43,7 +43,7 @@ export function healthConnectStagePath(folderPath: string, override = ""): strin
   if (!path.startsWith(folderPath + "/")) throw new Error("The staging file must be inside the configured operation folder: " + folderPath);
   const parts = path.split("/");
   if (!/\.json$/i.test(path) || parts.some((part, index) => !part || part === "." || part === ".."
-    || /[<>:"|?*\u0000-\u001f]/.test(part) || /[. ]$/.test(part)
+    || hasInvalidPathChar(part) || /[. ]$/.test(part)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)
     || (index < parts.length - 1 && part.startsWith(".")))) {
     throw new Error("Use a vault-relative .json path, without hidden folders, parent folders, or reserved filename characters.");
@@ -95,7 +95,7 @@ export async function importHealthConnectStaging(host: HealthConnectImportHost, 
   for (const record of validated.value.records) {
     for (const [key, val] of Object.entries(record)) {
       if (key === "date" || RESERVED_HABIT_IDS.has(key)) continue;
-      if (val && typeof val === "object" && typeof (val as HealthConnectMetricValue).value === "number") {
+      if (val && typeof val === "object" && typeof val.value === "number") {
         stagedMetricIds.add(key);
       }
     }

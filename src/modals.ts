@@ -8,7 +8,7 @@ import { formatTypingDuration, isTimeUnit, parseHabitAmount, parseTimeValue, par
 import { createTemperansDropdown } from "./dropdown";
 import { calculateGoalProgress, targetForDate } from "./evaluation";
 import { cadenceLabel, targetLabel } from "./dashboard/format";
-import { HabitCadence, HabitDefinition, HabitId, HabitSession, HabitType, QuickEntryConfig } from "./types";
+import { DailyLog, HabitCadence, HabitDefinition, HabitId, HabitSession, HabitType, ImportedTypingResult, QuickEntryConfig } from "./types";
 
 function getHabitIcon(habit: HabitDefinition): string {
   const id = habit.id.toLowerCase();
@@ -76,7 +76,7 @@ export class HabitLogModal extends Modal {
   }
   close(): void { void this.finish(); }
 
-  private logData: any = null;
+  private logData!: DailyLog;
   private metricDrafts = new Map<HabitId, { amount: string; note: string; dirty: boolean }>();
   private durationDrafts = new Map<HabitId, { duration: string; note: string; dirty: boolean }>();
   private typingDrafts = new Map<HabitId, { duration: string; tests: string; note: string; dirty: boolean }>();
@@ -640,7 +640,7 @@ export class HabitLogModal extends Modal {
 
     if (this.logData?.metricSources?.typing === "endpoint" || (this.logData?.typing?.imported?.length ?? 0) > 0) {
       const syncedSeconds = (this.logData.typing.imported.length > 0)
-        ? this.logData.typing.imported.reduce((sum: number, r: any) => sum + r.durationSeconds, 0)
+        ? this.logData.typing.imported.reduce((sum: number, r: ImportedTypingResult) => sum + r.durationSeconds, 0)
         : this.logData.typing.manualDurationSeconds;
       container.createEl("p", {
         cls: "temperans-endpoint-synced-hint",

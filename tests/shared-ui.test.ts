@@ -41,7 +41,7 @@ describe("shared habit creation", () => {
       root = tab.containerEl as unknown as Element;
       await action(root, "Configure habits");
       // Navigation launches the async subpage, so wait for the visible form.
-      root.field("Add habit definition").controls[0].click();
+      await action(root, "Create a new habit");
     } else {
       const modal = new DashboardActionsModal({} as App, { store } as unknown as DashboardActionsHost, refreshed);
       modal.onOpen();

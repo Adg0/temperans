@@ -1,3 +1,4 @@
+import { App, TFile } from "obsidian";
 import { parseYamlSafe } from "./codeblock-parser";
 import { DashboardLayoutConfig, DashboardWidgetConfig } from "./types";
 
@@ -307,7 +308,7 @@ layout:
 ${body}`;
 }
 
-export async function ensureDashboardFile(app: any, folderPath: string): Promise<string> {
+export async function ensureDashboardFile(app: App, folderPath: string): Promise<string> {
   const dashboardPath = `${folderPath}/${DASHBOARD_FILE}`.replace(/\\/g, "/").replace(/\/+/g, "/");
   const existing = app.vault.getAbstractFileByPath(dashboardPath);
   if (existing) return dashboardPath;
@@ -322,10 +323,10 @@ export async function ensureDashboardFile(app: any, folderPath: string): Promise
   return dashboardPath;
 }
 
-export async function loadDashboardLayout(app: any, folderPath: string): Promise<DashboardLayoutConfig> {
+export async function loadDashboardLayout(app: App, folderPath: string): Promise<DashboardLayoutConfig> {
   const dashboardPath = `${folderPath}/${DASHBOARD_FILE}`.replace(/\\/g, "/").replace(/\/+/g, "/");
   const file = app.vault.getAbstractFileByPath(dashboardPath);
-  if (file) {
+  if (file instanceof TFile) {
     try {
       const cached = app.metadataCache.getFileCache(file);
       if (cached?.frontmatter) {

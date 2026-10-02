@@ -202,8 +202,8 @@ export function normalizeHealthConnectRecord(
 
   for (const [key, val] of Object.entries(record)) {
     if (key === "date") continue;
-    if (val && typeof val === "object" && typeof (val as HealthConnectMetricValue).value === "number") {
-      const metricVal = val as HealthConnectMetricValue;
+    if (val && typeof val === "object" && typeof val.value === "number") {
+      const metricVal = val;
       const habitDef = habits?.find((h) => h.id === key);
       const factor = habitDef ? unitFactor(metricVal.unit, habitDef.unit) : 1;
       metrics[key] = convertAmount(metricVal.value, factor);

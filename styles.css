@@ -59,8 +59,8 @@ body:not(.theme-dark) .temperans-dashboard {
 .temperans-dropdown button:focus-visible,
 .temperans-modal button:focus-visible,
 .temperans-modal input:focus-visible {
-  outline: 2px solid var(--interactive-accent, #15803d) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--interactive-accent, #15803d);
+  outline-offset: 2px;
 }
 
 .temperans-header,
@@ -163,7 +163,7 @@ body:not(.theme-dark) .temperans-dashboard {
   position: fixed;
   /* Obsidian Settings can sit above normal plugin popovers. This menu is
      appended to document.body, so give it a dedicated layer above modals. */
-  z-index: 2147483647 !important;
+  z-index: 2147483647;
   pointer-events: auto;
   min-width: 0;
   max-width: calc(100vw - 1rem);
@@ -178,41 +178,46 @@ body:not(.theme-dark) .temperans-dashboard {
   box-shadow: var(--shadow-s);
 }
 
-.temperans-dropdown-option {
+.temperans-dropdown-menu button.temperans-dropdown-option,
+button.temperans-dropdown-option {
   display: block;
   width: 100%;
-  margin: 0 !important;
+  margin: 0;
   padding: .35rem .6rem;
   overflow: hidden;
-  border: 0 !important;
+  border: 0;
   border-radius: var(--radius-s);
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
   color: var(--text-normal);
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.temperans-dropdown-option:hover,
-.temperans-dropdown-option:active,
-.temperans-dropdown-option:focus-visible {
-  background: var(--background-modifier-hover) !important;
+.temperans-dropdown-menu button.temperans-dropdown-option:hover,
+.temperans-dropdown-menu button.temperans-dropdown-option:active,
+.temperans-dropdown-menu button.temperans-dropdown-option:focus-visible,
+button.temperans-dropdown-option:hover,
+button.temperans-dropdown-option:active,
+button.temperans-dropdown-option:focus-visible {
+  background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.temperans-dropdown-option.is-selected {
-  background: var(--interactive-accent) !important;
-  color: var(--text-on-accent, #ffffff) !important;
+.temperans-dropdown-menu button.temperans-dropdown-option.is-selected,
+button.temperans-dropdown-option.is-selected {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent, #ffffff);
   font-weight: var(--font-medium);
 }
 
-.temperans-year {
+button.temperans-year {
   min-width: 3.25rem;
   padding: .15rem .35rem;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   text-align: center;
   font-weight: var(--font-semibold);
   color: var(--text-normal);
@@ -353,10 +358,14 @@ body:not(.theme-dark) .temperans-dashboard {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 85%, var(--temperans-accent));
 }
 .temperans-day.is-future { opacity: .35; cursor: default; }
-.temperans-dashboard .intensity-1 { background-color: var(--temperans-one) !important; }
-.temperans-dashboard .intensity-2 { background-color: var(--temperans-two) !important; }
-.temperans-dashboard .intensity-3 { background-color: var(--temperans-three) !important; }
-.temperans-dashboard .intensity-4 { background-color: var(--temperans-four) !important; }
+.temperans-dashboard .temperans-day.intensity-1,
+.temperans-dashboard .temperans-legend-cell.intensity-1 { background-color: var(--temperans-one); }
+.temperans-dashboard .temperans-day.intensity-2,
+.temperans-dashboard .temperans-legend-cell.intensity-2 { background-color: var(--temperans-two); }
+.temperans-dashboard .temperans-day.intensity-3,
+.temperans-dashboard .temperans-legend-cell.intensity-3 { background-color: var(--temperans-three); }
+.temperans-dashboard .temperans-day.intensity-4,
+.temperans-dashboard .temperans-legend-cell.intensity-4 { background-color: var(--temperans-four); }
 
 .temperans-legend {
   justify-content: flex-end;
@@ -548,22 +557,22 @@ body:not(.theme-dark) .temperans-dashboard {
   height: 1.25rem;
 }
 
-.temperans-nav-setting-card {
+.temperans-settings .temperans-nav-setting-card {
   cursor: pointer;
   border-radius: var(--radius-s);
-  padding: 0.5rem 0.75rem !important;
-  margin: 0.25rem 0 !important;
+  padding: 0.5rem 0.75rem;
+  margin: 0.25rem 0;
   transition: background-color 0.15s ease, border-color 0.15s ease;
   border: 1px solid transparent;
 }
 
-.temperans-nav-setting-card:hover {
+.temperans-settings .temperans-nav-setting-card:hover {
   background-color: var(--background-modifier-hover);
   border-color: var(--background-modifier-border);
 }
 
-.temperans-nav-setting-card:focus-visible {
-  outline: 2px solid var(--interactive-accent) !important;
+.temperans-settings .temperans-nav-setting-card:focus-visible {
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 1px;
 }
 
@@ -653,50 +662,62 @@ body:not(.theme-dark) .temperans-dashboard {
   gap: 0.2rem;
   flex: 0 0 auto;
 }
-.temperans-task-order-button {
+.temperans-task-order-button,
+button.temperans-task-order-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.75rem;
   min-width: 1.75rem;
   min-height: 1.6rem;
-  padding: .2rem !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  padding: .2rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--text-muted);
 }
 .temperans-task-order-button:hover:not(:disabled),
 .temperans-task-order-button:active:not(:disabled),
-.temperans-task-order-button:focus-visible:not(:disabled) { color: var(--text-normal); background: var(--background-modifier-hover) !important; }
-.temperans-task-order-button.mod-warning:hover:not(:disabled) { color: var(--text-error, #ef4444) !important; background: color-mix(in srgb, var(--text-error, #ef4444) 15%, transparent) !important; }
-.temperans-task-order-button:disabled { opacity: .35; cursor: default; }
+.temperans-task-order-button:focus-visible:not(:disabled),
+button.temperans-task-order-button:hover:not(:disabled),
+button.temperans-task-order-button:active:not(:disabled),
+button.temperans-task-order-button:focus-visible:not(:disabled) { color: var(--text-normal); background: var(--background-modifier-hover); }
+.temperans-task-order-button.mod-warning:hover:not(:disabled),
+button.temperans-task-order-button.mod-warning:hover:not(:disabled) { color: var(--text-error, #ef4444); background: color-mix(in srgb, var(--text-error, #ef4444) 15%, transparent); }
+.temperans-task-order-button:disabled,
+button.temperans-task-order-button:disabled { opacity: .35; cursor: default; }
 
 .temperans-detail-heading {
   justify-content: flex-start;
   gap: .35rem;
 }
 
-.temperans-edit-day {
+.temperans-edit-day,
+button.temperans-edit-day {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
   min-width: 1.9rem;
-  min-height: 1.9rem !important;
+  min-height: 1.9rem;
   padding: .25rem;
-  border: 0 !important;
-  border-radius: 50%;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: #4ade80;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .temperans-edit-day:hover,
 .temperans-edit-day:active,
-.temperans-edit-day:focus-visible {
-  background: color-mix(in srgb, #22c55e 18%, transparent) !important;
-  color: #86efac;
+.temperans-edit-day:focus-visible,
+button.temperans-edit-day:hover,
+button.temperans-edit-day:active,
+button.temperans-edit-day:focus-visible {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
 }
 
 .temperans-detail-list {
@@ -911,7 +932,7 @@ body:not(.theme-dark) .temperans-dashboard {
 }
 
 .temperans-action-tile:focus-visible {
-  outline: 2px solid var(--interactive-accent) !important;
+  outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
 }
 
@@ -974,7 +995,7 @@ body:not(.theme-dark) .temperans-dashboard {
   z-index: 2;
   margin-left: auto;
   transition: transform 0.15s ease, background-color 0.15s ease;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .temperans-action-tile-btn svg {
@@ -1380,11 +1401,11 @@ body:not(.theme-dark) .temperans-dashboard {
 
 .temperans-dashboard.is-compact {
   padding: .75rem;
-  padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 5.5rem) !important;
+  padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 5.5rem);
 }
 
 body.is-mobile .temperans-dashboard {
-  padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 5.5rem) !important;
+  padding-bottom: calc(var(--safe-area-inset-bottom, 0px) + 5.5rem);
 }
 
 body.is-mobile .temperans-day-detail-panel,
@@ -1425,8 +1446,7 @@ body.is-mobile .temperans-day-detail-scroll {
   grid-template-areas:
     "name status"
     "value value";
-  row-gap: 0.35rem;
-  column-gap: 0.75rem;
+  gap: 0.35rem 0.75rem;
   align-items: center;
   padding: 0.55rem 0;
 }
@@ -1455,8 +1475,7 @@ body.is-mobile .temperans-day-detail-scroll {
     grid-template-areas:
       "name status"
       "value value";
-    row-gap: 0.35rem;
-    column-gap: 0.75rem;
+    gap: 0.35rem 0.75rem;
     align-items: center;
     padding: 0.55rem 0;
   }
@@ -1574,7 +1593,8 @@ body.is-mobile .temperans-day-detail-scroll {
   border-radius: var(--radius-m);
 }
 
-.temperans-stepper-nav-btn {
+.temperans-stepper-nav-btn,
+button.temperans-stepper-nav-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1587,8 +1607,8 @@ body.is-mobile .temperans-day-detail-scroll {
   color: var(--text-normal);
   cursor: pointer;
   transition: all 0.15s ease;
-  padding: 0 !important;
-  box-shadow: none !important;
+  padding: 0;
+  box-shadow: none;
 }
 
 .temperans-stepper-nav-btn svg {
@@ -1666,17 +1686,18 @@ body.is-mobile .temperans-day-detail-scroll {
   overflow-x: auto;
 }
 
-.temperans-stepper-dot {
+.temperans-stepper-dot,
+button.temperans-stepper-dot {
   width: 7px;
   height: 7px;
   min-width: 7px;
   min-height: 7px;
   border-radius: 4px;
-  border: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
+  border: none;
+  padding: 0;
+  margin: 0;
   background: var(--background-modifier-border);
-  box-shadow: none !important;
+  box-shadow: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1915,7 +1936,8 @@ body.is-mobile .temperans-day-detail-scroll {
   margin: 0.25rem 0 0.5rem;
 }
 
-.temperans-quick-pill {
+.temperans-quick-pill,
+button.temperans-quick-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1928,7 +1950,7 @@ body.is-mobile .temperans-day-detail-scroll {
   font-weight: var(--font-medium);
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .temperans-quick-pill:hover {
@@ -2058,14 +2080,15 @@ body.is-mobile .temperans-day-detail-scroll {
 }
 
 
-.temperans-hidden { display: none !important; }
-.temperans-dropdown-menu { z-index: 2147483647 !important; pointer-events: auto; }
+.temperans-hidden,
+.setting-item.temperans-hidden,
+div.temperans-hidden { display: none; }
 
 /* Quiet feedback beside the selected habit, with accessible status text. */
 .temperans-save-status { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 18px; width: 18px; color: var(--text-muted); }
 .temperans-save-status svg { width: 16px; height: 16px; }
 .temperans-save-status.is-error { color: var(--text-error); }
-.temperans-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.temperans-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .temperans-staging-path-details,
 .temperans-staging-recovery-details {
   margin-block: 10px;

@@ -2,6 +2,8 @@ import { App } from "obsidian";
 import { HabitStore } from "../data";
 import { DailyLog, DayEvaluation, HabitId, HabitSettings } from "../types";
 import { HabitAnalytics } from "../analytics";
+import type { PeerSyncService } from "../peer-sync/service";
+import type { HealthConnectImportSummary } from "../integrations/health-connect";
 
 export interface DashboardHost {
   state: {
@@ -10,8 +12,8 @@ export interface DashboardHost {
     dashboardSubtitle?: string;
   };
   store: HabitStore;
-  peerSync?: any;
-  importHealthConnect?(weekEnding?: string): Promise<any>;
+  peerSync?: PeerSyncService;
+  importHealthConnect?(weekEnding?: string): Promise<HealthConnectImportSummary | null>;
   openSettingsNote(): Promise<void>;
   openThirdPartySync(): void;
   openPeerSync(): void;
@@ -28,7 +30,7 @@ export interface WidgetContext {
   year: number;
   month: number;
   selectedDate: string | null;
-  habitFilter: "overall" | HabitId;
+  habitFilter: HabitId;
   settings: HabitSettings;
   logs: Map<string, DailyLog>;
   evaluations: Map<string, DayEvaluation>;
@@ -41,7 +43,7 @@ export interface WidgetContext {
   calendarMode?: "month" | "year";
   dayButtons: Map<string, HTMLButtonElement>;
   onSelectDay: (date: string) => void;
-  onSelectHabit: (habitId: "overall" | HabitId) => void;
+  onSelectHabit: (habitId: HabitId) => void;
   onNavigatePeriod: (delta: number) => void;
   onGoToToday: () => void;
   onRefresh: () => Promise<void>;

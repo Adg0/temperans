@@ -1,4 +1,5 @@
 import { App, moment, normalizePath } from "obsidian";
+import { hasInvalidPathChar } from "./paths";
 
 export interface NotePathSettings {
   mode: "flat" | "nested" | "custom";
@@ -32,7 +33,7 @@ export function formattedLogPath(folder: string, date: string, format: string): 
     throw new Error("The note format must include a complete year, month, and day, such as YYYY-MM-DD.");
   }
   const segments = name.split("/");
-  if (!name || segments.some(segment => !segment.trim() || segment.startsWith(".") || /[\\:*?"<>|\x00-\x1f]/.test(segment) || /[. ]$/.test(segment)
+  if (!name || segments.some(segment => !segment.trim() || segment.startsWith(".") || hasInvalidPathChar(segment) || /[. ]$/.test(segment)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(segment))) {
     throw new Error("The note format must produce a valid relative file path inside Habit Logs.");
   }
