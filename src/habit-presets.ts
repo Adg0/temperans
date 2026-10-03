@@ -120,8 +120,22 @@ export const HABIT_PRESETS: HabitPreset[] = [
     unit: "lessons",
     cadence: "daily",
     min: 1,
-    description: "Language learning streak (1 lesson daily).",
-    icon: "languages"
+    description: "Language learning streak (1 lesson daily). Syncs user profile streak.",
+    icon: "languages",
+    endpoint: {
+      sourceName: "duolingo",
+      url: "https://www.duolingo.com/2017-06-30/users?username=YOUR_USERNAME",
+      auth: {
+        type: "none",
+        secretKey: ""
+      },
+      response: {
+        recordsPath: "users.0",
+        dateField: "{{today}}",
+        valueField: "streak",
+        aggregation: "latest"
+      }
+    }
   },
   {
     id: "github",
@@ -132,8 +146,25 @@ export const HABIT_PRESETS: HabitPreset[] = [
     unit: "contributions",
     cadence: "daily",
     min: 1,
-    description: "Daily commits, reviews, and pull requests (1 contribution target).",
-    icon: "git-branch"
+    description: "Daily commits, reviews, and pull requests. Syncs GitHub activity.",
+    icon: "git-branch",
+    endpoint: {
+      sourceName: "github",
+      url: "https://api.github.com/users/YOUR_USERNAME/events",
+      testUrl: "https://api.github.com/user",
+      auth: {
+        type: "header",
+        headerName: "Authorization",
+        secretKey: "temperans-habits-github-token",
+        prefix: "Bearer "
+      },
+      response: {
+        recordsPath: "",
+        dateField: "created_at",
+        valueField: "",
+        aggregation: "count"
+      }
+    }
   },
   {
     id: "wakatime",
@@ -144,7 +175,25 @@ export const HABIT_PRESETS: HabitPreset[] = [
     unit: "minutes",
     cadence: "daily",
     min: 60,
-    description: "Daily editor focus time (60-minute target).",
-    icon: "code"
+    description: "Daily editor focus time (60-minute target). Syncs via WakaTime API key.",
+    icon: "code",
+    endpoint: {
+      sourceName: "wakatime",
+      url: "https://wakatime.com/api/v1/users/current/summaries?start={{startDate}}&end={{endDate}}",
+      testUrl: "https://wakatime.com/api/v1/users/current",
+      auth: {
+        type: "header",
+        headerName: "Authorization",
+        secretKey: "temperans-habits-wakatime-api-key",
+        prefix: "Bearer "
+      },
+      response: {
+        recordsPath: "data",
+        dateField: "range.date",
+        valueField: "grand_total.total_seconds",
+        aggregation: "sum",
+        valueTransform: "divideBy:60"
+      }
+    }
   }
 ];

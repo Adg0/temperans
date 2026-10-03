@@ -292,8 +292,15 @@ export default class TemperansHabitsPlugin extends Plugin {
       new Notice(`No external endpoint configured for ${habitId}.`);
       return false;
     }
-    const secretKey = habit.endpoint.auth?.secretKey || this.state.monkeytypeSecretName;
-    const secret = await this.getSecretValue(secretKey);
+    const secretKey = habit.endpoint.auth?.secretKey || (habit.id === "typing" ? this.state.monkeytypeSecretName : "");
+    let secret = secretKey ? this.getSecretValue(secretKey) : null;
+    if (!secret && habit.id === "typing" && this.state.monkeytypeSecretName && this.state.monkeytypeSecretName !== secretKey) {
+      secret = this.getSecretValue(this.state.monkeytypeSecretName);
+    }
+    if (!secret && habit.endpoint.auth?.type && habit.endpoint.auth.type !== "none") {
+      new Notice(`No secret found in Secret Storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
+      return false;
+    }
     const today = todayInZone(settings.timezone);
     const result = await testEndpointConnection(habit.endpoint, secret, today, requestUrl, settings.timezone);
     if (result.ok) {
@@ -311,8 +318,15 @@ export default class TemperansHabitsPlugin extends Plugin {
       new Notice(`No external endpoint configured for ${habitId}.`);
       return;
     }
-    const secretKey = habit.endpoint.auth?.secretKey || this.state.monkeytypeSecretName;
-    const secret = await this.getSecretValue(secretKey);
+    const secretKey = habit.endpoint.auth?.secretKey || (habit.id === "typing" ? this.state.monkeytypeSecretName : "");
+    let secret = secretKey ? this.getSecretValue(secretKey) : null;
+    if (!secret && habit.id === "typing" && this.state.monkeytypeSecretName && this.state.monkeytypeSecretName !== secretKey) {
+      secret = this.getSecretValue(this.state.monkeytypeSecretName);
+    }
+    if (!secret && habit.endpoint.auth?.type && habit.endpoint.auth.type !== "none") {
+      new Notice(`No secret found in Secret Storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
+      return;
+    }
     try {
       const summary = await syncHabitFromEndpoint(habit, this.store, secret, 7, requestUrl);
       if (summary.daysImported === 0 && summary.daysUpdated === 0) {

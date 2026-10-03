@@ -63,8 +63,9 @@ export async function renderBrowsePresets(
 
       const actions = card.createDiv({ cls: "temperans-preset-actions" });
 
+      let customizeBtn: HTMLButtonElement | undefined = undefined;
       if (options.onCustomize && !isAlreadyAdded) {
-        const customizeBtn = actions.createEl("button", {
+        customizeBtn = actions.createEl("button", {
           cls: "temperans-preset-add-btn",
           text: "Customize",
           attr: { type: "button" }
@@ -104,7 +105,15 @@ export async function renderBrowsePresets(
           }],
           ...(preset.endpoint ? { endpoint: preset.endpoint } : {})
         });
-        new Notice(`Created “${preset.name}”.`);
+        existingIds.add(preset.id);
+        addBtn.textContent = "Configured";
+        addBtn.removeClass("mod-cta");
+        if (customizeBtn) customizeBtn.addClass("temperans-hidden");
+        if (preset.endpoint) {
+          new Notice(`Created “${preset.name}”. Configure API key in Settings → Automated API endpoints.`);
+        } else {
+          new Notice(`Created “${preset.name}”.`);
+        }
         await options.onAdded();
       };
     }

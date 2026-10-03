@@ -119,6 +119,7 @@ describe("shared sync and analytics panels", () => {
   it("preserves host controls and paired profile edits", async () => {
     const root = new Element(), refresh = vi.fn();
     const service = {
+      app: {} as App,
       isHosting: false, configuredPort: 43887, setHostPort: vi.fn(), startHost: vi.fn(),
       getRemoteProfile: vi.fn().mockResolvedValue({ url: "", secret: "" }),
       saveRemoteProfile: vi.fn(), forgetRemoteProfile: vi.fn()

@@ -37,6 +37,10 @@ export class PeerSyncService {
 
   constructor(private readonly plugin: PeerSyncPluginHost) {}
 
+  get app(): App {
+    return this.plugin.app;
+  }
+
   get isDesktop(): boolean {
     return Platform.isDesktopApp;
   }

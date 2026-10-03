@@ -485,13 +485,73 @@
       color: #e2e8f0;
     }
 
-    /* Key features list */
+    /* Feature list */
     .feature-list {
       list-style: none;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1rem;
       margin: 1.5rem 0;
+    }
+
+    /* User Guide Walkthrough */
+    .user-guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .guide-step {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.35rem;
+      display: flex;
+      gap: 1.15rem;
+      align-items: flex-start;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .guide-step:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .step-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.95rem;
+      margin-top: 2px;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: var(--text-main);
+    }
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .step-desc code {
+      font-family: var(--font-mono);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--text-main);
     }
     .feature-item {
       display: flex;
@@ -650,6 +710,9 @@
         <a href="#api-endpoints" class="nav-item">Automated REST APIs</a>
         <a href="#health-connect" class="nav-item">Android Health Connect</a>
         <a href="#peer-sync" class="nav-item">Local Peer Sync</a>
+
+        <div class="nav-group-title">User Guide</div>
+        <a href="#user-guide" class="nav-item">Getting Started</a>
 
         <div class="nav-group-title">Reference</div>
         <a href="#data-schema" class="nav-item">Markdown Data Schema</a>
@@ -941,6 +1004,77 @@ widgets:
             <div class="media-card">
               <img src="assets/habit-actions-sync-toast.png" alt="Automated Sync Feedback" onclick="openLightbox(this.src)">
               <div class="media-caption">Non-intrusive status notices and audit feedback when syncing endpoints.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- User Guide -->
+        <section class="doc-section" id="user-guide">
+          <div class="section-header">
+            <div class="section-tag">Step-by-Step</div>
+            <h2 class="section-title">Getting Started Guide</h2>
+            <p class="section-desc">New to Obsidian or habit tracking? Follow this 6-step walkthrough to get up and running in minutes.</p>
+          </div>
+
+          <div class="user-guide-steps">
+            <div class="guide-step">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <h3 class="step-title">Open Your Habit Dashboard</h3>
+                <p class="step-desc">
+                  After installing and enabling the plugin, click the <strong>chart icon</strong> in your Obsidian left ribbon, or press <code>Ctrl+P</code> / <code>Cmd+P</code> and search for <code>Temperans Habits: Open habit dashboard</code>. This opens your interactive annual heat map view.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <h3 class="step-title">Set Up Your Habits (Starter & Presets)</h3>
+                <p class="step-desc">
+                  Your vault initializes with a clean <strong>Reading</strong> starter habit. To add more habits, go to <strong>Settings → Temperans Habits → Configure habits → Create a new habit</strong>. You can click <strong>Browse presets</strong> to add pre-configured templates for <em>Sleep</em>, <em>Hydration</em>, <em>Daily steps</em>, or <em>Monkeytype</em> in a single click, or define custom <em>Build</em>, <em>Avoidance</em>, or <em>Tracker</em> habits.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <h3 class="step-title">Log Today's Habits in Seconds</h3>
+                <p class="step-desc">
+                  Click the prominent <strong>Log today</strong> button on the dashboard header (or use hotkey command <code>Log a habit today</code>). Use quick-entry pills, enter numbers, or type natural duration formats like <code>1h 30m</code>, <code>45m</code>, or <code>1:30</code>. For activities like books or workouts, log multi-entry sessions with custom notes.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">4</div>
+              <div class="step-content">
+                <h3 class="step-title">Embed Heatmaps into Daily Notes</h3>
+                <p class="step-desc">
+                  Keep your routine visible by embedding live habit widgets directly into your daily journal notes or dashboard homepage using <code>```temperans-dashboard</code> codeblocks. Embed your full calendar or isolate specific habits like reading or workouts.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">5</div>
+              <div class="step-content">
+                <h3 class="step-title">Connect Automated REST APIs (Monkeytype, etc.)</h3>
+                <p class="step-desc">
+                  Automate tracking without manual logging. Add the <strong>Typing practice</strong> preset, store your ApeKey in Obsidian Secret Storage, and configure the key in <strong>Settings → Automated API endpoints</strong>. Temperans syncs past records without ever exposing secret tokens in Markdown notes.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">6</div>
+              <div class="step-content">
+                <h3 class="step-title">Companion App & One-Tap Peer Sync</h3>
+                <p class="step-desc">
+                  Track health metrics on mobile with the open-source Android companion app. Start the desktop peer host, point your phone's camera at the pairing QR code, and sync your dated Markdown logs wirelessly over your local Wi-Fi with authenticated AES-256-GCM encryption.
+                </p>
+              </div>
             </div>
           </div>
         </section>

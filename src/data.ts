@@ -84,8 +84,16 @@ export const DEFAULT_HABITS: HabitDefinition[] = LEGACY_HABIT_DEFAULTS
 
 const CADENCES = new Set(["daily", "weekly", "monthly", "quarterly", "annual", "yearly"]);
 
-function cloneDefaults(): HabitDefinition[] {
-  return JSON.parse(JSON.stringify(DEFAULT_HABITS)) as HabitDefinition[];
+function cloneDefaults(startDate?: string): HabitDefinition[] {
+  const defaults = JSON.parse(JSON.stringify(DEFAULT_HABITS)) as HabitDefinition[];
+  if (startDate) {
+    for (const habit of defaults) {
+      for (const target of habit.targetHistory) {
+        target.effectiveDate = startDate;
+      }
+    }
+  }
+  return defaults;
 }
 
 function numberOrUndefined(value: unknown): number | undefined {
@@ -241,6 +249,10 @@ export class HabitStore {
   }
 
   async ensureInitialized(): Promise<void> {
+    if (this.stopped) {
+      this.stopped = false;
+      this.historyInstance = undefined;
+    }
     const folderExists = this.app.vault.getAbstractFileByPath(this.folderPath) !== null
       || await this.app.vault.adapter.exists(this.folderPath);
     if (!folderExists) {
@@ -253,7 +265,9 @@ export class HabitStore {
     const settingsExists = this.app.vault.getAbstractFileByPath(this.settingsPath) !== null
       || await this.app.vault.adapter.exists(this.settingsPath);
     if (!settingsExists) {
-      const settings = { temperans: "settings", timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London", habits: cloneDefaults() };
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London";
+      const today = todayInZone(timezone);
+      const settings = { temperans: "settings", timezone, habits: cloneDefaults(today) };
       const body = `
 # Temperans Habits Settings
 
@@ -474,11 +488,18 @@ endpoint:
 
   /** Canonical dates come from owned frontmatter, independent of filenames. */
   dailyFiles(signal?: AbortSignal): Promise<Map<string, TFile>> {
+    if (this.stopped && !signal?.aborted) {
+      this.stopped = false;
+      this.historyInstance = undefined;
+    }
     return this.stopped ? Promise.reject(new Error("History loading was cancelled.")) : this.history.files(signal);
   }
 
   private readDocument(file: TFile): Promise<ReturnType<typeof splitFrontmatter>> {
-    if (this.stopped) return Promise.reject(new Error("History loading was cancelled."));
+    if (this.stopped) {
+      this.stopped = false;
+      this.historyInstance = undefined;
+    }
     const path = file.path;
     const existing = this.reads.get(path);
     if (existing) return existing;

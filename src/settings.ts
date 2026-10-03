@@ -7,8 +7,9 @@ import { renderPeerSyncSettings } from "./peer-sync/settings-panel";
 import { renderHealthConnectPanel } from "./integrations/health-connect-panel";
 import { App, Modal, Notice, PluginSettingTab, SecretComponent, Setting, setIcon } from "obsidian";
 import TemperansHabitsPlugin from "./main";
-import { EditHabitModal } from "./modals";
 import { formatSleepDuration } from "./durations";
+import { EditHabitModal } from "./modals";
+import { HabitStore } from "./data";
 
 // Supports Obsidian 1.13.0+
 export class TemperansSettingTab extends PluginSettingTab {
@@ -184,132 +185,17 @@ export class TemperansSettingTab extends PluginSettingTab {
     renderSubpageHeader(containerEl, "Configure habits",
       "Drag cards using the left grip or use the arrows to reorder. Tap the pencil to edit or trash to delete. Changes are saved directly in Habit Logs/Settings.md.", "Back to settings", () => this.display());
 
-    const settings = await this.plugin.store.loadSettings();
-
-    // Add Habit CTA (Clickable full card)
-    renderActionCard(containerEl, {
-      icon: "plus-circle",
-      title: "Create a new habit",
-      description: "Define a positive build habit, avoidance habit, or zero-goal metric tracker.",
-      onClick: () => {
+    await renderHabitsConfiguration(containerEl, {
+      app: this.app,
+      store: this.plugin.store,
+      onChanged: async () => {
+        await this.plugin.refreshDashboards();
+        await this.displayHabitsSubSettings();
+      },
+      onAddHabit: () => {
         void this.displayAddHabitSubSettings();
       }
     });
-
-    containerEl.createDiv({
-      cls: "temperans-actions-section-title",
-      text: `Configured habits (${settings.habits.length})`
-    });
-
-    const list = containerEl.createDiv({ cls: "temperans-sortable-task-list" });
-    const habitIds = settings.habits.map((item) => item.id);
-    let draggedIndex: number | null = null;
-
-    for (const [index, habit] of settings.habits.entries()) {
-      const target = habit.targetHistory.at(-1);
-      const formatTarget = (value: number) => habit.id === "sleep" ? formatSleepDuration(value) : `${value} ${habit.unit}`;
-      const range = target?.min !== undefined && target?.max !== undefined
-        ? `${formatTarget(target.min)}–${formatTarget(target.max)}`
-        : target?.min !== undefined
-        ? formatTarget(target.min)
-        : target?.max !== undefined
-        ? `max ${formatTarget(target.max)}`
-        : "No target";
-
-      const row = list.createDiv({ cls: "temperans-sortable-task", attr: { "data-habit-id": habit.id } });
-      row.draggable = true;
-
-      // 1. Left-aligned drag handle
-      const dragHandle = row.createSpan({ cls: "temperans-task-drag-handle", attr: { "aria-label": "Drag to reorder" } });
-      setIcon(dragHandle, "grip-vertical");
-
-      row.addEventListener("dragstart", (e) => {
-        draggedIndex = index;
-        row.addClass("is-dragging");
-        e.dataTransfer?.setData("text/plain", String(index));
-      });
-
-      row.addEventListener("dragend", () => {
-        row.removeClass("is-dragging");
-        draggedIndex = null;
-      });
-
-      row.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        row.addClass("is-drag-over");
-      });
-
-      row.addEventListener("dragleave", () => {
-        row.removeClass("is-drag-over");
-      });
-
-      row.addEventListener("drop", (e) => {
-        e.preventDefault();
-        row.removeClass("is-drag-over");
-        if (draggedIndex === null || draggedIndex === index) return;
-        const newIds = [...habitIds];
-        const [moved] = newIds.splice(draggedIndex, 1);
-        newIds.splice(index, 0, moved);
-        void this.reorderHabitsTo(newIds);
-      });
-
-      // 2. Left-aligned title & metadata
-      const textContainer = row.createDiv({ cls: "temperans-task-text-container" });
-      textContainer.createEl("strong", { text: habit.name, cls: "temperans-task-title" });
-      textContainer.createSpan({
-        text: ` · ${habit.cadence}${habit.type === "avoidance" ? " · avoidance" : habit.type === "tracker" ? " · tracker" : ""} · ${range}${habit.enabled ? "" : " · disabled"}`,
-        cls: "temperans-task-meta"
-      });
-
-      // 3. Right-aligned controls
-      const controls = row.createDiv({ cls: "temperans-task-order-controls" });
-
-      // Edit Pencil button
-      const editBtn = controls.createEl("button", {
-        cls: "temperans-task-order-button",
-        attr: { type: "button", "aria-label": `Edit ${habit.name}` }
-      });
-      setIcon(editBtn, "pencil");
-      editBtn.onclick = () => {
-        new EditHabitModal(this.app, habit, settings.timezone, async (updated) => {
-          await this.plugin.store.updateHabit(updated);
-          await this.plugin.refreshDashboards();
-          await this.displayHabitsSubSettings();
-        }).open();
-      };
-
-      // Delete Trash button
-      const deleteBtn = controls.createEl("button", {
-        cls: "temperans-task-order-button mod-warning",
-        attr: { type: "button", "aria-label": `Delete ${habit.name}` }
-      });
-      setIcon(deleteBtn, "trash-2");
-      deleteBtn.onclick = () => {
-        new DeleteHabitConfirmModal(this.app, habit.name, async () => {
-          await this.plugin.store.deleteHabit(habit.id);
-          await this.plugin.refreshDashboards();
-          new Notice(`Deleted “${habit.name}”.`);
-          await this.displayHabitsSubSettings();
-        }).open();
-      };
-
-      // Up and Down selectors
-      const up = controls.createEl("button", {
-        cls: "temperans-task-order-button",
-        attr: { type: "button", "aria-label": `Move ${habit.name} up` }
-      });
-      setIcon(up, "chevron-up");
-      up.disabled = index === 0;
-      up.onclick = () => this.moveHabit(habitIds, index, -1);
-
-      const down = controls.createEl("button", {
-        cls: "temperans-task-order-button",
-        attr: { type: "button", "aria-label": `Move ${habit.name} down` }
-      });
-      setIcon(down, "chevron-down");
-      down.disabled = index === settings.habits.length - 1;
-      down.onclick = () => this.moveHabit(habitIds, index, 1);
-    }
   }
 
   private async displayAddHabitSubSettings(preset?: HabitPreset): Promise<void> {
@@ -340,7 +226,6 @@ export class TemperansSettingTab extends PluginSettingTab {
     await renderBrowsePresets(containerEl, this.plugin.store, {
       onAdded: async () => {
         await this.plugin.refreshDashboards();
-        await this.displayHabitsSubSettings();
       },
       onCustomize: (preset) => {
         void this.displayAddHabitSubSettings(preset);
@@ -383,25 +268,6 @@ export class TemperansSettingTab extends PluginSettingTab {
     void renderPeerSyncSettings(containerEl, this.plugin.peerSync, () => this.displayPeerSyncSubSettings());
   }
 
-  private moveHabit(ids: string[], index: number, direction: -1 | 1): void {
-    const destination = index + direction;
-    if (destination < 0 || destination >= ids.length) return;
-    const newIds = [...ids];
-    [newIds[index], newIds[destination]] = [newIds[destination], newIds[index]];
-    void this.reorderHabitsTo(newIds);
-  }
-
-  private async reorderHabitsTo(ids: string[]): Promise<void> {
-    try {
-      await this.plugin.reorderHabits(ids);
-      await this.displayHabitsSubSettings();
-    } catch (error: unknown) {
-      console.error("Temperans Habits could not save task order.", error);
-      new Notice("Could not save the task order. Please try again.");
-      await this.displayHabitsSubSettings();
-    }
-  }
-
   private async renderEndpointSettingsCards(container: HTMLElement): Promise<void> {
     const settings = await this.plugin.store.loadSettings();
     const endpointHabits = settings.habits.filter((h) => h.endpoint);
@@ -441,30 +307,32 @@ export class TemperansSettingTab extends PluginSettingTab {
         syncBtn.disabled = false;
       };
 
-      if (ep.auth && ep.auth.type !== "none" && secretKey) {
+      if (ep.auth && ep.auth.type !== "none") {
+        const currentKey = ep.auth.secretKey || (habit.id === "typing" ? this.plugin.state.monkeytypeSecretName : "");
         const secretSetting = new Setting(card)
           .setName("Secret key identifier")
-          .setDesc(`Stored in Obsidian Secret Storage under "${secretKey}".`);
+          .setDesc("Select or enter the key stored in Obsidian secret storage.");
+
+        const onSecretChanged = async (value: string) => {
+          const key = value.trim();
+          if (ep.auth) ep.auth.secretKey = key;
+          if (habit.id === "typing") {
+            this.plugin.state.monkeytypeSecretName = key;
+            await this.plugin.savePluginState();
+          }
+          await this.plugin.store.updateHabit(habit);
+          new Notice(`Updated secret key for ${habit.name}.`);
+        };
 
         if (this.app.secretStorage) {
           secretSetting.addComponent((component) => new SecretComponent(this.app, component)
-            .setValue(secretKey)
-            .onChange(async (value) => {
-              if (habit.id === "typing") {
-                this.plugin.state.monkeytypeSecretName = value;
-                await this.plugin.savePluginState();
-              }
-            }));
+            .setValue(currentKey)
+            .onChange(onSecretChanged));
         } else {
           secretSetting.addText((text) => {
             text.inputEl.type = "password";
-            text.setValue(secretKey);
-            text.onChange(async (value) => {
-              if (habit.id === "typing") {
-                this.plugin.state.monkeytypeSecretName = value;
-                await this.plugin.savePluginState();
-              }
-            });
+            text.setValue(currentKey);
+            text.onChange(onSecretChanged);
           });
         }
       }
@@ -472,7 +340,7 @@ export class TemperansSettingTab extends PluginSettingTab {
   }
 }
 
-class DeleteHabitConfirmModal extends Modal {
+export class DeleteHabitConfirmModal extends Modal {
   constructor(app: App, private habitName: string, private onConfirm: () => Promise<void>) {
     super(app);
   }
@@ -486,5 +354,161 @@ class DeleteHabitConfirmModal extends Modal {
         this.close();
         await this.onConfirm();
       }));
+  }
+}
+
+export interface HabitsConfigurationHost {
+  app: App;
+  store: HabitStore;
+  onChanged: () => Promise<void>;
+  onAddHabit: () => void;
+}
+
+export async function renderHabitsConfiguration(
+  container: HTMLElement,
+  host: HabitsConfigurationHost
+): Promise<void> {
+  const { app, store, onChanged, onAddHabit } = host;
+  const settings = await store.loadSettings();
+
+  // Add Habit CTA (Clickable full card)
+  renderActionCard(container, {
+    icon: "plus-circle",
+    title: "Create a new habit",
+    description: "Define a positive build habit, avoidance habit, or zero-goal metric tracker.",
+    onClick: onAddHabit
+  });
+
+  container.createDiv({
+    cls: "temperans-actions-section-title",
+    text: `Configured habits (${settings.habits.length})`
+  });
+
+  const list = container.createDiv({ cls: "temperans-sortable-task-list" });
+  const habitIds = settings.habits.map((item) => item.id);
+  let draggedIndex: number | null = null;
+
+  const reorderHabitsTo = async (ids: string[]): Promise<void> => {
+    try {
+      await store.reorderHabits(ids);
+      await onChanged();
+    } catch (error: unknown) {
+      console.error("Temperans Habits could not save task order.", error);
+      new Notice("Could not save the task order. Please try again.");
+      await onChanged();
+    }
+  };
+
+  const moveHabit = async (index: number, direction: -1 | 1): Promise<void> => {
+    const destination = index + direction;
+    if (destination < 0 || destination >= habitIds.length) return;
+    const newIds = [...habitIds];
+    [newIds[index], newIds[destination]] = [newIds[destination], newIds[index]];
+    await reorderHabitsTo(newIds);
+  };
+
+  for (const [index, habit] of settings.habits.entries()) {
+    const target = habit.targetHistory.at(-1);
+    const formatTarget = (value: number) => habit.id === "sleep" ? formatSleepDuration(value) : `${value} ${habit.unit}`;
+    const range = target?.min !== undefined && target?.max !== undefined
+      ? `${formatTarget(target.min)}–${formatTarget(target.max)}`
+      : target?.min !== undefined
+      ? formatTarget(target.min)
+      : target?.max !== undefined
+      ? `max ${formatTarget(target.max)}`
+      : "No target";
+
+    const row = list.createDiv({ cls: "temperans-sortable-task", attr: { "data-habit-id": habit.id } });
+    row.draggable = true;
+
+    // 1. Left-aligned drag handle
+    const dragHandle = row.createSpan({ cls: "temperans-task-drag-handle", attr: { "aria-label": "Drag to reorder" } });
+    setIcon(dragHandle, "grip-vertical");
+
+    row.addEventListener("dragstart", (e) => {
+      draggedIndex = index;
+      row.addClass("is-dragging");
+      e.dataTransfer?.setData("text/plain", String(index));
+    });
+
+    row.addEventListener("dragend", () => {
+      row.removeClass("is-dragging");
+      draggedIndex = null;
+    });
+
+    row.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      row.addClass("is-drag-over");
+    });
+
+    row.addEventListener("dragleave", () => {
+      row.removeClass("is-drag-over");
+    });
+
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      row.removeClass("is-drag-over");
+      if (draggedIndex === null || draggedIndex === index) return;
+      const newIds = [...habitIds];
+      const [moved] = newIds.splice(draggedIndex, 1);
+      newIds.splice(index, 0, moved);
+      void reorderHabitsTo(newIds);
+    });
+
+    // 2. Left-aligned title and metadata
+    const textContainer = row.createDiv({ cls: "temperans-task-text-container" });
+    textContainer.createEl("strong", { text: habit.name, cls: "temperans-task-title" });
+    textContainer.createSpan({
+      text: ` · ${habit.cadence}${habit.type === "avoidance" ? " · avoidance" : habit.type === "tracker" ? " · tracker" : ""} · ${range}${habit.enabled ? "" : " · disabled"}`,
+      cls: "temperans-task-meta"
+    });
+
+    // 3. Right-aligned controls
+    const controls = row.createDiv({ cls: "temperans-task-order-controls" });
+
+    // Edit Pencil button
+    const editBtn = controls.createEl("button", {
+      cls: "temperans-task-order-button",
+      attr: { type: "button", "aria-label": `Edit ${habit.name}` }
+    });
+    setIcon(editBtn, "pencil");
+    editBtn.onclick = () => {
+      new EditHabitModal(app, habit, settings.timezone, async (updated) => {
+        await store.updateHabit(updated);
+        new Notice(`Updated “${updated.name}”.`);
+        await onChanged();
+      }).open();
+    };
+
+    // Delete Trash button
+    const deleteBtn = controls.createEl("button", {
+      cls: "temperans-task-order-button mod-warning",
+      attr: { type: "button", "aria-label": `Delete ${habit.name}` }
+    });
+    setIcon(deleteBtn, "trash-2");
+    deleteBtn.onclick = () => {
+      new DeleteHabitConfirmModal(app, habit.name, async () => {
+        await store.deleteHabit(habit.id);
+        new Notice(`Deleted “${habit.name}”.`);
+        await onChanged();
+      }).open();
+    };
+
+    // Up and Down selectors
+    const up = controls.createEl("button", {
+      cls: "temperans-task-order-button",
+      attr: { type: "button", "aria-label": `Move ${habit.name} up` }
+    });
+    setIcon(up, "chevron-up");
+    up.disabled = index === 0;
+    up.onclick = () => void moveHabit(index, -1);
+
+    const down = controls.createEl("button", {
+      cls: "temperans-task-order-button",
+      attr: { type: "button", "aria-label": `Move ${habit.name} down` }
+    });
+    setIcon(down, "chevron-down");
+    down.disabled = index === settings.habits.length - 1;
+    down.onclick = () => void moveHabit(index, 1);
   }
 }

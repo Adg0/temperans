@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { DEFAULT_HABITS, HabitStore } from "../src/data";
 import { memoryVault } from "./helpers/memory-vault";
 
-it("creates a clean single starter for a new vault", async () => {
+it("creates a clean single starter for a new vault with target starting today", async () => {
   const f = memoryVault();
   const store = new HabitStore(f.app, "Habit Logs");
   const settings = await store.loadSettings();
@@ -11,6 +11,8 @@ it("creates a clean single starter for a new vault", async () => {
   ]);
   expect(DEFAULT_HABITS).toHaveLength(1);
   expect(settings.habits.every(h => h.enabled && !h.endpoint)).toBe(true);
+  expect(settings.habits[0].targetHistory[0].effectiveDate).not.toBe("2000-01-01");
+  expect(settings.habits[0].targetHistory[0].effectiveDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   store.invalidate(store.settingsPath);
   expect((await store.loadSettings()).habits.map(h => h.id)).toEqual(["reading"]);
 });

@@ -18,7 +18,9 @@ export class PeerSyncFiles {
   async createManifest(): Promise<PeerSyncManifest> {
     const files: PeerSyncManifest["files"] = [];
     const settings = this.app.vault.getAbstractFileByPath(this.store.settingsPath);
-    if (settings instanceof TFile) files.push(await descriptorForContent("Settings.md", await this.app.vault.read(settings)));
+    if (settings instanceof TFile) {
+      files.push(await descriptorForContent("Settings.md", await this.app.vault.read(settings)));
+    }
     for (const [date, file] of await this.store.dailyFiles()) {
       files.push(await descriptorForContent(`${date}.md`, await this.app.vault.read(file)));
     }

@@ -111,7 +111,7 @@ try {
     await importButton.click();
     assert.equal(await page.evaluate(() => window.healthImported), true);
     await page.evaluate(mobile => window.renderFixture('peer', { mobile }), width < 650);
-    await page.getByRole('button', { name: 'Compare', exact: true }).click();
+    await page.getByRole('button', { name: /Connect|Compare/ }).click();
     await page.locator('.temperans-peer-sync-preview').scrollIntoViewIfNeeded();
     assert.equal(await page.locator('.temperans-peer-sync-row').count(), 20);
     assert.equal(await page.getByRole('checkbox', { name: 'Select Settings.md', exact: true }).isChecked(), false);
@@ -146,11 +146,11 @@ try {
     console.log(`PASS ${width}x${height}: dashboard scrolling, logging, unit/cadence labels, selection state, keyboard and saving`);
   }
   await page.evaluate(() => window.renderFixture('peer', { empty: true, mobile: true }));
-  await page.getByRole('button', { name: 'Compare', exact: true }).click();
+  await page.getByRole('button', { name: /Connect|Compare/ }).click();
   await page.getByText('All caught up', { exact: true }).waitFor();
   assert.equal(await page.locator('.temperans-peer-sync-actions').count(), 0);
   await page.evaluate(() => window.renderFixture('peer', { mobile: true }));
-  await page.getByRole('button', { name: 'Compare', exact: true }).click();
+  await page.getByRole('button', { name: /Connect|Compare/ }).click();
   await page.evaluate(() => window.failPeerTransfer = true);
   await page.locator('.temperans-peer-sync-actions button').click();
   await page.waitForFunction(() => window.lastNotice === 'Connection interrupted');

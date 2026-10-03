@@ -7,6 +7,7 @@ import { renderBrowsePresets } from "./habit-presets-panel";
 import { HabitPreset } from "./habit-presets";
 import { renderPeerSyncSettings } from "./peer-sync/settings-panel";
 import { HealthConnectPathControl, renderHealthConnectPanel } from "./integrations/health-connect-panel";
+import { renderHabitsConfiguration } from "./settings";
 import { App, Modal, Notice } from "obsidian";
 import { HabitStore } from "./data";
 
@@ -23,11 +24,12 @@ export interface DashboardActionsHost {
   openDashboardConfig(): Promise<void>;
 }
 
-type ActionsView = "menu" | "peer-sync" | "sync-hub" | "analytics" | "add-habit" | "presets";
+type ActionsView = "menu" | "peer-sync" | "sync-hub" | "analytics" | "add-habit" | "presets" | "configure-habits";
 
 /** Frequently used dashboard actions, presented in an elegant, categorized action palette with embedded sub-pages. */
 export class DashboardActionsModal extends Modal {
   private currentView: ActionsView = "menu";
+  private previousHabitView: ActionsView = "menu";
   private selectedPreset?: HabitPreset;
 
   constructor(
@@ -59,6 +61,8 @@ export class DashboardActionsModal extends Modal {
       void this.renderAddHabit(contentEl);
     } else if (this.currentView === "presets") {
       void this.renderPresets(contentEl);
+    } else if (this.currentView === "configure-habits") {
+      void this.renderConfigureHabits(contentEl);
     }
   }
 
@@ -131,10 +135,20 @@ export class DashboardActionsModal extends Modal {
         }
       },
       {
+        icon: "list-ordered",
+        title: "Configure habits",
+        description: "Reorder, edit, sort, and manage your habit list.",
+        onClick: () => {
+          this.currentView = "configure-habits";
+          this.render();
+        }
+      },
+      {
         icon: "plus-circle",
         title: "Add a habit",
         description: "Create a build habit, negative/avoidance habit, or zero-goal tracker.",
         onClick: () => {
+          this.previousHabitView = "menu";
           this.selectedPreset = undefined;
           this.currentView = "add-habit";
           this.render();
@@ -208,21 +222,49 @@ export class DashboardActionsModal extends Modal {
   }
 
   private async renderAddHabit(container: HTMLElement): Promise<void> {
-    this.renderSubpageHeader(
+    renderSubpageHeader(
       container,
       "Add a habit",
-      "Configure a positive build habit, negative/avoidance habit, or zero-goal metric tracker."
+      "Configure a positive build habit, negative/avoidance habit, or zero-goal metric tracker.",
+      this.previousHabitView === "configure-habits" ? "Back to habits" : "Back to actions",
+      () => {
+        this.currentView = this.previousHabitView;
+        this.render();
+      }
     );
 
     await renderAddHabitForm(container, this.host.store, async () => {
       this.selectedPreset = undefined;
       await this.onTasksChanged();
-      this.currentView = "menu";
+      this.currentView = this.previousHabitView;
       this.render();
     }, {
       initialPreset: this.selectedPreset,
       onOpenPresets: () => {
         this.currentView = "presets";
+        this.render();
+      }
+    });
+  }
+
+  private async renderConfigureHabits(container: HTMLElement): Promise<void> {
+    this.renderSubpageHeader(
+      container,
+      "Configure habits",
+      "Drag cards using the left grip or use the arrows to reorder. Tap the pencil to edit or trash to delete."
+    );
+
+    await renderHabitsConfiguration(container, {
+      app: this.app,
+      store: this.host.store,
+      onChanged: async () => {
+        await this.onTasksChanged();
+        await this.render();
+      },
+      onAddHabit: () => {
+        this.previousHabitView = "configure-habits";
+        this.selectedPreset = undefined;
+        this.currentView = "add-habit";
         this.render();
       }
     });
@@ -242,10 +284,7 @@ export class DashboardActionsModal extends Modal {
 
     await renderBrowsePresets(container, this.host.store, {
       onAdded: async () => {
-        this.selectedPreset = undefined;
         await this.onTasksChanged();
-        this.currentView = "menu";
-        this.render();
       },
       onCustomize: (preset) => {
         this.selectedPreset = preset;

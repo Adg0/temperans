@@ -29,6 +29,14 @@ it("provides categorized presets for Health Connect and Connected APIs", () => {
   expect(apiIds).toContain("typing");
   expect(apiIds).toContain("duolingo");
   expect(apiIds).toContain("github");
+  expect(apiIds).toContain("wakatime");
+
+  // Every Connected API preset must include a valid endpoint configuration
+  for (const preset of connectedApis) {
+    expect(preset.endpoint).toBeDefined();
+    expect(preset.endpoint?.url).toMatch(/^https?:\/\//);
+    expect(preset.endpoint?.sourceName).toBeDefined();
+  }
 
   // Every preset must have required properties and sentence-case labels
   for (const preset of HABIT_PRESETS) {
