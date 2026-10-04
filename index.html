@@ -416,6 +416,26 @@
       gap: 1.25rem;
       margin: 1.5rem 0;
     }
+    .showcase-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .section-subtitle-bar {
+      margin: 2rem 0 1rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .section-subtitle-bar h3 {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+    .section-subtitle-bar p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
     .media-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -652,7 +672,8 @@
       .top-bar-mobile {
         display: flex;
       }
-      .showcase-grid-2 {
+      .showcase-grid-2,
+      .showcase-grid-3 {
         grid-template-columns: 1fr;
       }
       .hero-title {
@@ -903,6 +924,26 @@
               <div class="media-caption">Filter the entire dashboard to a single habit with specialized stats.</div>
             </div>
           </div>
+
+          <div class="section-subtitle-bar">
+            <h3>Responsive Mobile & Tablet View</h3>
+            <p>On mobile phones and compact windows, the dashboard automatically shifts to an intuitive 7×5 monthly calendar with touch-friendly controls.</p>
+          </div>
+
+          <div class="showcase-grid-3">
+            <div class="media-card">
+              <img src="assets/mobile-dashboard-main.jpg" alt="Mobile dashboard view" onclick="openLightbox(this.src)">
+              <div class="media-caption">Mobile dashboard header, widgets, and target progress.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/mobile-heatmap-monthly.jpg" alt="Mobile monthly heat map calendar" onclick="openLightbox(this.src)">
+              <div class="media-caption">Adaptive 7×5 monthly calendar grid with daily completion intensity.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/mobile-logging-habit.jpg" alt="Mobile logging modal" onclick="openLightbox(this.src)">
+              <div class="media-caption">Fast habit logger with touch-friendly quick-entry pills.</div>
+            </div>
+          </div>
         </section>
 
         <!-- Embedded Codeblocks -->
@@ -988,12 +1029,12 @@ widgets:
           </div>
         </section>
 
-        <!-- Health Connect & Peer Sync -->
+        <!-- Health Connect -->
         <section class="doc-section" id="health-connect">
           <div class="section-header">
-            <div class="section-tag">Hardware & Mobile</div>
-            <h2 class="section-title">Companion App & Peer Sync</h2>
-            <p class="section-desc">Read Health Connect metrics on Android via an open companion app, and sync notes securely to desktop with zero cloud intermediaries.</p>
+            <div class="section-tag">Hardware Integration</div>
+            <h2 class="section-title">Android Health Connect Companion</h2>
+            <p class="section-desc">Read Health Connect metrics (sleep, hydration, steps, calories) on Android via an open companion app, staging data cleanly in your vault.</p>
           </div>
 
           <div class="showcase-grid-2">
@@ -1004,6 +1045,62 @@ widgets:
             <div class="media-card">
               <img src="assets/habit-actions-sync-toast.png" alt="Automated Sync Feedback" onclick="openLightbox(this.src)">
               <div class="media-caption">Non-intrusive status notices and audit feedback when syncing endpoints.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Local Peer Sync -->
+        <section class="doc-section" id="peer-sync">
+          <div class="section-header">
+            <div class="section-tag">Direct Sync</div>
+            <h2 class="section-title">Encrypted Local Peer Sync</h2>
+            <p class="section-desc">Transfer habit settings and dated daily notes wirelessly over your local Wi-Fi network using authenticated AES-256-GCM encryption without any cloud intermediaries.</p>
+          </div>
+
+          <div class="section-subtitle-bar">
+            <h3>1. Desktop Host Setup</h3>
+            <p>Start the temporary host on desktop. A pairing QR code is generated instantly with your local network IP and security pairing code.</p>
+          </div>
+
+          <div class="showcase-grid-2">
+            <div class="media-card">
+              <img src="assets/peer-sync-host-modal.png" alt="Desktop peer sync host modal" onclick="openLightbox(this.src)">
+              <div class="media-caption">Host setup: configure operation folder, port, and start the temporary local server.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-host-qr.png" alt="Desktop QR code generated" onclick="openLightbox(this.src)">
+              <div class="media-caption">Pairing QR code generated with AES-256 session credentials and local IP.</div>
+            </div>
+          </div>
+
+          <div class="section-subtitle-bar">
+            <h3>2. Mobile Connection & Transfer Preview</h3>
+            <p>Scan the QR code with your mobile camera or Google Lens to pair instantly, review file version differences, and synchronize changes.</p>
+          </div>
+
+          <div class="showcase-grid-2">
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-scanned.jpg" alt="Mobile pairing dialog" onclick="openLightbox(this.src)">
+              <div class="media-caption">Scanning the QR code populates the paired host profile instantly via URI deep link.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-connected.jpg" alt="Mobile connected to host" onclick="openLightbox(this.src)">
+              <div class="media-caption">Authenticated connection established over local Wi-Fi with AES-256-GCM RPC.</div>
+            </div>
+          </div>
+
+          <div class="showcase-grid-3">
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-preview.jpg" alt="Transfer preview showing differences" onclick="openLightbox(this.src)">
+              <div class="media-caption">Transfer preview: visual status indicators (Up to date, Only here, Different versions) with Send/Receive direction toggles.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-transferred.jpg" alt="Transferring selected notes" onclick="openLightbox(this.src)">
+              <div class="media-caption">Transfer in progress: streaming encrypted note updates with live progress feedback.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-up-to-date.jpg" alt="All files caught up" onclick="openLightbox(this.src)">
+              <div class="media-caption">Transfer complete: all habit notes and settings successfully synchronized and verified.</div>
             </div>
           </div>
         </section>
@@ -1022,8 +1119,12 @@ widgets:
               <div class="step-content">
                 <h3 class="step-title">Open Your Habit Dashboard</h3>
                 <p class="step-desc">
-                  After installing and enabling the plugin, click the <strong>chart icon</strong> in your Obsidian left ribbon, or press <code>Ctrl+P</code> / <code>Cmd+P</code> and search for <code>Temperans Habits: Open habit dashboard</code>. This opens your interactive annual heat map view.
+                  After installing and enabling the plugin, click the <strong>chart icon</strong> in your Obsidian left ribbon, or press <code>Ctrl+P</code> / <code>Cmd+P</code> and search for <code>Temperans Habits: Open habit dashboard</code>. On mobile devices, access it quickly from the navigation drawer or command palette.
                 </p>
+                <div class="media-card" style="margin-top: 1rem; max-width: 480px;">
+                  <img src="assets/mobile-open-plugin-navigation.jpg" alt="Opening Temperans Habits on mobile" onclick="openLightbox(this.src)">
+                  <div class="media-caption">Access the Habit Dashboard and Habit Actions from the Obsidian navigation menu.</div>
+                </div>
               </div>
             </div>
 

@@ -79,6 +79,22 @@ The dashboard automatically refreshes after a saved entry and when you edit a no
 - **Responsive Calendar**: Full Jan–Dec 53-week view on desktop panes; interactive 7x5 monthly grid on mobile viewports.
 - **Theme Harmony**: Respects your active Obsidian theme styling, fonts, and button aesthetics. Customize the heat-map accent color in **Settings → Temperans Habits → Heat-map color**.
 
+### Mobile experience & responsive calendar
+
+Temperans Habits adapts seamlessly across mobile devices and tablets, delivering a touch-first dashboard, responsive monthly heatmaps, and streamlined daily logging.
+
+| Opening dashboard & actions on mobile | Mobile main dashboard view |
+| :---: | :---: |
+| ![Opening Temperans Habits in Obsidian mobile](assets/mobile-open-plugin-navigation.jpg) | ![Mobile main dashboard](assets/mobile-dashboard-main.jpg) |
+
+| Responsive 7×5 monthly heat map | Fast daily habit logging |
+| :---: | :---: |
+| ![Monthly heat map on mobile](assets/mobile-heatmap-monthly.jpg) | ![Logging a habit on mobile](assets/mobile-logging-habit.jpg) |
+
+- **Quick Navigation**: Launch the dashboard or action menu anytime from Obsidian's mobile command palette (`Temperans Habits: Open habit dashboard`) or ribbon actions.
+- **Adaptive Monthly Heatmap**: Automatically switches from the 53-week desktop view to an interactive 7×5 monthly calendar optimized for portrait mobile screens.
+- **Touch-Friendly Logging**: Tap convenient quick-entry pills, enter numeric values, or type natural duration formats directly on your mobile device.
+
 ## Customize habit logging in Settings.md
 
 Add an optional `logging` block **inside a habit** in the YAML frontmatter of `Habit Logs/Settings.md`. Omitted options retain their defaults; no extra controls appear in habit creation. Save the note and reopen the logger to see changes.
@@ -364,13 +380,33 @@ The companion’s `minSdk` is Android 9, the minimum supported version for Healt
 
 ## Local peer sync
 
-Open **Temperans Habits: Open local peer sync** on the desktop and start the temporary host. The desktop immediately displays a pairing QR code alongside the local network address and pairing code.
+Transfer habit configurations (`Habit Logs/Settings.md`) and dated daily logs securely between desktop and mobile over your local Wi-Fi with authenticated AES-256-GCM encryption — zero cloud accounts or third-party servers required.
+
+### 1. Desktop host setup & QR generation
+
+Open **Temperans Habits: Open local peer sync** (or go to **Settings → Temperans Habits → Local peer sync**) on your desktop computer and click **Start temporary host**. A pairing QR code is generated instantly alongside your local network IP and pairing code:
+
+| Desktop Peer Sync host setup | Generated QR code & pairing credentials |
+| :---: | :---: |
+| ![Desktop peer sync host modal](assets/peer-sync-host-modal.png) | ![Desktop QR code generated](assets/peer-sync-host-qr.png) |
+
+### 2. Mobile connection & transfer preview
 
 On your mobile device:
 - **Native Camera Deep Link**: Point your standard camera or Google Lens at the desktop QR code. Tapping the detected `obsidian://temperans-pair` link opens Obsidian and configures the paired desktop profile instantly.
 - **Clipboard Fallback**: Tap **Paste pairing from clipboard** inside the mobile Peer Sync modal to configure URL and pairing code in 1 tap.
 
-Peer sync requires mutual challenge-response authentication and AES-256-GCM encrypted RPC, with session keys derived through PBKDF2 (100,000 iterations) and a fresh session salt. Pairing-key changes and host shutdown revoke sessions; replayed encrypted requests are rejected. Handshakes, request sizes, connection count, and session lifetime are bounded. Update both devices before pairing.
+| Scanned QR pairing detected | Connected to desktop host |
+| :---: | :---: |
+| ![Mobile after scanning QR](assets/peer-sync-mobile-scanned.jpg) | ![Mobile connected to host](assets/peer-sync-mobile-connected.jpg) |
+
+| Transfer preview & version comparison | Transferring selected notes | All files caught up |
+| :---: | :---: | :---: |
+| ![Transfer preview showing differences](assets/peer-sync-mobile-preview.jpg) | ![Transferring selected files](assets/peer-sync-mobile-transferred.jpg) | ![All files caught up](assets/peer-sync-mobile-up-to-date.jpg) |
+
+- **Side-by-Side Comparison**: The transfer preview clearly indicates whether each file is **Up to date**, **Only here**, **Only on paired device**, or has **Different versions** (colored status pills).
+- **Directional Control**: Choose whether to **Send** ($\uparrow$) or **Receive** ($\downarrow$) individual files, or tap **Transfer selected** to synchronize all pending changes at once.
+- **Cryptographic Safety**: Peer sync requires mutual challenge-response authentication and AES-256-GCM encrypted RPC, with session keys derived through PBKDF2 (100,000 iterations) and a fresh session salt. Pairing-key changes and host shutdown revoke sessions; replayed encrypted requests are rejected. Handshakes, request sizes, connection count, and session lifetime are bounded. Update both devices before pairing.
 
 The temporary host listens on local IPv4 interfaces while enabled. Use a trusted network and stop hosting when finished. This implementation has automated protocol coverage but has not undergone an independent cryptographic assessment.
 
