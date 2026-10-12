@@ -120,13 +120,26 @@ function asEndpoint(value: unknown): EndpointConfig | undefined {
   const raw = value as Record<string, unknown>;
   const url = typeof raw.url === "string" && raw.url.trim() ? raw.url.trim() : "";
   if (!url) return undefined;
-  const method = raw.method === "POST" ? "POST" : "GET";
+  const supportedMethods = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]);
+  const methodCandidate = typeof raw.method === "string" ? raw.method.trim().toUpperCase() : "GET";
+  const method = supportedMethods.has(methodCandidate) ? methodCandidate as EndpointConfig["method"] : "GET";
   const testUrl = typeof raw.testUrl === "string" && raw.testUrl.trim() ? raw.testUrl.trim() : undefined;
   const sourceName = typeof raw.sourceName === "string" && raw.sourceName.trim()
     ? raw.sourceName.trim()
     : typeof raw.source === "string" && raw.source.trim()
     ? raw.source.trim()
     : undefined;
+  const headersRaw = typeof raw.headers === "object" && raw.headers !== null && !Array.isArray(raw.headers)
+    ? raw.headers as Record<string, unknown>
+    : undefined;
+  const headers = headersRaw
+    ? Object.fromEntries(Object.entries(headersRaw).filter((entry): entry is [string, string] =>
+      Boolean(entry[0].trim()) && typeof entry[1] === "string"))
+    : undefined;
+  const timeout = typeof raw.timeout === "number" && Number.isFinite(raw.timeout) && raw.timeout > 0 ? raw.timeout : undefined;
+  const body = typeof raw.body === "string" || Array.isArray(raw.body)
+    ? raw.body
+    : typeof raw.body === "object" && raw.body !== null ? raw.body as Record<string, unknown> : undefined;
   const authRaw = typeof raw.auth === "object" && raw.auth !== null ? raw.auth as Record<string, unknown> : undefined;
   let auth: EndpointAuthConfig | undefined;
   if (authRaw) {
@@ -145,16 +158,19 @@ function asEndpoint(value: unknown): EndpointConfig | undefined {
   const respRaw = typeof raw.response === "object" && raw.response !== null ? raw.response as Record<string, unknown> : undefined;
   let response: EndpointResponseConfig | undefined;
   if (respRaw) {
-    const aggregation: EndpointAggregation = respRaw.aggregation === "count" || respRaw.aggregation === "max" || respRaw.aggregation === "latest"
+    const aggregation: EndpointAggregation = respRaw.aggregation === "count" || respRaw.aggregation === "max" || respRaw.aggregation === "latest" || respRaw.aggregation === "average"
       ? respRaw.aggregation
       : "sum";
-    const valueTransform: EndpointValueTransform = respRaw.valueTransform === "divideBy:60" || respRaw.valueTransform === "multiplyBy:60"
-      ? respRaw.valueTransform
+    const transformRaw = typeof respRaw.valueTransform === "string" ? respRaw.valueTransform.trim() : "none";
+    const valueTransform = /^(?:divideBy|multiplyBy):(?:\d+(?:\.\d+)?|\.\d+)$/.test(transformRaw)
+      && Number(transformRaw.slice(transformRaw.indexOf(":") + 1)) > 0
+      ? transformRaw as EndpointValueTransform
       : "none";
     response = {
       ...(typeof respRaw.recordsPath === "string" ? { recordsPath: respRaw.recordsPath.trim() } : {}),
       ...(typeof respRaw.dateField === "string" ? { dateField: respRaw.dateField.trim() } : {}),
       ...(typeof respRaw.valueField === "string" ? { valueField: respRaw.valueField.trim() } : {}),
+      ...(typeof respRaw.valuePattern === "string" ? { valuePattern: respRaw.valuePattern } : {}),
       aggregation,
       valueTransform
     };
@@ -162,8 +178,11 @@ function asEndpoint(value: unknown): EndpointConfig | undefined {
   return {
     url,
     method,
+    ...(headers && Object.keys(headers).length ? { headers } : {}),
     ...(testUrl ? { testUrl } : {}),
     ...(sourceName ? { sourceName } : {}),
+    ...(timeout ? { timeout } : {}),
+    ...(body !== undefined ? { body } : {}),
     ...(auth ? { auth } : {}),
     ...(response ? { response } : {})
   };
@@ -349,17 +368,26 @@ Habits with time units (\`minutes\`, \`hours\`, \`seconds\`) accept:
 - \`H:MM\` or \`M:SS\` format (e.g. \`1:30\` = 90 minutes).
 - Explicit duration strings (e.g. \`"1h 30m"\`, \`"90m"\`, \`"45s"\`).
 
-### 5. Automated REST API Endpoints (\`endpoint:\`)
-Automatically fetch daily data from external web APIs (Monkeytype, WakaTime, Duolingo, GitHub, etc.):
+### 5. Automated API Endpoints (\`endpoint:\`)
+Automatically fetch daily metrics from supported external HTTP APIs:
 \`\`\`yaml
 endpoint:
-  url: "https://api.monkeytype.com/users/personalBests?mode=time"
+  url: "https://api.example.com/activity?from={{startDate}}&to={{endDate}}"
+  method: GET                          # GET, POST, PUT, PATCH, DELETE, HEAD, or OPTIONS
   headers:
     Accept: "application/json"
-  secretHeader: "Ape-Key"             # Request header key
-  secretId: "monkeytype-api-key"      # Stored securely in Obsidian Secret Storage (never plain text)
-  jsonPath: "data.timeTypingSeconds"  # JSON pointer or JMES path to target metric
-  parser: "duration-seconds"          # duration-seconds | duration-minutes | number | count
+  auth:
+    type: header                       # header, query, or none
+    headerName: Authorization
+    secretKey: "my-api-token"         # Name stored in Obsidian Secret Storage
+    prefix: "Bearer "
+  response:
+    recordsPath: "data.items"         # Dot-separated JSON path to an array or date dictionary
+    dateField: "createdAt"            # Date, ISO timestamp, or epoch seconds/milliseconds
+    valueField: "amount"
+    aggregation: sum                  # sum, count, max, latest, or average
+    valueTransform: "divideBy:60"     # Optional divideBy:<positive number> or multiplyBy:<positive number>
+    valuePattern: '([0-9]+(?:\\.[0-9]+)?)' # Optional capture pattern for a numeric value in a text field
 \`\`\`
 
 ---
@@ -800,7 +828,7 @@ endpoint:
       let counts = { metricsImported: 0, metricsUpdated: 0, metricsProtected: 0, metricsSkipped: 0 };
       await this.updateLog(update.date, log => {
         counts = { metricsImported: 0, metricsUpdated: 0, metricsProtected: 0, metricsSkipped: 0 };
-        const metrics = { ...log.metrics }, metricSources = { ...log.metricSources }, sessions = { ...log.sessions };
+        const metrics = { ...log.metrics }, metricSources = { ...log.metricSources }, metricNotes = { ...log.metricNotes }, sessions = { ...log.sessions };
         let changed = false;
         for (const [id, value] of Object.entries(update.metrics)) {
           if (value === undefined || !Number.isFinite(value) || value < 0 || !configured.has(id)) { counts.metricsSkipped++; continue; }
@@ -812,12 +840,25 @@ endpoint:
           if (decision === "import") counts.metricsImported++;
           else if (decision === "update") counts.metricsUpdated++;
           else counts.metricsSkipped++;
-          if (decision !== "skip") { metrics[id] = value; metricSources[id] = source; changed = true; }
+          if (decision !== "skip") {
+            metrics[id] = value;
+            metricSources[id] = source;
+            if (update.metricNotes?.[id]) {
+              metricNotes[id] = update.metricNotes[id];
+            } else if (ownedSessions && metricNotes[id]) {
+              delete metricNotes[id];
+            }
+            changed = true;
+          }
           if (update.sessions?.[id] && (decision !== "skip" || ownedSessions)) {
-            sessions[id] = update.sessions[id]; changed = true;
+            sessions[id] = update.sessions[id];
+            changed = true;
+          } else if (ownedSessions && !update.sessions?.[id] && sessions[id]) {
+            delete sessions[id];
+            changed = true;
           }
         }
-        return changed ? { ...log, metrics, metricSources, sessions, reading: sessions.reading ?? log.reading } : log;
+        return changed ? { ...log, metrics, metricSources, metricNotes, sessions, reading: sessions.reading ?? log.reading } : log;
       });
       for (const key of Object.keys(result) as Array<keyof typeof result>) result[key] += counts[key];
     }

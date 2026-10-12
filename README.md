@@ -31,12 +31,8 @@ Manage all your habits through **Settings → Temperans Habits → Configure hab
 
 Jump-start tracking with pre-configured templates accessible from the **Browse presets** action at the top of the habit creation form:
 
-| Health Connect presets | Connected APIs presets |
-| :---: | :---: |
-| ![Health Connect presets](assets/settings-browse-preset-health-connect.png) | ![Connected APIs presets](assets/settings-browse-preset-connect-apis.png) |
-
-- **Health Connect**: Sleep duration, hydration volume, daily steps, active calories, and exercise minutes.
-- **Connected APIs**: Monkeytype typing duration, Duolingo practice, GitHub contributions, and WakaTime coding time.
+- **Health Connect**: Sleep duration, hydration volume, daily steps, nutrition calories, and exercise minutes.
+- **Connected APIs**: GitHub contributions, Monkeytype typing duration, and Duolingo streak tracking.
 
 To change targets or add a historic target revision manually, edit `Habit Logs/Settings.md`. For example:
 
@@ -228,155 +224,36 @@ Temperans Habits provides a generic analytics engine that automatically computes
 | :---: | :---: |
 | ![Habit actions palette](assets/habit-actions-palette.png) | ![Habit analytics summary modal](assets/habit-analytics-modal.png) |
 
-## Automated API endpoints (Monkeytype, WakaTime, Duolingo, GitHub, etc.)
+## Automated API sync
 
-Temperans Habits includes a generic, declarative endpoint runner. Any task defined in `Habit Logs/Settings.md` can optionally specify an `endpoint` block to automatically fetch and aggregate data from an external REST API without writing custom plugin code. API keys and tokens stay securely in Obsidian Secret Storage, referenced only by their secret name in Markdown.
+Add an `endpoint` block to a habit in `Habit Logs/Settings.md` to fetch and map data from an HTTP API. The runner supports one request per sync, JSON responses, date templates, standard HTTP methods, headers, request bodies, and optional authentication. API secrets are stored in Obsidian Secret Storage. Imported values use `sourceName` (or `endpoint` by default), and existing manual entries are protected.
 
-### How it works
-
-When syncing, Temperans evaluates your URL template, applies dynamic date variables, sends authenticated requests, extracts daily records from the JSON response, aggregates them (e.g. sum, count, max), and writes them to your daily habit notes under `source: endpoint`. Existing manual entries are always protected.
-
-### Configuration prototype in `Habit Logs/Settings.md`
-
-Add an `endpoint:` block under any task in `Habit Logs/Settings.md`. Here are common examples:
-
-#### 1. Monkeytype (Typing duration in minutes)
 ```yaml
-- id: typing
-  name: Typing practice
-  unit: minutes
-  cadence: daily
-  enabled: true
-  targetHistory:
-    - effectiveDate: 2000-01-01
-      min: 15
-  endpoint:
-    sourceName: "monkeytype"        # Custom label saved under "source:" in daily Markdown logs
-    url: "https://api.monkeytype.com/results?onOrAfterTimestamp={{startMillis}}&limit=1000"
-    testUrl: "https://api.monkeytype.com/users/currentTestActivity"
-    auth:
-      type: header
-      headerName: Authorization
-      secretKey: "temperans-habits-monkeytype-apekey" # Name in Obsidian Secret Storage
-      prefix: "ApeKey "
-    response:
-      recordsPath: "data"           # Array location in response JSON
-      dateField: "timestamp"        # Date or epoch timestamp property
-      valueField: "testDuration"    # Metric to aggregate
-      aggregation: sum              # sum, count, max, or latest
-      valueTransform: "divideBy:60"  # Converts seconds to minutes
-```
-
-#### 2. WakaTime (Coding time in minutes)
-```yaml
-- id: coding
-  name: Coding
-  unit: minutes
-  cadence: daily
-  enabled: true
-  targetHistory:
-    - effectiveDate: 2026-01-01
-      min: 60
-  endpoint:
-    sourceName: "wakatime"
-    url: "https://wakatime.com/api/v1/users/current/summaries?start={{startDate}}&end={{endDate}}"
-    auth:
-      type: header
-      headerName: Authorization
-      secretKey: "wakatime-api-key"
-      prefix: "Bearer "
-    response:
-      recordsPath: "data"
-      dateField: "range.date"
-      valueField: "grand_total.total_seconds"
-      aggregation: sum
-      valueTransform: "divideBy:60"
-```
-
-#### 3. GitHub (Daily commit/event count)
-```yaml
-- id: commits
-  name: GitHub activity
+- id: api-metric
+  name: External metric
   unit: count
   cadence: daily
   enabled: true
+  type: tracker
   targetHistory:
     - effectiveDate: 2026-01-01
-      min: 3
   endpoint:
-    sourceName: "github"
-    url: "https://api.github.com/users/YOUR_USERNAME/events"
-    auth:
-      type: header
-      headerName: Authorization
-      secretKey: "github-pat"
-      prefix: "Bearer "
+    sourceName: example-api
+    url: "https://api.example.com/records?from={{startDate}}&to={{endDate}}"
     response:
-      recordsPath: ""               # Root array
-      dateField: "created_at"       # ISO 8601 timestamp string
-      aggregation: count            # Counts number of events on each day
+      recordsPath: data
+      dateField: date
+      valueField: value
+      aggregation: sum
 ```
 
-### Supported configuration options
+Response mapping supports arrays or date-keyed objects. Use `aggregation` (`sum`, `count`, `max`, `latest`, or `average`) and optional numeric `valueTransform` (`divideBy:<number>` or `multiplyBy:<number>`). For JSON responses that contain a text field with a numeric value, `valuePattern` can extract the first capture group. Templates include `{{today}}`, `{{startDate}}`, `{{endDate}}`, and ISO or epoch variants.
 
-* **Source Label & Icon (`sourceName`)**:
-  * Optional label saved under `source:` in daily habit logs and rendered as an icon badge in your dashboard:
-    * **Automatic Built-in Icons**: Recognized names automatically render crisp, theme-matching SVG icons with zero system bloat:
-      * `"monkeytype"` $\to$ Keyboard icon
-      * `"health-connect"` $\to$ Heart-pulse icon
-      * `"github"` $\to$ GitHub icon
-      * `"wakatime"` $\to$ Code icon
-      * `"strava"` $\to$ Footprints/Activity icon
-      * `"duolingo"` $\to$ Languages icon
-      * `"endpoint"` $\to$ Cloud-download icon
-    * **Lucide Icon Names**: Prefix any Obsidian Lucide icon with `lucide:` or `icon:` (e.g. `sourceName: "lucide:flame"`, `sourceName: "lucide:dumbbell"`).
-    * **Custom Images**: Specify a local image file path, URL, or data URI (e.g. `sourceName: "assets/icons/app.png"` or `sourceName: "https://.../icon.svg"`).
-    * **Inline SVG**: Provide raw SVG markup directly (e.g. `sourceName: "<svg ...>...</svg>"`).
-    * **Text Badge**: Any unrecognized plain text renders as a clean pill badge.
-    * Hovering over any icon in the Day Detail panel shows an Obsidian tooltip with the full source name.
-* **URL Template Variables**:
-  * `{{today}}`, `{{startDate}}`, `{{endDate}}`: formatted as `YYYY-MM-DD`.
-  * `{{startMillis}}`, `{{endMillis}}`: epoch millisecond timestamps.
-  * `{{startSeconds}}`, `{{endSeconds}}`: epoch second timestamps.
-* **Authentication (`auth`)**:
-  * `type: header`: Sends an HTTP header (default `Authorization`). Specify `prefix` such as `Bearer ` or `ApeKey `.
-  * `type: query`: Appends a query parameter to the URL (e.g. `?api_key=...`).
-  * `type: none`: For open endpoints.
-  * `secretKey`: The identifier used to retrieve the token from Obsidian Secret Storage.
-* **Response Mapping (`response`)**:
-  * `recordsPath`: Dot-separated path to the JSON records array (e.g. `data`, `items`, or empty `""` if the root payload is an array). Also supports dictionary objects keyed by date.
-  * `dateField`: Property holding the date (`YYYY-MM-DD`, ISO 8601 string, or epoch timestamp).
-  * `valueField`: Property holding the numeric value.
-  * `aggregation`: `sum` (total for the day), `count` (number of records for the day), `max` (highest recorded value), or `latest` (most recent value).
-  * `valueTransform`: Optional math scaling: `divideBy:60` (e.g. seconds to minutes), `multiplyBy:60` (e.g. hours to minutes), or `none`.
-
-### Testing and syncing
-
-* **Settings → Temperans Habits → Automated API endpoints**:
-  Every task with an `endpoint` configured in `Settings.md` appears in this section with a **Test connection** button, a **Sync past 7 days** button, and an Obsidian Secret Storage component to set or update its secret key.
-* **Command Palette**:
-  Each endpoint task dynamically receives a command: `Temperans Habits: Sync <Task Name> from endpoint`, alongside `Temperans Habits: Sync all external endpoints`.
-* **Logging Modal**:
-  Opening the log modal for any endpoint-enabled task shows an on-demand sync button alongside manual logging.
-
-![Settings overview](assets/settings-main.png)
+Use **Settings → Temperans Habits → Automated API endpoints** to store credentials, test a request, or sync the past seven days. See the [API gallery](https://adg0.github.io/temperans/#api-gallery) and the [copyable YAML examples](examples/).
 
 ## Third-party integrations
 
-Health Connect uses the separate [Android companion](android-companion/README.md), because an Obsidian mobile plugin cannot add Android Health Connect permissions to Obsidian’s signed app manifest. The companion requests read access only to nutrition energy, hydration, sleep sessions, steps, distance, active calories, total calories, exercise, floors, heart rate, resting heart rate, and weight; it has no history permission, background read, Health Connect write access, account, analytics, or backend.
-
-On Android, choose the vault’s `Habit Logs` folder itself in the companion (not the vault root), grant the read permissions to health metrics you want to track, and press **Export available data**. The companion uses Health Connect’s daily aggregation API to read Nutrition **Energy** (kcal) and hydration volume across every source; all other nutrition fields are discarded. A bounded sleep-session read retains wake-up-day assignment. It writes one local staging file, `Habit Logs/.temperance-staging.json`, without touching Markdown. Then open **Temperans Habits → Third-party sync → Import staged data** on any device with the staging file in its vault. The importer is open-ended: it validates provenance IDs and time zone, then imports any metric matching an enabled task in `Settings.md` (including `calories`, `hydration`, `sleep`, `steps`, or future metrics like `pullups`):
-
-- creates missing metric values with `source: health-connect`;
-- refreshes values already owned by `health-connect` on repeated exports;
-- safely skips metrics that have not been added as tasks in `Settings.md`;
-- protects manual values and sessions, including legacy entries, and values owned by a different integration.
-
-**Health Connect sync → Staging file path** is collapsed by default; click its heading to edit. It lets you choose a JSON filename or subfolder **inside the configured operation folder**, for example `Habit Logs/Exports/health.json`. Enter the complete vault-relative path. Absolute paths, traversal, hidden directories, reserved filenames, and paths outside that folder are rejected. Click **Save path**, or import to save and use the edited path. Clear the field to restore `<Habit Logs folder>/.temperance-staging.json`. The setting is stored in local plugin configuration. It does not move files or change the Android companion's export destination; the selected path must match the exported file.
-
-The staging file is **retained after import**, including failed, protected, and skipped records. You can configure missing habits and retry; the companion replaces the export on its next run. Temperans never deletes a newer export during cleanup. The importer accepts at most 2 MiB of JSON and serializes concurrent imports of the same path. Run **Local peer sync** afterwards to transfer the selected dated Markdown logs to desktop. The staging JSON itself is intentionally never peer-synced.
-
-The companion’s `minSdk` is Android 9, the minimum supported version for Health Connect.
+The Android companion exports Health Connect data to a local staging file in the vault. Temperans imports supported values for enabled habits. See the [companion guide](android-companion/README.md) for setup and supported metrics.
 
 ## Local peer sync
 
@@ -465,3 +342,5 @@ This is a candidate for a future pilot, subject to user demand and feasibility, 
 ## Development and release verification
 
 Use Node 22.13+ and the pinned pnpm version. Run `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, and `pnpm check:release`. The lint gate checks official Obsidian-specific rules; TypeScript checks run separately. Browser fixtures use pinned Playwright: install Chromium with `pnpm exec playwright install chromium`, set `BROWSER_CHANNEL=chromium`, then run `pnpm test:responsive`. Windows can use the installed Edge browser with the default channel.
+
+See [contributions.md](contributions.md) for guidance on code changes and new endpoint examples.

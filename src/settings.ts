@@ -49,7 +49,7 @@ export class TemperansSettingTab extends PluginSettingTab {
     const endpointsCard = renderActionCard(habitsStack, {
       icon: "cloud-download",
       title: "Automated API endpoints",
-      description: "Configure external REST APIs, sync past logs, and manage Secret Storage keys.",
+      description: "Configure external HTTP APIs, sync past logs, and manage Secret Storage keys.",
       badgeText: "Loading...",
       onClick: () => this.displayEndpointsSubSettings()
     });
@@ -276,7 +276,7 @@ export class TemperansSettingTab extends PluginSettingTab {
       const emptyCard = container.createDiv({ cls: "temperans-subpage-card" });
       emptyCard.createEl("p", {
         cls: "temperans-subpage-card-desc",
-        text: "No tasks currently have an external API endpoint configured. You can enable automated tracking for any task (Monkeytype, WakaTime, Duolingo, GitHub, etc.) by adding an `endpoint:` block to that task in Habit Logs/Settings.md."
+        text: "No tasks currently have an external API endpoint configured. Add an `endpoint:` block to any task in Habit Logs/Settings.md to enable automated API tracking."
       });
       return;
     }

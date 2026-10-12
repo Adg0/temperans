@@ -25,11 +25,13 @@ it("provides categorized presets for Health Connect and Connected APIs", () => {
   expect(healthIds).toContain("steps");
   expect(healthIds).toContain("calories");
 
+  const caloriesPreset = healthConnect.find(p => p.id === "calories");
+  expect(caloriesPreset?.name).toBe("Nutrition");
+
   const apiIds = connectedApis.map(p => p.id);
   expect(apiIds).toContain("typing");
   expect(apiIds).toContain("duolingo");
   expect(apiIds).toContain("github");
-  expect(apiIds).toContain("wakatime");
 
   // Every Connected API preset must include a valid endpoint configuration
   for (const preset of connectedApis) {

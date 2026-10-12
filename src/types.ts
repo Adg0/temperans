@@ -19,24 +19,27 @@ export interface EndpointAuthConfig {
   prefix?: string;
 }
 
-export type EndpointAggregation = "sum" | "count" | "max" | "latest";
-export type EndpointValueTransform = "divideBy:60" | "multiplyBy:60" | "none";
+export type EndpointAggregation = "sum" | "count" | "max" | "latest" | "average";
+export type EndpointValueTransform = "none" | `divideBy:${number}` | `multiplyBy:${number}`;
 
 export interface EndpointResponseConfig {
   recordsPath?: string;
   dateField?: string;
   valueField?: string;
+  valuePattern?: string;
   aggregation?: EndpointAggregation;
   valueTransform?: EndpointValueTransform;
 }
 
 export interface EndpointConfig {
   url: string;
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
   headers?: Record<string, string>;
   auth?: EndpointAuthConfig;
   testUrl?: string;
   sourceName?: string;
+  timeout?: number;
+  body?: string | Record<string, unknown> | unknown[];
   response?: EndpointResponseConfig;
 }
 
@@ -116,6 +119,7 @@ export interface ExternalMetricImport {
   date: string;
   metrics: Record<string, number>;
   metricSources?: Record<string, HabitSource>;
+  metricNotes?: Record<HabitId, string>;
   sessions?: Record<HabitId, HabitSession[]>;
 }
 

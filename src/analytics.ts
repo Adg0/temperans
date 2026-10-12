@@ -1,6 +1,6 @@
 import { emptyDailyLog } from "./log-schema";
 import { addDays } from "./date";
-import { evaluatePeriodGoal, periodBounds, targetForDate, valueForHabit } from "./evaluation";
+import { earliestEffectiveDate, evaluatePeriodGoal, periodBounds, targetForDate, valueForHabit } from "./evaluation";
 import { DailyLog, HabitDefinition, TargetVersion } from "./types";
 
 export interface HabitAnalytics {
@@ -48,7 +48,8 @@ export function calculateHabitAnalytics(
   logs: Map<string, DailyLog>,
   today: string
 ): HabitAnalytics {
-  const eligibleDates = dates.filter((d) => d <= today);
+  const effectiveStart = earliestEffectiveDate(habit);
+  const eligibleDates = dates.filter((d) => d <= today && (!effectiveStart || d >= effectiveStart));
   const totalDays = eligibleDates.length;
 
   let activeDays = 0;

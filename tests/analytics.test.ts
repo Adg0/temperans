@@ -49,6 +49,34 @@ describe("generic habit analytics engine", () => {
     expect(stats.consistencyRate).toBe(0.8); // 4 / 5
   });
 
+  it("calculates active days and completion rate starting from target effective date", () => {
+    const habit: HabitDefinition = {
+      id: "reading",
+      name: "Reading",
+      unit: "pages",
+      cadence: "daily",
+      enabled: true,
+      targetHistory: [{ effectiveDate: "2026-08-23", min: 10 }]
+    };
+
+    const dates = ["2026-08-21", "2026-08-22", "2026-08-23", "2026-08-24", "2026-08-25"];
+    const logs = new Map<string, DailyLog>([
+      ["2026-08-21", dummyLog({ reading: 0 }, "2026-08-21")],
+      ["2026-08-22", dummyLog({ reading: 0 }, "2026-08-22")],
+      ["2026-08-23", dummyLog({ reading: 15 }, "2026-08-23")],
+      ["2026-08-24", dummyLog({ reading: 10 }, "2026-08-24")],
+      ["2026-08-25", dummyLog({ reading: 5 }, "2026-08-25")]
+    ]);
+
+    const stats = calculateHabitAnalytics(habit, dates, logs, "2026-08-25");
+
+    expect(stats.totalDays).toBe(3); // Aug 23, 24, 25
+    expect(stats.completedDays).toBe(2); // Aug 23 (15 >= 10), Aug 24 (10 >= 10)
+    expect(stats.partialDays).toBe(1); // Aug 25 (5 < 10)
+    expect(stats.missedDays).toBe(0);
+    expect(stats.consistencyRate).toBeCloseTo(0.67, 2); // 2 / 3
+  });
+
   it("computes session counts and session averages for session-based habits", () => {
     const habit: HabitDefinition = {
       id: "workouts",

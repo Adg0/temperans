@@ -1,0 +1,20 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# It counts the USGS catalog events with magnitude >= 2.5 on each day.
+- id: usgs-earthquake-count
+  name: Global earthquakes (M2.5+)
+  unit: events
+  cadence: daily
+  enabled: true
+  targetHistory:
+    - effectiveDate: "2026-01-01"
+      min: 1
+  endpoint:
+    sourceName: usgs
+    method: GET
+    url: "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={{startDate}}&endtime={{endDateIso}}&minmagnitude=2.5&limit=20000"
+    headers:
+      Accept: "application/json"
+    response:
+      recordsPath: features
+      dateField: properties.time
+      aggregation: count

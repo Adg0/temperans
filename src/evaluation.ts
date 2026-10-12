@@ -2,6 +2,14 @@ import { emptyDailyLog } from "./log-schema";
 import { addDays } from "./date";
 import { DailyLog, DayEvaluation, HabitCadence, HabitDefinition, HabitEvaluation, HabitSettings, ImportedTypingResult, PeriodEvaluation, TargetVersion } from "./types";
 
+export function earliestEffectiveDate(habit: HabitDefinition): string | undefined {
+  if (!habit.targetHistory || habit.targetHistory.length === 0) return undefined;
+  return habit.targetHistory.reduce(
+    (earliest, t) => (t.effectiveDate < earliest ? t.effectiveDate : earliest),
+    habit.targetHistory[0].effectiveDate
+  );
+}
+
 export function targetForDate(habit: HabitDefinition, date: string): TargetVersion | undefined {
   return [...habit.targetHistory]
     .filter((target) => target.effectiveDate <= date)
@@ -105,7 +113,8 @@ export function calculateGoalProgress(value: number, target: TargetVersion | und
 
   // 2. Avoidance / negative habit: success is value <= max (default max 0)
   if (habit?.type === "avoidance") {
-    const maxLimit = target?.max ?? 0;
+    if (!target) return { progress: 0, isOverCeiling: false, excess: 0 };
+    const maxLimit = target.max ?? 0;
     if (value <= maxLimit) {
       return { progress: 1, isOverCeiling: false, excess: 0 };
     }
@@ -149,11 +158,12 @@ export function calculateGoalProgress(value: number, target: TargetVersion | und
 
 function evaluationStatus(value: number, target: TargetVersion | undefined, habit?: HabitDefinition): HabitEvaluation["status"] {
   if (habit?.type === "tracker") return "not-applicable";
+  if (!target) return "not-applicable";
   if (habit?.type === "avoidance") {
-    const maxLimit = target?.max ?? 0;
+    const maxLimit = target.max ?? 0;
     return value <= maxLimit ? "complete" : "empty";
   }
-  if (!target || (target.min === undefined && target.max === undefined)) return "not-applicable";
+  if (target.min === undefined && target.max === undefined) return "not-applicable";
   const withinMin = target.min === undefined || value >= target.min;
   const withinMax = target.max === undefined || value <= target.max;
   return withinMin && withinMax ? "complete" : value > 0 ? "partial" : "empty";

@@ -3,7 +3,10 @@ import { HabitDefinition } from "../types";
 
 export function formatValue(value: number, unit: string, habit?: HabitDefinition): string {
   if (habit?.displayFormat === "duration" || habit?.id === "sleep") return formatSleepDuration(value);
-  const rendered = Number.isInteger(value) ? String(value) : value.toFixed(1);
+  const fractionDigits = ["km", "miles"].includes(unit.toLowerCase()) ? 2 : 1;
+  const rendered = Number.isInteger(value)
+    ? String(value)
+    : value.toFixed(fractionDigits).replace(/\.?0+$/, "");
   const label = value === 1 && unit.endsWith("s") ? unit.slice(0, -1) : unit;
   return unit === "minutes" ? `${rendered} min` : `${rendered} ${label}`;
 }
@@ -28,7 +31,8 @@ export function formatStatValue(value: number, unit: string, habit?: HabitDefini
   const magnitude = Math.abs(value);
   const divisor = magnitude >= 1e9 ? 1e9 : magnitude >= 1e6 ? 1e6 : magnitude >= 1e3 ? 1e3 : 1;
   const suffix = divisor === 1e9 ? "bn" : divisor === 1e6 ? "mn" : divisor === 1e3 ? "k" : "";
-  const number = Number((value / divisor).toFixed(1));
+  const fractionDigits = ["km", "miles"].includes(label.toLowerCase()) ? 2 : 1;
+  const number = Number((value / divisor).toFixed(fractionDigits));
   return (number + suffix + " " + label).trim();
 }
 

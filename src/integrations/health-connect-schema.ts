@@ -198,6 +198,7 @@ export function normalizeHealthConnectRecord(
 ): ExternalMetricImport {
   const metrics: Record<string, number> = {};
   const metricSources: Record<string, HabitSource> = {};
+  const metricNotes: Record<string, string> = {};
   const sessions: Record<HabitId, HabitSession[]> = {};
 
   for (const [key, val] of Object.entries(record)) {
@@ -212,25 +213,34 @@ export function normalizeHealthConnectRecord(
         metricSources[key] = metricVal.source;
       }
 
-      if (Array.isArray(metricVal.sessions)) {
+      if (Array.isArray(metricVal.sessions) && metricVal.sessions.length > 0) {
         const unit = canonicalUnit(habitDef?.unit ?? metricVal.unit);
         if (habitDef && unit === "count" && (metricVal.value !== metricVal.sessions.length || metricVal.sessions.some(session => session.value !== 1))) {
           throw new Error("This Obsidian habit counts sessions. Use a quantity unit such as reps for multi-amount counter sessions. The staging file was kept.");
         }
-        sessions[key] = metricVal.sessions.map((s) => {
-          const valNum = convertAmount(s.value, factor);
-          const noteText = s.note?.trim();
-          const title = s.title?.trim() || noteText || `${habitDef?.name ?? key} session`;
-          return {
-            title,
-            ...(unit === "minutes" || unit === "hours" || unit === "seconds" ? { minutes: convertAmount(valNum, unit === "hours" ? 60 : unit === "seconds" ? 1 / 60 : 1) }
-              : unit === "reps" ? { reps: valNum }
-              : unit === "pages" ? { pages: valNum }
-              : unit === "chapters" ? { chapters: valNum }
-              : { count: valNum }),
-            ...(s.title && noteText && noteText !== title ? { note: noteText } : {})
-          };
-        });
+
+        if (metricVal.sessions.length === 1 && key !== "reading") {
+          const single = metricVal.sessions[0];
+          const sessionNote = single.note?.trim();
+          if (sessionNote) {
+            metricNotes[key] = sessionNote;
+          }
+        } else {
+          sessions[key] = metricVal.sessions.map((s) => {
+            const valNum = convertAmount(s.value, factor);
+            const noteText = s.note?.trim();
+            const title = s.title?.trim() || noteText || `${habitDef?.name ?? key} session`;
+            return {
+              title,
+              ...(unit === "minutes" || unit === "hours" || unit === "seconds" ? { minutes: convertAmount(valNum, unit === "hours" ? 60 : unit === "seconds" ? 1 / 60 : 1) }
+                : unit === "reps" ? { reps: valNum }
+                : unit === "pages" ? { pages: valNum }
+                : unit === "chapters" ? { chapters: valNum }
+                : { count: valNum }),
+              ...(s.title && noteText && noteText !== title ? { note: noteText } : {})
+            };
+          });
+        }
       }
     }
   }
@@ -240,6 +250,7 @@ export function normalizeHealthConnectRecord(
     date: record.date,
     metrics,
     ...(Object.keys(metricSources).length > 0 ? { metricSources } : {}),
+    ...(Object.keys(metricNotes).length > 0 ? { metricNotes } : {}),
     ...(Object.keys(sessions).length > 0 ? { sessions } : {})
   };
 }

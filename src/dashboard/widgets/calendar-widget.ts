@@ -1,6 +1,6 @@
 import { setIcon } from "obsidian";
 import { daysInMonth, formatDate, monthLongName, monthShortName, weekdayIndexMonday } from "../../date";
-import { calculateGoalProgress, evaluatePeriodGoal } from "../../evaluation";
+import { calculateGoalProgress, earliestEffectiveDate, evaluatePeriodGoal } from "../../evaluation";
 import { cadenceLabel, formatValue, targetLabel } from "../format";
 import { DashboardWidget, WidgetContext } from "../types";
 import { HabitDefinition, HabitEvaluation, PeriodEvaluation } from "../../types";
@@ -131,7 +131,7 @@ export class CalendarWidget implements DashboardWidget {
       const evaluation = ctx.evaluations.get(date);
       const habitEvaluation = selectedHabit ? evaluation?.habits.find((item) => item.habit.id === selectedHabit.id) : undefined;
       const periodEvaluation = !isFuture && selectedHabit && selectedHabit.cadence !== "daily" ? evaluatePeriodGoal(selectedHabit, date, ctx.logs) : undefined;
-      const score = isFuture ? null : periodEvaluation ? periodEvaluation.progress : habitEvaluation ? scoreForHabit(habitEvaluation) : evaluation?.score ?? null;
+      const score = isFuture ? null : periodEvaluation ? periodEvaluation.progress : habitEvaluation && habitEvaluation.status !== "not-applicable" ? scoreForHabit(habitEvaluation) : habitEvaluation && habitEvaluation.value > 0 ? scoreForHabit(habitEvaluation) : evaluation?.score ?? null;
       const tooltip = buildCellTooltip(date, isFuture, selectedHabit, habitEvaluation, periodEvaluation, evaluation?.score ?? null);
       const selected = date === ctx.selectedDate;
       const isToday = date === ctx.today;
@@ -188,28 +188,32 @@ export class CalendarWidget implements DashboardWidget {
   private getMonthSummaryText(ctx: WidgetContext, selectedHabit: HabitDefinition | undefined): string {
     const monthDates = daysInMonth(ctx.year, ctx.month);
     const monthName = monthLongName(ctx.month);
-    const monthScores = monthDates
+    const effectiveStart = selectedHabit ? earliestEffectiveDate(selectedHabit) : undefined;
+    const eligibleDates = monthDates.filter((date) => date <= ctx.today && (!effectiveStart || date >= effectiveStart));
+
+    const monthScores = eligibleDates
       .map((date) => {
         const evaluation = ctx.evaluations.get(date);
         if (!evaluation) return undefined;
         if (selectedHabit) {
           if (selectedHabit.cadence !== "daily") {
-            return date <= ctx.today ? evaluatePeriodGoal(selectedHabit, date, ctx.logs).progress : undefined;
+            return evaluatePeriodGoal(selectedHabit, date, ctx.logs).progress;
           }
           const item = evaluation.habits.find((h) => h.habit.id === selectedHabit.id);
-          return item ? scoreForHabit(item) : undefined;
+          if (!item || item.status === "not-applicable") return undefined;
+          return scoreForHabit(item);
         }
         return evaluation.score;
       })
       .filter((score): score is number => score !== null && score !== undefined);
 
     if (!monthScores.length) {
-      return `${monthName} has no logged days yet.`;
+      return `${monthName} has no active days yet.`;
     }
 
     const monthAverage = monthScores.reduce((sum, score) => sum + score, 0) / monthScores.length;
     const consistencyLabel = selectedHabit ? "consistency" : "daily consistency";
-    return `${monthName}: ${Math.round(monthAverage * 100)}% ${consistencyLabel} across ${monthScores.length} day${monthScores.length === 1 ? "" : "s"}.`;
+    return `${monthName}: ${Math.round(monthAverage * 100)}% ${consistencyLabel} across ${monthScores.length} active day${monthScores.length === 1 ? "" : "s"}.`;
   }
 
   private renderMonthGrid(section: HTMLElement, ctx: WidgetContext, selectedHabit: HabitDefinition | undefined, showLegend = true): void {
@@ -246,7 +250,7 @@ export class CalendarWidget implements DashboardWidget {
     const evaluation = ctx.evaluations.get(date);
     const habitEvaluation = selectedHabit ? evaluation?.habits.find((item) => item.habit.id === selectedHabit.id) : undefined;
     const periodEvaluation = !isFuture && selectedHabit && selectedHabit.cadence !== "daily" ? evaluatePeriodGoal(selectedHabit, date, ctx.logs) : undefined;
-    const score = isFuture ? null : periodEvaluation ? periodEvaluation.progress : habitEvaluation ? scoreForHabit(habitEvaluation) : evaluation?.score ?? null;
+    const score = isFuture ? null : periodEvaluation ? periodEvaluation.progress : habitEvaluation && habitEvaluation.status !== "not-applicable" ? scoreForHabit(habitEvaluation) : habitEvaluation && habitEvaluation.value > 0 ? scoreForHabit(habitEvaluation) : evaluation?.score ?? null;
     const tooltip = buildCellTooltip(date, isFuture, selectedHabit, habitEvaluation, periodEvaluation, evaluation?.score ?? null);
     const selected = date === ctx.selectedDate;
     const isToday = date === ctx.today;

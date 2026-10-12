@@ -1,0 +1,25 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# Replace the host and entity ID. Store a Home Assistant token as `home-assistant-token`.
+- id: living-room-temperature
+  name: Living-room temperature
+  unit: "°C"
+  cadence: daily
+  enabled: true
+  targetHistory:
+    - effectiveDate: "2026-01-01"
+      min: 18
+      max: 27
+  endpoint:
+    sourceName: home-assistant
+    method: GET
+    url: "https://YOUR_HOME_ASSISTANT_HOST/api/history/period/{{startDateIso}}?end_time={{endDateIso}}&filter_entity_id=sensor.living_room_temperature&minimal_response"
+    auth:
+      type: header
+      headerName: Authorization
+      secretKey: home-assistant-token
+      prefix: "Bearer "
+    response:
+      recordsPath: "*"
+      dateField: last_changed
+      valueField: state
+      aggregation: average

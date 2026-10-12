@@ -729,6 +729,7 @@
 
         <div class="nav-group-title">Integrations & Sync</div>
         <a href="#api-endpoints" class="nav-item">Automated REST APIs</a>
+        <a href="#api-gallery" class="nav-item">Creative API Samples</a>
         <a href="#health-connect" class="nav-item">Android Health Connect</a>
         <a href="#peer-sync" class="nav-item">Local Peer Sync</a>
 
@@ -874,16 +875,6 @@
             <p class="section-desc">New vaults start with 1 clean starter (<code>Reading</code>). Access one-click presets for Health Connect metrics and connected APIs whenever you need them.</p>
           </div>
 
-          <div class="showcase-grid-2">
-            <div class="media-card">
-              <img src="assets/settings-browse-preset-health-connect.png" alt="Health Connect Presets" onclick="openLightbox(this.src)">
-              <div class="media-caption">Health Connect: Pre-configured presets for Sleep duration, Hydration, Steps, and Calories.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/settings-browse-preset-connect-apis.png" alt="Connected APIs Presets" onclick="openLightbox(this.src)">
-              <div class="media-caption">Connected APIs: Monkeytype typing practice, Duolingo, GitHub contributions, and WakaTime.</div>
-            </div>
-          </div>
         </section>
 
         <!-- Daily Logging -->
@@ -995,9 +986,54 @@ widgets:
           <div class="section-header">
             <div class="section-tag">Automation</div>
             <h2 class="section-title">Automated REST API Endpoints</h2>
-            <p class="section-desc">Connect external services (Monkeytype, WakaTime, Duolingo, GitHub) declaratively. Secret keys stay in Obsidian Secret Storage, never in plain Markdown.</p>
+            <p class="section-desc">Connect external services declaratively. GitHub contributions and Monkeytype typing practice are shown first; tokens stay in Obsidian Secret Storage, never in plain Markdown.</p>
           </div>
 
+          <div class="section-subtitle-bar">
+            <h3>1. GitHub contributions</h3>
+            <p>Fetch the signed-in account's daily contribution calendar with a personal access token.</p>
+          </div>
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Habit Logs/Settings.md (YAML excerpt)</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: github-contributions
+  name: GitHub contributions
+  unit: contributions
+  cadence: daily
+  enabled: true
+  targetHistory:
+    - effectiveDate: 2026-01-01
+      min: 1
+  endpoint:
+    sourceName: github
+    method: POST
+    url: "https://api.github.com/graphql"
+    headers:
+      Content-Type: "application/json"
+      User-Agent: "Temperans-Habits"
+    auth:
+      type: header
+      headerName: Authorization
+      secretKey: "temperans-habits-github-token"
+      prefix: "Bearer "
+    body:
+      query: "query($from: DateTime!, $to: DateTime!) { viewer { contributionsCollection(from: $from, to: $to) { contributionCalendar { weeks { contributionDays { date contributionCount } } } } } }"
+      variables:
+        from: "{{startDateIso}}"
+        to: "{{todayIso}}"
+    response:
+      recordsPath: data.viewer.contributionsCollection.contributionCalendar.weeks.contributionDays
+      dateField: date
+      valueField: contributionCount
+      aggregation: sum</code></pre>
+          </div>
+
+          <div class="section-subtitle-bar">
+            <h3>2. Typing practice</h3>
+            <p>Aggregate Monkeytype test durations into daily minutes.</p>
+          </div>
           <div class="code-block-wrapper">
             <div class="code-header">
               <span>Habit Logs/Settings.md (YAML excerpt)</span>
@@ -1027,6 +1063,182 @@ widgets:
       aggregation: sum
       valueTransform: "divideBy:60"</code></pre>
           </div>
+        </section>
+
+        <!-- Creative API Sample Gallery -->
+        <section class="doc-section" id="api-gallery">
+          <div class="section-header">
+            <div class="section-tag">Endpoint Gallery</div>
+            <h2 class="section-title">Track more than the usual habits</h2>
+            <p class="section-desc">These copyable YAML examples show how one generic endpoint runner can turn sky observations, public events, weather, research activity, and smart-home readings into daily metrics. Add one habit item under <code>habits:</code> in <code>Habit Logs/Settings.md</code>, then customize its query, location, entity, or secret.</p>
+          </div>
+
+          <div class="section-subtitle-bar">
+            <h3>Astrology and astronomy</h3>
+            <p>Use measured sky data as personal journaling context. These are observations, not claims that celestial events cause changes in behavior.</p>
+          </div>
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>NASA/JPL Horizons — geocentric Moon distance at noon UTC</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: moon-earth-distance
+  name: Moon distance from Earth
+  unit: km
+  cadence: daily
+  enabled: true
+  type: tracker
+  targetHistory:
+    - effectiveDate: 2026-01-01
+  endpoint:
+    sourceName: nasa-horizons
+    method: GET
+    url: "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&amp;COMMAND=%27301%27&amp;OBJ_DATA=NO&amp;MAKE_EPHEM=YES&amp;EPHEM_TYPE=OBSERVER&amp;CENTER=500%40399&amp;START_TIME=%27{{today}}%2012%3A00%27&amp;STOP_TIME=%27{{today}}%2012%3A01%27&amp;STEP_SIZE=%271%20d%27&amp;QUANTITIES=20&amp;RANGE_UNITS=KM&amp;CSV_FORMAT=YES"
+    response:
+      recordsPath: result
+      dateField: "{{today}}"
+      valuePattern: "\\$\\$SOE[\\s\\S]*?\\r?\\n[^\\r\\n]*?,\\s*([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[Ee][+-]?\\d+)?)"
+      aggregation: latest</code></pre>
+          </div>
+          <p class="section-desc">Horizons returns its ephemeris table as text inside JSON. The response mapping extracts the first CSV range value (kilometres) for the Moon, viewed from Earth's centre, at 12:00 UTC. This is one daily snapshot, not a seven-day historical backfill.</p>
+
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>NASA/JPL — asteroid and comet close approaches in the past week</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: small-body-approaches
+  name: Near-Earth asteroid and comet approaches
+  unit: events
+  cadence: daily
+  enabled: true
+  type: tracker
+  targetHistory:
+    - effectiveDate: 2026-01-01
+  endpoint:
+    sourceName: nasa-jpl
+    method: GET
+    url: "https://ssd-api.jpl.nasa.gov/cad.api?date-min={{startDate}}&amp;date-max={{endDate}}&amp;dist-max=0.05&amp;nea-comet=true&amp;neo=false"
+    response:
+      recordsPath: data
+      dateField: "3"
+      aggregation: count</code></pre>
+          </div>
+          <p class="section-desc">The mapper groups each returned close approach by the row's fourth field, JPL's <code>cd</code> date, so events are saved to their matching day in the seven-day window. Dates with no qualifying approaches remain blank instead of receiving zero.</p>
+
+          <div class="section-subtitle-bar">
+            <h3>Weather and smart home</h3>
+            <p>Track a current local weather reading or summarize sensor history from Home Assistant.</p>
+          </div>
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Open-Meteo — current outdoor relative humidity</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: outdoor-humidity
+  name: Outdoor relative humidity
+  unit: percent
+  cadence: daily
+  enabled: true
+  type: tracker
+  targetHistory:
+    - effectiveDate: 2026-01-01
+  endpoint:
+    sourceName: open-meteo
+    method: GET
+    url: "https://api.open-meteo.com/v1/forecast?latitude=51.5072&amp;longitude=-0.1276&amp;current=relative_humidity_2m&amp;timezone=Europe%2FLondon"
+    response:
+      recordsPath: current
+      dateField: time
+      valueField: relative_humidity_2m
+      aggregation: latest</code></pre>
+          </div>
+          <p class="section-desc">No API key is needed. This sample uses central London coordinates and the Europe/London timezone. It stores one current reading for the date returned by the API; it does not backfill past weather days.</p>
+
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Home Assistant — average living-room temperature</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: living-room-temperature
+  name: Living-room temperature
+  unit: "°C"
+  cadence: daily
+  enabled: true
+  targetHistory:
+    - effectiveDate: 2026-01-01
+      min: 18
+      max: 27
+  endpoint:
+    sourceName: home-assistant
+    method: GET
+    url: "https://YOUR_HOME_ASSISTANT_HOST/api/history/period/{{startDateIso}}?end_time={{endDateIso}}&amp;filter_entity_id=sensor.living_room_temperature&amp;minimal_response"
+    auth:
+      type: header
+      headerName: Authorization
+      secretKey: "home-assistant-token"
+      prefix: "Bearer "
+    response:
+      recordsPath: "*"
+      dateField: last_changed
+      valueField: state
+      aggregation: average</code></pre>
+          </div>
+          <p class="section-desc">Replace <code>YOUR_HOME_ASSISTANT_HOST</code> and the entity ID. Use a valid HTTPS URL, or <code>http://localhost:8123</code> if Home Assistant runs on the same machine. The runner averages recorded state changes, not a time-weighted sensor average. It rejects private-LAN HTTP URLs.</p>
+
+          <div class="section-subtitle-bar">
+            <h3>Smoke-test examples</h3>
+            <p>Copyable examples for public JSON endpoints, including an aggregate research count and an event stream. The PubMed result is a rolling seven-day count saved as today's snapshot.</p>
+          </div>
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>PubMed — new sleep and habit papers indexed in 7 days</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: pubmed-sleep-research
+  name: New sleep and habit papers
+  unit: papers
+  cadence: daily
+  enabled: true
+  type: tracker
+  targetHistory:
+    - effectiveDate: 2026-01-01
+  endpoint:
+    sourceName: pubmed
+    method: GET
+    url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&amp;term=sleep%5Btiab%5D+AND+habits%5Btiab%5D&amp;reldate=7&amp;datetype=edat&amp;retmode=json&amp;retmax=0"
+    response:
+      recordsPath: esearchresult
+      dateField: "{{today}}"
+      valueField: count
+      aggregation: latest</code></pre>
+          </div>
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>USGS — earthquakes of magnitude 2.5 or higher</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><code>- id: usgs-earthquake-count
+  name: Global earthquakes (M2.5+)
+  unit: events
+  cadence: daily
+  enabled: true
+  targetHistory:
+    - effectiveDate: 2026-01-01
+      min: 1
+  endpoint:
+    sourceName: usgs
+    method: GET
+    url: "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&amp;starttime={{startDate}}&amp;endtime={{endDateIso}}&amp;minmagnitude=2.5&amp;limit=20000"
+    headers:
+      Accept: "application/json"
+    response:
+      recordsPath: features
+      dateField: properties.time
+      aggregation: count</code></pre>
+          </div>
+
+          <p class="section-desc">A successful <strong>Test connection</strong> confirms an HTTP response, while <strong>Sync past 7 days</strong> also exercises the mapping. The current runner handles one HTTP request with a JSON response; pagination, interactive OAuth/token refresh, and multipart uploads require additional integration support. See the <a href="https://ssd-api.jpl.nasa.gov/doc/horizons.html" target="_blank" rel="noopener">NASA/JPL Horizons API docs</a>, <a href="https://ssd-api.jpl.nasa.gov/doc/cad.html" target="_blank" rel="noopener">close-approach docs</a>, <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo docs</a>, and <a href="https://developers.home-assistant.io/docs/api/rest/" target="_blank" rel="noopener">Home Assistant REST API docs</a>.</p>
         </section>
 
         <!-- Health Connect -->

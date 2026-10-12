@@ -1,0 +1,17 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# This stores one geocentric Moon-distance snapshot per sync date, at 12:00 UTC.
+- id: moon-earth-distance
+  name: Moon distance from Earth
+  unit: km
+  cadence: daily
+  enabled: true
+  type: tracker
+  endpoint:
+    sourceName: nasa-horizons
+    method: GET
+    url: "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=NO&MAKE_EPHEM=YES&EPHEM_TYPE=OBSERVER&CENTER=500%40399&START_TIME=%27{{today}}%2012%3A00%27&STOP_TIME=%27{{today}}%2012%3A01%27&STEP_SIZE=%271%20d%27&QUANTITIES=20&RANGE_UNITS=KM&CSV_FORMAT=YES"
+    response:
+      recordsPath: result
+      dateField: "{{today}}"
+      valuePattern: "\\$\\$SOE[\\s\\S]*?\\r?\\n[^\\r\\n]*?,\\s*([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[Ee][+-]?\\d+)?)"
+      aggregation: latest

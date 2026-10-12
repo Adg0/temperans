@@ -158,14 +158,14 @@ Displays detailed breakdown, logs, and multi-entry session cards for whichever h
 
 Habits can be automatically populated from third-party APIs by configuring an \`endpoint:\` block inside any habit in \`Habit Logs/Settings.md\`. Secrets (API keys, personal access tokens) are stored securely in Obsidian Secret Storage and never written to plain Markdown.
 
-When synced, the dashboard displays matching branded source icons (\`github\`, \`wakatime\`, \`duolingo\`, \`monkeytype\`, \`health-connect\`) on daily log badges.
+When synced, the dashboard displays matching branded source icons (\`github\`, \`monkeytype\`, \`duolingo\`, \`health-connect\`) on daily log badges.
 
-### 1. GitHub Contributions / Commits
-Tracks daily public or private contribution events.
+### 1. GitHub Contributions
+Tracks the daily contribution calendar with GitHub GraphQL.
 \`\`\`yaml
   - id: "github-contributions"
-    name: "GitHub Commits"
-    unit: "commits"
+    name: "GitHub contributions"
+    unit: "contributions"
     cadence: "daily"
     enabled: true
     targetHistory:
@@ -173,40 +173,28 @@ Tracks daily public or private contribution events.
         min: 3
     endpoint:
       sourceName: "github"
-      url: "https://api.github.com/users/YOUR_GITHUB_USERNAME/events"
+      url: "https://api.github.com/graphql"
+      method: POST
+      headers:
+        Content-Type: "application/json"
       auth:
         type: header
         headerName: Authorization
-        secretKey: "github-pat"       # Secret name stored in Obsidian Secret Storage
+        secretKey: "github-pat"
         prefix: "Bearer "
+      body:
+        query: "query($from: DateTime!, $to: DateTime!) { viewer { contributionsCollection(from: $from, to: $to) { contributionCalendar { weeks { contributionDays { date contributionCount } } } } } }"
+        variables:
+          from: "{{startDateIso}}"
+          to: "{{todayIso}}"
       response:
-        recordsPath: ""              # Root JSON array
-        dateField: "created_at"      # ISO 8601 timestamp string
-        aggregation: count           # Counts number of events per day
-\`\`\`
-
-### 2. Duolingo Daily XP / Lessons
-Tracks daily language practice XP and streak maintenance.
-\`\`\`yaml
-  - id: "duolingo"
-    name: "Duolingo Spanish"
-    unit: "xp"
-    cadence: "daily"
-    enabled: true
-    targetHistory:
-      - effectiveDate: "2026-01-01"
-        min: 30
-    endpoint:
-      sourceName: "duolingo"
-      url: "https://www.duolingo.com/2017-06-30/users/YOUR_DUOLINGO_USER_ID?fields=streakData"
-      response:
-        recordsPath: "streakData.currentStreak.days"
+        recordsPath: "data.viewer.contributionsCollection.contributionCalendar.weeks.contributionDays"
         dateField: "date"
-        valueField: "gainedXp"
+        valueField: "contributionCount"
         aggregation: sum
 \`\`\`
 
-### 3. Monkeytype Typing Practice Time
+### 2. Monkeytype Typing Practice Time
 Syncs typing practice time and aggregated test durations.
 \`\`\`yaml
   - id: "typing"
@@ -232,33 +220,6 @@ Syncs typing practice time and aggregated test durations.
         valueField: "testDuration"
         aggregation: sum
         valueTransform: "divideBy:60"
-\`\`\`
-
-### 4. WakaTime Coding Duration
-Syncs programming time across all IDEs and editors.
-\`\`\`yaml
-  - id: "coding"
-    name: "Coding Time"
-    unit: "minutes"
-    cadence: "daily"
-    enabled: true
-    targetHistory:
-      - effectiveDate: "2026-01-01"
-        min: 60
-    endpoint:
-      sourceName: "wakatime"
-      url: "https://wakatime.com/api/v1/users/current/summaries?start={{startDate}}&end={{endDate}}"
-      auth:
-        type: header
-        headerName: Authorization
-        secretKey: "wakatime-api-key"
-        prefix: "Bearer "
-      response:
-        recordsPath: "data"
-        dateField: "range.date"
-        valueField: "grand_total.total_seconds"
-        valueTransform: "divideBy:60"
-        aggregation: sum
 \`\`\`
 
 ---

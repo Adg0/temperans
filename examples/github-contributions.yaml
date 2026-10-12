@@ -1,0 +1,34 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# Add a GitHub token to Obsidian Secret Storage as `github-pat`.
+- id: github-contributions
+  name: GitHub contributions
+  unit: contributions
+  cadence: daily
+  enabled: true
+  type: metric
+  targetHistory:
+    - effectiveDate: "2026-01-01"
+      min: 1
+  endpoint:
+    sourceName: github
+    url: "https://api.github.com/graphql"
+    method: POST
+    timeout: 60000
+    headers:
+      Content-Type: "application/json"
+      User-Agent: "Temperans-Habits"
+    auth:
+      type: header
+      headerName: Authorization
+      secretKey: github-pat
+      prefix: "Bearer "
+    body:
+      query: "query($from: DateTime!, $to: DateTime!) { viewer { contributionsCollection(from: $from, to: $to) { contributionCalendar { weeks { contributionDays { date contributionCount } } } } } }"
+      variables:
+        from: "{{startDateIso}}"
+        to: "{{todayIso}}"
+    response:
+      recordsPath: data.viewer.contributionsCollection.contributionCalendar.weeks.contributionDays
+      dateField: date
+      valueField: contributionCount
+      aggregation: sum

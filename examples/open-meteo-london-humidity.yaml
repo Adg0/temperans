@@ -1,0 +1,17 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# This records the current relative humidity for central London; no API key is needed.
+- id: outdoor-humidity
+  name: Outdoor relative humidity
+  unit: percent
+  cadence: daily
+  enabled: true
+  type: tracker
+  endpoint:
+    sourceName: open-meteo
+    method: GET
+    url: "https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current=relative_humidity_2m&timezone=Europe%2FLondon"
+    response:
+      recordsPath: current
+      dateField: time
+      valueField: relative_humidity_2m
+      aggregation: latest

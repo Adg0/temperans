@@ -1,0 +1,16 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# Returned events are grouped by the close-approach date in the seven-day window.
+- id: small-body-approaches
+  name: Near-Earth asteroid and comet approaches
+  unit: events
+  cadence: daily
+  enabled: true
+  type: tracker
+  endpoint:
+    sourceName: nasa-jpl
+    method: GET
+    url: "https://ssd-api.jpl.nasa.gov/cad.api?date-min={{startDate}}&date-max={{endDate}}&dist-max=0.05&nea-comet=true&neo=false"
+    response:
+      recordsPath: data
+      dateField: "3"
+      aggregation: count

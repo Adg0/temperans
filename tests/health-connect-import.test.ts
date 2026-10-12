@@ -72,6 +72,28 @@ it("converts compatible totals and session values together", () => {
     [{ id: "reading-time", name: "Reading time", unit: "hours", cadence: "daily", enabled: true, targetHistory: [] }])).toEqual(expect.objectContaining({ metrics: { "reading-time": 2 }, sessions: { "reading-time": [expect.objectContaining({ minutes: 90 }), expect.objectContaining({ minutes: 30 })] } }));
 });
 
+it("imports a single session with a note remark without creating a sessions array", () => {
+  const result = normalizeHealthConnectRecord({
+    date: "2026-09-26",
+    sleep: { value: 480, unit: "minutes", sessions: [{ value: 480, note: "Restful sleep" }] }
+  }, [{ id: "sleep", name: "Sleep", unit: "hours", cadence: "daily", enabled: true, targetHistory: [] }]);
+
+  expect(result.metrics.sleep).toBe(8);
+  expect(result.metricNotes?.sleep).toBe("Restful sleep");
+  expect(result.sessions?.sleep).toBeUndefined();
+});
+
+it("imports a single session without a note as clean metric without session array", () => {
+  const result = normalizeHealthConnectRecord({
+    date: "2026-09-26",
+    sleep: { value: 480, unit: "minutes", sessions: [{ value: 480 }] }
+  }, [{ id: "sleep", name: "Sleep", unit: "hours", cadence: "daily", enabled: true, targetHistory: [] }]);
+
+  expect(result.metrics.sleep).toBe(8);
+  expect(result.metricNotes?.sleep).toBeUndefined();
+  expect(result.sessions?.sleep).toBeUndefined();
+});
+
 it("requires an explicit matching recovery week before importing old sessions", async () => {
   const { host, apply } = fixture(JSON.stringify({ schemaVersion: 1, integration: "health-connect", generatedAt: "2026-09-26T10:00:00Z", timezone: "UTC", sources: ["temperans-companion"], records: [{ date: "2026-09-01", pullups: { value: 20, unit: "reps" } }] }));
   await expect(importHealthConnectStaging(host)).rejects.toThrow("outside the permitted");

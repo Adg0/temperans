@@ -22,7 +22,11 @@ describe("endpoint-runner URL and template interpolation", () => {
       startMillis: 1787097600000,
       endMillis: 1787702399999,
       startSeconds: 1787097600,
-      endSeconds: 1787702399
+      endSeconds: 1787702399,
+      startDateIso: "2026-08-19T00:00:00Z",
+      endDateIso: "2026-08-25T23:59:59Z",
+      nowIso: "2026-08-25T12:00:00Z",
+      todayIso: "2026-08-25T00:00:00Z"
     };
     const template = "https://api.example.com/data?start={{startDate}}&end={{endDate}}&since={{startMillis}}";
     expect(interpolateEndpointUrl(template, vars)).toBe(
@@ -227,5 +231,201 @@ describe("endpoint-runner daily value extraction", () => {
     expect(savedLogs[today].metricSources.typing).toBe("monkeytype");
     expect(savedLogs[today].typing.imported).toHaveLength(1);
     expect(savedLogs[today].typing.imported[0].id).toBe("t1");
+  });
+
+  it("extracts GitHub GraphQL contribution calendar with nested array flattening", () => {
+    const payload = {
+      data: {
+        user: {
+          contributionsCollection: {
+            contributionCalendar: {
+              weeks: [
+                {
+                  contributionDays: [
+                    { date: "2026-08-24", contributionCount: 4 },
+                    { date: "2026-08-25", contributionCount: 7 }
+                  ]
+                },
+                {
+                  contributionDays: [
+                    { date: "2026-08-26", contributionCount: 2 }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    };
+    const result = extractEndpointDailyValues(
+      payload,
+      {
+        recordsPath: "data.user.contributionsCollection.contributionCalendar.weeks.contributionDays",
+        dateField: "date",
+        valueField: "contributionCount",
+        aggregation: "sum"
+      },
+      "UTC"
+    );
+    expect(result.get("2026-08-24")).toBe(4);
+    expect(result.get("2026-08-25")).toBe(7);
+    expect(result.get("2026-08-26")).toBe(2);
+  });
+
+  it("extracts GitHub GraphQL contribution calendar from viewer path", () => {
+    const payload = {
+      data: {
+        viewer: {
+          contributionsCollection: {
+            contributionCalendar: {
+              weeks: [
+                {
+                  contributionDays: [
+                    { date: "2026-08-24", contributionCount: 3 },
+                    { date: "2026-08-25", contributionCount: 8 }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    };
+    const result = extractEndpointDailyValues(
+      payload,
+      {
+        recordsPath: "data.viewer.contributionsCollection.contributionCalendar.weeks.contributionDays",
+        dateField: "date",
+        valueField: "contributionCount",
+        aggregation: "sum"
+      },
+      "UTC"
+    );
+    expect(result.get("2026-08-24")).toBe(3);
+    expect(result.get("2026-08-25")).toBe(8);
+  });
+
+  it("extracts Duolingo-style single user profile streak for today", () => {
+    const payload = {
+      users: [
+        {
+          username: "Adg0",
+          streak: 42,
+          totalXp: 15400
+        }
+      ]
+    };
+    const result = extractEndpointDailyValues(
+      payload,
+      {
+        recordsPath: "users.0",
+        dateField: "{{today}}",
+        valueField: "streak",
+        aggregation: "latest"
+      },
+      "UTC"
+    );
+    const today = todayInZone("UTC");
+    expect(result.get(today)).toBe(42);
+  });
+
+  it("interpolates ISO date variables and sends POST body for GraphQL endpoints", async () => {
+    const habit: HabitDefinition = {
+      id: "github",
+      name: "GitHub",
+      unit: "contributions",
+      cadence: "daily",
+      enabled: true,
+      targetHistory: [{ effectiveDate: "2020-01-01", min: 1 }],
+      endpoint: {
+        sourceName: "github",
+        url: "https://api.github.com/graphql",
+        method: "POST",
+        body: {
+          query: "query { test }",
+          variables: {
+            from: "{{startDateIso}}",
+            to: "{{endDateIso}}"
+          }
+        },
+        response: {
+          recordsPath: "data.days",
+          dateField: "date",
+          valueField: "count"
+        }
+      }
+    };
+    const savedLogs: Record<string, any> = {};
+    const mockStore = {
+      loadSettings: async () => ({ timezone: "UTC" }),
+      getLog: async (date: string) => savedLogs[date] ?? { metrics: {}, metricSources: {}, sessions: {}, typing: { manualTests: 0, manualDurationSeconds: 0, imported: [] } },
+      updateLog: async (date: string, update: (log: any) => any) => {
+        const current = savedLogs[date] ?? { metrics: {}, metricSources: {}, sessions: {}, typing: { manualTests: 0, manualDurationSeconds: 0, imported: [] } };
+        const next = update(current);
+        savedLogs[date] = next;
+        return next;
+      }
+    };
+    const today = todayInZone("UTC");
+    let capturedBody: string | undefined;
+    let capturedMethod: string | undefined;
+    const mockRequester = async (params: any) => {
+      capturedBody = params.body;
+      capturedMethod = params.method;
+      return {
+        status: 200,
+        json: {
+          data: {
+            days: [
+              { date: today, count: 5 }
+            ]
+          }
+        }
+      };
+    };
+
+    const summary = await syncHabitFromEndpoint(habit, mockStore, "secret-pat", 7, mockRequester);
+    expect(summary.daysImported).toBe(1);
+    expect(capturedMethod).toBe("POST");
+    expect(capturedBody).toBeDefined();
+    expect(capturedBody).toContain('"from":');
+    expect(capturedBody).toMatch(/T00:00:00Z/);
+    expect(capturedBody).toMatch(/T\d{2}:\d{2}:\d{2}/);
+    expect(savedLogs[today].metrics.github).toBe(5);
+  });
+
+  it("detects and surfaces GraphQL errors returned in HTTP 200 payload", async () => {
+    const habit: HabitDefinition = {
+      id: "github",
+      name: "GitHub",
+      unit: "contributions",
+      cadence: "daily",
+      enabled: true,
+      targetHistory: [{ effectiveDate: "2020-01-01", min: 1 }],
+      endpoint: {
+        sourceName: "github",
+        url: "https://api.github.com/graphql",
+        method: "POST",
+        response: {
+          recordsPath: "data.days",
+          dateField: "date",
+          valueField: "count"
+        }
+      }
+    };
+    const mockStore = {
+      loadSettings: async () => ({ timezone: "UTC" }),
+      getLog: async () => ({ metrics: {}, metricSources: {} }),
+      updateLog: async () => null
+    };
+    const mockRequester = async () => ({
+      status: 200,
+      json: {
+        errors: [{ message: "Field 'contributionsCollection' doesn't exist" }]
+      }
+    });
+
+    await expect(syncHabitFromEndpoint(habit, mockStore, "secret", 7, mockRequester))
+      .rejects.toThrow("GraphQL error: Field 'contributionsCollection' doesn't exist");
   });
 });

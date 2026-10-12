@@ -1,0 +1,26 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# Add your Monkeytype ApeKey to Obsidian Secret Storage as `monkeytype-apekey`.
+- id: monkeytype-typing-duration
+  name: Typing practice
+  unit: minutes
+  cadence: daily
+  enabled: true
+  type: metric
+  targetHistory:
+    - effectiveDate: "2026-01-01"
+      min: 15
+  endpoint:
+    sourceName: monkeytype
+    url: "https://api.monkeytype.com/results?onOrAfterTimestamp={{startMillis}}&limit=1000"
+    testUrl: "https://api.monkeytype.com/users/currentTestActivity"
+    auth:
+      type: header
+      headerName: Authorization
+      secretKey: monkeytype-apekey
+      prefix: "ApeKey "
+    response:
+      recordsPath: data
+      dateField: timestamp
+      valueField: testDuration
+      aggregation: sum
+      valueTransform: "divideBy:60"

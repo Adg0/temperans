@@ -1,0 +1,17 @@
+# Copy this item into the `habits:` list in Habit Logs/Settings.md.
+# This is a rolling seven-day count recorded as today's snapshot.
+- id: pubmed-sleep-research
+  name: New sleep and habit papers
+  unit: papers
+  cadence: daily
+  enabled: true
+  type: tracker
+  endpoint:
+    sourceName: pubmed
+    method: GET
+    url: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=sleep%5Btiab%5D+AND+habits%5Btiab%5D&reldate=7&datetype=edat&retmode=json&retmax=0"
+    response:
+      recordsPath: esearchresult
+      dateField: "{{today}}"
+      valueField: count
+      aggregation: latest

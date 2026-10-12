@@ -33,6 +33,8 @@ export type HttpRequester = (params: {
   url: string;
   method?: string;
   headers?: Record<string, string>;
+  contentType?: string;
+  body?: string;
   throw?: boolean;
   timeout?: number;
 }) => Promise<{ status: number; json: unknown; text?: string }>;
@@ -45,6 +47,10 @@ export interface EndpointTemplateVars {
   endMillis: number;
   startSeconds: number;
   endSeconds: number;
+  startDateIso: string;
+  endDateIso: string;
+  nowIso: string;
+  todayIso: string;
 }
 
 export interface EndpointSyncSummary {
@@ -61,6 +67,8 @@ export function buildTemplateVars(endDate: string, days = 7, timezone = "UTC"): 
   const startDate = addDays(endDate, -(days - 1));
   const startMillis = startOfDayInZone(startDate, timezone);
   const endMillis = startOfDayInZone(addDays(endDate, 1), timezone) - 1;
+  const nowIso = new Date().toISOString();
+  const endOfDay = `${endDate}T23:59:59Z`;
   return {
     today: endDate,
     startDate,
@@ -68,12 +76,20 @@ export function buildTemplateVars(endDate: string, days = 7, timezone = "UTC"): 
     startMillis,
     endMillis,
     startSeconds: Math.floor(startMillis / 1000),
-    endSeconds: Math.floor(endMillis / 1000)
+    endSeconds: Math.floor(endMillis / 1000),
+    startDateIso: `${startDate}T00:00:00Z`,
+    endDateIso: endOfDay > nowIso ? nowIso : endOfDay,
+    nowIso,
+    todayIso: `${endDate}T00:00:00Z`
   };
 }
 
-export function interpolateEndpointUrl(template: string, vars: EndpointTemplateVars): string {
+export function interpolateTemplateString(template: string, vars: EndpointTemplateVars): string {
   return template
+    .replace(/\{\{todayIso\}\}/g, vars.todayIso)
+    .replace(/\{\{nowIso\}\}/g, vars.nowIso)
+    .replace(/\{\{startDateIso\}\}/g, vars.startDateIso)
+    .replace(/\{\{endDateIso\}\}/g, vars.endDateIso)
     .replace(/\{\{today\}\}/g, vars.today)
     .replace(/\{\{startDate\}\}/g, vars.startDate)
     .replace(/\{\{endDate\}\}/g, vars.endDate)
@@ -83,23 +99,76 @@ export function interpolateEndpointUrl(template: string, vars: EndpointTemplateV
     .replace(/\{\{endSeconds\}\}/g, String(vars.endSeconds));
 }
 
-function resolvePath(obj: unknown, path: string): unknown {
-  if (!path) return obj;
-  const parts = path.split(".");
-  let current: unknown = obj;
-  for (const part of parts) {
-    if (current && typeof current === "object" && part in (current as Record<string, unknown>)) {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return undefined;
-    }
-  }
-  return current;
+export function interpolateEndpointUrl(template: string, vars: EndpointTemplateVars): string {
+  return interpolateTemplateString(template, vars);
 }
 
-export function parseRecordDate(value: unknown, timezone: string): string | null {
+export function buildEndpointBody(body: unknown, vars: EndpointTemplateVars): string | undefined {
+  if (body === undefined || body === null) return undefined;
+  if (typeof body === "string") {
+    const interpolated = interpolateTemplateString(body, vars);
+    const trimmed = interpolated.trim();
+    if (trimmed.startsWith("query") || trimmed.startsWith("mutation")) {
+      return JSON.stringify({ query: trimmed });
+    }
+    if (trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (typeof parsed === "object" && parsed !== null && "query" in parsed) {
+          return JSON.stringify(parsed);
+        }
+      } catch {
+        return JSON.stringify({ query: trimmed });
+      }
+    }
+    return interpolated;
+  }
+  const json = JSON.stringify(body);
+  return interpolateTemplateString(json, vars);
+}
+
+export function resolvePath(obj: unknown, path: string): unknown {
+  if (!path) return obj;
+  const parts = path.split(".").map((p) => p.trim()).filter(Boolean);
+  return resolveParts(obj, parts);
+}
+
+function resolveParts(current: unknown, parts: string[]): unknown {
+  if (parts.length === 0) return current;
+  if (current === null || current === undefined) return undefined;
+
+  const [head, ...tail] = parts;
+
+  if (Array.isArray(current)) {
+    if (/^\d+$/.test(head)) {
+      return resolveParts(current[Number(head)], tail);
+    }
+    if (head === "*" || head === "[]") {
+      const mapped = current.map((item) => resolveParts(item, tail));
+      return mapped.flat();
+    }
+    const mapped = current.map((item) => resolveParts((item as Record<string, unknown>)?.[head], tail));
+    return mapped.flat();
+  }
+
+  if (typeof current === "object") {
+    if (head === "*") {
+      const values = Object.values(current as Record<string, unknown>);
+      const mapped = values.map((val) => resolveParts(val, tail)).filter((v) => v !== undefined);
+      if (mapped.length === 1) return mapped[0];
+      return mapped.flat();
+    }
+    const next = (current as Record<string, unknown>)[head];
+    return resolveParts(next, tail);
+  }
+
+  return undefined;
+}
+
+export function parseRecordDate(value: unknown, timezone: string, today?: string): string | null {
   if (typeof value === "string") {
     const trimmed = value.trim();
+    if (trimmed === "{{today}}" && today) return today;
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return isLogDate(trimmed) ? trimmed : null;
     const parsed = Date.parse(trimmed);
     if (!Number.isFinite(parsed)) return null;
@@ -134,8 +203,11 @@ function validMetricNumber(value: unknown): boolean {
 
 export function transformValue(value: number, transform?: EndpointValueTransform): number {
   if (!Number.isFinite(value)) return 0;
-  if (transform === "divideBy:60") return value / 60;
-  if (transform === "multiplyBy:60") return value * 60;
+  const match = transform?.match(/^(divideBy|multiplyBy):(\d+(?:\.\d+)?|\.\d+)$/);
+  if (match) {
+    const factor = Number(match[2]);
+    if (factor > 0) return match[1] === "divideBy" ? value / factor : value * factor;
+  }
   return value;
 }
 
@@ -147,17 +219,24 @@ export function extractEndpointDailyData(
   const result = new Map<string, EndpointDailyData>();
   const recordsPath = config?.recordsPath ?? "";
   const rawArray = resolvePath(payload, recordsPath);
+  const today = todayInZone(timezone);
 
-  if (!Array.isArray(rawArray)) {
-    if (rawArray && typeof rawArray === "object") {
-      for (const [key, item] of Object.entries(rawArray as Record<string, unknown>)) {
-        const date = parseRecordDate(key, timezone);
-        if (!date) continue;
-        const rawVal = config?.valueField ? resolvePath(item, config.valueField) : (typeof item === "number" ? item : (item as { value?: unknown })?.value);
-        if (!validMetricNumber(rawVal)) continue;
-        const val = transformValue(Number(rawVal), config?.valueTransform);
+  if (typeof rawArray === "string" && config?.valuePattern) {
+    const dateField = config.dateField;
+    const dateVal = dateField && dateField !== "{{today}}" ? resolvePath(payload, dateField) : undefined;
+    const date = dateField === "{{today}}"
+      ? today
+      : dateField
+        ? parseRecordDate(dateVal, timezone, today)
+        : today;
+    if (!date) return result;
+
+    try {
+      const match = new RegExp(config.valuePattern).exec(rawArray);
+      const rawVal = match?.[1] ?? match?.[0];
+      if (validMetricNumber(rawVal)) {
+        const val = transformValue(Number(rawVal), config.valueTransform);
         const rounded = Math.round(val * 100) / 100;
-        const rawRecord = typeof item === "object" && item !== null ? (item as Record<string, unknown>) : { value: item };
         result.set(date, {
           date,
           value: rounded,
@@ -167,9 +246,71 @@ export function extractEndpointDailyData(
             timestamp: Date.parse(`${date}T12:00:00Z`) || Date.now(),
             durationSeconds: Math.round(Number(rawVal) || 0),
             value: rounded,
-            raw: rawRecord
+            raw: { value: Number(rawVal) }
           }]
         });
+      }
+    } catch (err) {
+      console.warn("[Temperans] Invalid endpoint valuePattern:", err);
+    }
+    return result;
+  }
+
+  if (!Array.isArray(rawArray)) {
+    if (rawArray && typeof rawArray === "object") {
+      const recordObj = rawArray as Record<string, unknown>;
+      const keys = Object.keys(recordObj);
+      const isDateDictionary = keys.some((key) => parseRecordDate(key, timezone, today) !== null);
+
+      if (isDateDictionary) {
+        for (const [key, item] of Object.entries(recordObj)) {
+          const date = parseRecordDate(key, timezone, today);
+          if (!date) continue;
+          const rawVal = config?.valueField ? resolvePath(item, config.valueField) : (typeof item === "number" ? item : (item as { value?: unknown })?.value);
+          if (!validMetricNumber(rawVal)) continue;
+          const val = transformValue(Number(rawVal), config?.valueTransform);
+          const rounded = Math.round(val * 100) / 100;
+          const rawRecord = typeof item === "object" && item !== null ? (item as Record<string, unknown>) : { value: item };
+          result.set(date, {
+            date,
+            value: rounded,
+            count: 1,
+            items: [{
+              id: date,
+              timestamp: Date.parse(`${date}T12:00:00Z`) || Date.now(),
+              durationSeconds: Math.round(Number(rawVal) || 0),
+              value: rounded,
+              raw: rawRecord
+            }]
+          });
+        }
+      } else {
+        // Single entity object (e.g. Duolingo user profile with streak)
+        const dateField = config?.dateField;
+        const dateVal = dateField && dateField !== "{{today}}" ? resolvePath(recordObj, dateField) : undefined;
+        const date = dateField === "{{today}}"
+          ? today
+          : dateField
+            ? parseRecordDate(dateVal, timezone, today)
+            : today;
+        if (!date) return result;
+        const rawVal = config?.valueField ? resolvePath(recordObj, config.valueField) : (typeof recordObj === "number" ? recordObj : (recordObj as { value?: unknown })?.value);
+        if (validMetricNumber(rawVal)) {
+          const val = transformValue(Number(rawVal), config?.valueTransform);
+          const rounded = Math.round(val * 100) / 100;
+          result.set(date, {
+            date,
+            value: rounded,
+            count: 1,
+            items: [{
+              id: date,
+              timestamp: Date.parse(`${date}T12:00:00Z`) || Date.now(),
+              durationSeconds: Math.round(Number(rawVal) || 0),
+              value: rounded,
+              raw: recordObj
+            }]
+          });
+        }
       }
     }
     return result;
@@ -183,11 +324,11 @@ export function extractEndpointDailyData(
   for (const item of rawArray) {
     if (!item || typeof item !== "object") continue;
     const rawRecord = item as Record<string, unknown>;
-    const rawDate = resolvePath(rawRecord, dateField);
-    const date = parseRecordDate(rawDate, timezone);
+    const rawDate = dateField === "{{today}}" ? today : resolvePath(rawRecord, dateField);
+    const date = parseRecordDate(rawDate, timezone, today);
     if (!date) continue;
 
-    const rawVal = aggregation === "count" ? 1 : resolvePath(rawRecord, valueField);
+    const rawVal = aggregation === "count" ? 1 : (valueField ? resolvePath(rawRecord, valueField) : 1);
     if (!validMetricNumber(rawVal)) continue;
     const num = Number(rawVal);
     const value = transformValue(Number.isFinite(num) ? num : 0, config?.valueTransform);
@@ -222,6 +363,8 @@ export function extractEndpointDailyData(
     } else if (aggregation === "latest") {
       items.sort((left, right) => left.timestamp - right.timestamp);
       aggregated = items.at(-1)?.value ?? 0;
+    } else if (aggregation === "average") {
+      aggregated = items.reduce((sum, item) => sum + item.value, 0) / items.length;
     } else {
       aggregated = items.reduce((sum, item) => sum + item.value, 0);
     }
@@ -249,12 +392,26 @@ export function extractEndpointDailyValues(
   return values;
 }
 
-export function buildEndpointHeaders(config: EndpointConfig, secret: string | null): Record<string, string> {
-  const headers: Record<string, string> = { ...(config.headers ?? {}) };
+function methodHasBody(method?: string): boolean {
+  return Boolean(method && !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase()));
+}
+
+export function buildEndpointHeaders(
+  config: EndpointConfig,
+  secret: string | null,
+  vars?: EndpointTemplateVars
+): Record<string, string> {
+  const headers: Record<string, string> = {};
+  for (const [name, value] of Object.entries(config.headers ?? {})) {
+    headers[name] = vars ? interpolateTemplateString(value, vars) : value;
+  }
   if (config.auth && config.auth.type === "header" && secret) {
     const headerName = config.auth.headerName?.trim() || "Authorization";
     const prefix = config.auth.prefix ?? "";
     headers[headerName] = `${prefix}${secret.trim()}`;
+  }
+  if (methodHasBody(config.method) && !headers["Content-Type"] && !headers["content-type"]) {
+    headers["Content-Type"] = "application/json";
   }
   return headers;
 }
@@ -263,8 +420,9 @@ export function buildEndpointUrl(config: EndpointConfig, vars: EndpointTemplateV
   let url = interpolateEndpointUrl(config.url, vars);
   if (config.auth && config.auth.type === "query" && secret) {
     const paramName = config.auth.paramName?.trim() || "api_key";
-    const separator = url.includes("?") ? "&" : "?";
-    url = `${url}${separator}${encodeURIComponent(paramName)}=${encodeURIComponent(secret.trim())}`;
+    const parsed = new URL(url);
+    parsed.searchParams.set(paramName, secret.trim());
+    url = parsed.toString();
   }
   return url;
 }
@@ -296,6 +454,23 @@ export function validateEndpointUrl(rawUrl: string): void {
 
 const MAX_PAYLOAD_SIZE = 5 * 1024 * 1024; // 5MB
 
+export function extractGraphQLError(payload: unknown): string | null {
+  if (payload && typeof payload === "object" && "errors" in (payload as Record<string, unknown>)) {
+    const errors = (payload as { errors?: Array<{ message?: string }> }).errors;
+    if (Array.isArray(errors) && errors.length > 0) {
+      return errors.map((e) => e.message).filter(Boolean).join("; ") || "GraphQL query error";
+    }
+  }
+  return null;
+}
+
+function resolveTimeout(configTimeout?: number): number {
+  if (typeof configTimeout === "number" && configTimeout > 0) {
+    return configTimeout < 1000 ? configTimeout * 1000 : configTimeout;
+  }
+  return 60000;
+}
+
 export async function testEndpointConnection(
   config: EndpointConfig,
   secret: string | null,
@@ -309,26 +484,46 @@ export async function testEndpointConnection(
     let url = interpolateEndpointUrl(testUrlTemplate, vars);
     if (config.auth && config.auth.type === "query" && secret) {
       const paramName = config.auth.paramName?.trim() || "api_key";
-      const separator = url.includes("?") ? "&" : "?";
-      url = `${url}${separator}${encodeURIComponent(paramName)}=${encodeURIComponent(secret.trim())}`;
+      const parsed = new URL(url);
+      parsed.searchParams.set(paramName, secret.trim());
+      url = parsed.toString();
     }
     validateEndpointUrl(url);
-    const headers = buildEndpointHeaders(config, secret);
+    const headers = buildEndpointHeaders(config, secret, vars);
     const request = requester ?? requestUrl;
     if (!request) throw new Error("No HTTP requester is available.");
+    const method = config.testUrl ? "GET" : (config.method || "GET");
+    const body = methodHasBody(method) ? buildEndpointBody(config.body, vars) : undefined;
+    const timeoutMs = resolveTimeout(config.timeout);
+    const contentType = headers["Content-Type"] || headers["content-type"] || (methodHasBody(method) ? "application/json" : undefined);
     const response = await request({
       url,
-      method: config.method || "GET",
+      method,
       headers,
+      contentType,
+      body,
       throw: false,
-      timeout: 15000
+      timeout: timeoutMs
     });
+    if (response.status < 200 || response.status >= 300) {
+      const errorBody = typeof response.json === "object" && response.json !== null
+        ? (response.json as { message?: string; errors?: Array<{ message?: string }> })
+        : undefined;
+      const detail = errorBody?.message || errorBody?.errors?.map((e) => e.message).join("; ") || response.text || "";
+      return { ok: false, status: response.status, error: detail || `HTTP ${response.status}` };
+    }
+    const gqlError = extractGraphQLError(response.json);
+    if (gqlError) {
+      return { ok: false, error: `GraphQL error: ${gqlError}` };
+    }
     return {
-      ok: response.status >= 200 && response.status < 300,
+      ok: true,
       status: response.status
     };
-  } catch {
-    return { ok: false, error: "Connection failed. Check the URL, credentials, and network." };
+  } catch (err: unknown) {
+    console.error(`[Temperans] Endpoint connection test failed:`, err);
+    const detail = err instanceof Error ? `: ${err.message}` : "";
+    return { ok: false, error: `Connection failed${detail}. Check the URL, credentials, and network.` };
   }
 }
 
@@ -355,18 +550,40 @@ export async function syncHabitFromEndpoint(
   const vars = buildTemplateVars(endDate, days, settings.timezone);
   const url = buildEndpointUrl(habit.endpoint, vars, secret);
   validateEndpointUrl(url);
-  const headers = buildEndpointHeaders(habit.endpoint, secret);
+  const headers = buildEndpointHeaders(habit.endpoint, secret, vars);
 
   const request = requester ?? requestUrl;
   if (!request) throw new Error("No HTTP requester is available.");
+  const method = habit.endpoint.method || "GET";
+  const body = methodHasBody(method) ? buildEndpointBody(habit.endpoint.body, vars) : undefined;
+  const timeoutMs = resolveTimeout(habit.endpoint.timeout);
+  const contentType = headers["Content-Type"] || headers["content-type"] || (methodHasBody(method) ? "application/json" : undefined);
   const response = await request({
     url,
-    method: habit.endpoint.method || "GET",
+    method,
     headers,
-    timeout: 15000,
+    contentType,
+    body,
+    timeout: timeoutMs,
     throw: false
-  }).catch(() => { throw new Error("Endpoint request failed. Check the connection and credentials."); });
-  if (response.status < 200 || response.status >= 300) throw new Error(`Endpoint returned HTTP ${response.status}.`);
+  }).catch((err: unknown) => {
+    console.error(`[Temperans] Endpoint request failed for ${habit.name}:`, err);
+    const detail = err instanceof Error ? `: ${err.message}` : "";
+    throw new Error(`Endpoint request failed${detail}. Check the connection, network, and credentials.`);
+  });
+  if (response.status < 200 || response.status >= 300) {
+    const errorBody = typeof response.json === "object" && response.json !== null
+      ? (response.json as { message?: string; errors?: Array<{ message?: string }> })
+      : undefined;
+    const detail = errorBody?.message || errorBody?.errors?.map((e) => e.message).join("; ") || response.text || "";
+    const detailStr = detail ? `: ${detail}` : "";
+    throw new Error(`Endpoint returned HTTP ${response.status}${detailStr}`);
+  }
+
+  const gqlError = extractGraphQLError(response.json);
+  if (gqlError) {
+    throw new Error(`GraphQL error: ${gqlError}`);
+  }
 
   if (new TextEncoder().encode(response.text ?? JSON.stringify(response.json)).byteLength > MAX_PAYLOAD_SIZE) {
     throw new Error(`Response payload exceeded maximum size limit (${MAX_PAYLOAD_SIZE} bytes).`);
