@@ -71,6 +71,12 @@ function createAbortError(): Error {
 export function checkAbort(signal?: AbortSignal): void {
   if (signal?.aborted) throw createAbortError();
 }
+
+function rejectionError(reason: unknown): Error {
+  if (reason instanceof Error) return reason;
+  return new Error(typeof reason === "string" ? reason : "Operation failed.", { cause: reason });
+}
+
 /** Detach one consumer without cancelling a read still needed by another consumer. */
 export function abortable<T>(work: Promise<T>, signal?: AbortSignal): Promise<T> {
   if (!signal) return work;
@@ -78,7 +84,7 @@ export function abortable<T>(work: Promise<T>, signal?: AbortSignal): Promise<T>
     const cancel = () => { cleanup(); reject(createAbortError()); };
     const cleanup = () => signal.removeEventListener("abort", cancel);
     signal.addEventListener("abort", cancel, { once: true });
-    work.then(value => { cleanup(); resolve(value); }, error => { cleanup(); reject(error); });
+    work.then(value => { cleanup(); resolve(value); }, reason => { cleanup(); reject(rejectionError(reason)); });
     if (signal.aborted) cancel();
   });
 }

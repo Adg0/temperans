@@ -4,7 +4,6 @@ import { App, TFile, normalizePath } from "obsidian";
 import { ExternalMetricImport, HabitSettings, RESERVED_HABIT_IDS } from "../types";
 import {
   HEALTH_CONNECT_STAGE_FILE,
-  HealthConnectMetricValue,
   normalizeHealthConnectRecord,
   validateHealthConnectStagingDocument
 } from "./health-connect-schema";

@@ -156,7 +156,7 @@ Displays detailed breakdown, logs, and multi-entry session cards for whichever h
 
 ## Automated Endpoint Integrations (in Settings.md)
 
-Habits can be automatically populated from third-party APIs by configuring an \`endpoint:\` block inside any habit in \`Habit Logs/Settings.md\`. Secrets (API keys, personal access tokens) are stored securely in Obsidian Secret Storage and never written to plain Markdown.
+Habits can be automatically populated from third-party APIs by configuring an \`endpoint:\` block inside any habit in \`Habit Logs/Settings.md\`. Secrets (API keys, personal access tokens) are stored securely in Obsidian secret storage and never written to plain Markdown.
 
 When synced, the dashboard displays matching branded source icons (\`github\`, \`monkeytype\`, \`duolingo\`, \`health-connect\`) on daily log badges.
 

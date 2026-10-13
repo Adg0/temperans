@@ -113,7 +113,7 @@ export function buildEndpointBody(body: unknown, vars: EndpointTemplateVars): st
     }
     if (trimmed.startsWith("{")) {
       try {
-        const parsed = JSON.parse(trimmed);
+        const parsed: unknown = JSON.parse(trimmed);
         if (typeof parsed === "object" && parsed !== null && "query" in parsed) {
           return JSON.stringify(parsed);
         }

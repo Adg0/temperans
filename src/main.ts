@@ -298,7 +298,7 @@ export default class TemperansHabitsPlugin extends Plugin {
       secret = this.getSecretValue(this.state.monkeytypeSecretName);
     }
     if (!secret && habit.endpoint.auth?.type && habit.endpoint.auth.type !== "none") {
-      new Notice(`No secret found in Secret Storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
+      new Notice(`No secret found in secret storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
       return false;
     }
     const today = todayInZone(settings.timezone);
@@ -324,7 +324,7 @@ export default class TemperansHabitsPlugin extends Plugin {
       secret = this.getSecretValue(this.state.monkeytypeSecretName);
     }
     if (!secret && habit.endpoint.auth?.type && habit.endpoint.auth.type !== "none") {
-      new Notice(`No secret found in Secret Storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
+      new Notice(`No secret found in secret storage for ${habit.name} (key: "${secretKey}"). Configure it in Settings → Automated API endpoints.`);
       return;
     }
     try {

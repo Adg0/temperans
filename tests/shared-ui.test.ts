@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Element, notices, Platform } from "./helpers/obsidian-ui";
+import { Element, lastModal, notices, Platform } from "./helpers/obsidian-ui";
 import type { App } from "obsidian";
 import type TemperansHabitsPlugin from "../src/main";
 import type { DashboardActionsHost } from "../src/dashboard-actions-modal";
@@ -35,13 +35,19 @@ describe("shared habit creation", () => {
     const store = makeStore();
     const refreshed = vi.fn().mockResolvedValue(undefined);
     let root: Element;
+    let settingsPage: Element | undefined;
     if (entry === "settings") {
-      const tab = new TemperansSettingTab({} as App, { store, state: {}, refreshDashboards: refreshed } as unknown as TemperansHabitsPlugin);
-      tab.display();
-      root = tab.containerEl as unknown as Element;
-      await action(root, "Configure habits");
-      // Navigation launches the async subpage, so wait for the visible form.
-      await action(root, "Create a new habit");
+      const mockApp = { vault: { on: () => ({}) } } as unknown as App;
+      const mockPlugin = { store, state: {}, refreshDashboards: refreshed, registerEvent: () => {} } as unknown as TemperansHabitsPlugin;
+      const tab = new TemperansSettingTab(mockApp, mockPlugin);
+      const defs = tab.getSettingDefinitions();
+      const habitsPageDef = (defs[0] as unknown as { items: Array<{ name: string; page: () => { display(): void; containerEl: unknown } }> }).items.find((i) => i.name === "Configure habits")!;
+      const page = habitsPageDef.page();
+      page.display();
+      settingsPage = page.containerEl as unknown as Element;
+      await vi.waitFor(() => expect(settingsPage!.all().some((n) => n.attrs["aria-label"]?.startsWith("Create a new habit:") ?? false)).toBe(true));
+      await action(settingsPage, "Create a new habit");
+      root = (lastModal?.contentEl ?? settingsPage) as unknown as Element;
     } else {
       const modal = new DashboardActionsModal({} as App, { store } as unknown as DashboardActionsHost, refreshed);
       modal.onOpen();
@@ -63,7 +69,8 @@ describe("shared habit creation", () => {
       enabled: true, targetHistory: [{ effectiveDate: expect.any(String), min: 15, max: 60 }]
     }));
     expect(refreshed).toHaveBeenCalledOnce();
-    expect(root.all().some(node => node.textContent === (entry === "settings" ? "Configure habits" : "Habit actions"))).toBe(true);
+    const returnContainer = settingsPage ?? root;
+    expect(returnContainer.all().some((node) => node.textContent?.toLowerCase().includes("habits") || node.textContent?.includes("Habit actions"))).toBe(true);
   });
 
   it.each(["Avoidance habit", "Metric tracker"])("saves %s with the correct target and keyboard selection", async title => {

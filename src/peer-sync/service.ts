@@ -169,13 +169,13 @@ export class PeerSyncService {
 
   private async getSecret(name: string): Promise<string> {
     const storage = this.plugin.app.secretStorage;
-    if (!storage) throw new Error("Peer sync requires Obsidian Secret Storage on this device.");
+    if (!storage) throw new Error("Peer sync requires Obsidian secret storage on this device.");
     return storage.getSecret(name) ?? "";
   }
 
   private async setSecret(name: string, value: string): Promise<void> {
     const storage = this.plugin.app.secretStorage;
-    if (!storage) throw new Error("Peer sync requires Obsidian Secret Storage on this device.");
+    if (!storage) throw new Error("Peer sync requires Obsidian secret storage on this device.");
     storage.setSecret(name, value);
   }
 }

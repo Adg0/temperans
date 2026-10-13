@@ -379,7 +379,7 @@ endpoint:
   auth:
     type: header                       # header, query, or none
     headerName: Authorization
-    secretKey: "my-api-token"         # Name stored in Obsidian Secret Storage
+    secretKey: "my-api-token"         # Name stored in Obsidian secret storage
     prefix: "Bearer "
   response:
     recordsPath: "data.items"         # Dot-separated JSON path to an array or date dictionary

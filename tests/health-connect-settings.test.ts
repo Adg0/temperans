@@ -1,5 +1,20 @@
 import { expect, it, vi } from "vitest";
-vi.mock("obsidian", async importOriginal => ({ ...await importOriginal<object>(), Plugin: class {}, MarkdownRenderChild: class {} }));
+vi.mock("obsidian", async importOriginal => ({
+  ...await importOriginal<object>(),
+  Plugin: class {},
+  MarkdownRenderChild: class {},
+  PluginSettingTab: class { containerEl = {}; update() {} display() {} hide() {} },
+  SettingPage: class { containerEl = {}; title = ""; display() {} hide() {} },
+  Setting: class {
+    setName() { return this; }
+    setDesc() { return this; }
+    setHeading() { return this; }
+    addText() { return this; }
+    addToggle() { return this; }
+    addButton() { return this; }
+    addExtraButton() { return this; }
+  }
+}));
 import TemperansPlugin from "../src/main";
 import { HabitStore } from "../src/data";
 

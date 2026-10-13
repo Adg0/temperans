@@ -24,7 +24,24 @@ export const normalizePath = value => value;
 export const parseYaml = JSON.parse;
 export const stringifyYaml = JSON.stringify;
 export class MarkdownRenderChild { constructor(containerEl) { this.containerEl = containerEl; } }
-export class PluginSettingTab {}
+export class SettingPage {
+  constructor() {
+    this.containerEl = document.createElement('div');
+    this.title = '';
+  }
+  display() {}
+  hide() {}
+}
+export class PluginSettingTab {
+  constructor(app, plugin) {
+    this.app = app;
+    this.plugin = plugin;
+    this.containerEl = document.createElement('div');
+  }
+  update() {}
+  display() {}
+  hide() {}
+}
 export class ItemView {
   constructor(leaf) {
     this.app = leaf.app;

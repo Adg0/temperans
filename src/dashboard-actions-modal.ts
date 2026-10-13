@@ -259,7 +259,7 @@ export class DashboardActionsModal extends Modal {
       store: this.host.store,
       onChanged: async () => {
         await this.onTasksChanged();
-        await this.render();
+        this.render();
       },
       onAddHabit: () => {
         this.previousHabitView = "configure-habits";

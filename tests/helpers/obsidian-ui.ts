@@ -35,6 +35,7 @@ export class Element {
   createSpan(options = {}) { return this.createEl("span", options); }
   empty() { this.children = []; }
   addClass(...classes: string[]) { this.cls += ` ${classes.join(" ")}`; }
+  appendChild(child: Element) { this.children.push(child); return child; }
   removeClass(cls: string) { this.cls = this.cls.split(" ").filter(c => c !== cls).join(" "); }
   toggleClass(cls: string, enabled: boolean) { if (enabled) this.addClass(cls); else this.removeClass(cls); }
   setAttribute(name: string, value: string) { this.attrs[name] = value; }
@@ -100,15 +101,30 @@ export class SecretComponent {
   onChange() { return this; }
 }
 
+export let lastModal: Modal | null = null;
 export class Modal {
   contentEl = new Element();
   modalEl = new Element();
   constructor(public app: unknown) {}
-  close() {}
+  open() {
+    lastModal = this;
+    return (this as unknown as { onOpen?(): unknown }).onOpen?.();
+  }
+  close() {
+    return (this as unknown as { onClose?(): unknown }).onClose?.();
+  }
+}
+export class SettingPage {
+  containerEl = new Element();
+  title = "";
+  display() {}
+  hide() {}
 }
 export class PluginSettingTab {
   containerEl = new Element();
   constructor(public app: unknown) {}
+  update() {}
+  hide() {}
 }
 export const Platform = { isDesktopApp: true, isMobileApp: false };
 export const notices: string[] = [];

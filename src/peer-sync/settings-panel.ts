@@ -198,34 +198,36 @@ export class PeerSyncPanelController {
           void this.service.saveRemoteProfile(parsed.url, parsed.secret);
         }
       });
-      input.inputEl.addEventListener("keydown", async (e) => {
+      input.inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          await connectAndCompare();
+          void connectAndCompare();
         }
       });
     });
 
+    const pasteConnectionDetails = async (): Promise<void> => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const parsed = parsePairingPayload(text);
+        if (!parsed) {
+          new Notice("Clipboard does not contain a valid pairing address or code.");
+          return;
+        }
+        currentInput = `${parsed.url}#${parsed.secret}`;
+        if (textInputEl) textInputEl.value = currentInput;
+        await this.service.saveRemoteProfile(parsed.url, parsed.secret);
+        new Notice("Configured desktop connection from clipboard!");
+        await connectAndCompare();
+      } catch (error) {
+        new Notice(error instanceof Error ? error.message : "Could not read clipboard.");
+      }
+    };
+
     connectionSetting.addExtraButton((button) => {
       button.setIcon("clipboard-paste");
       button.setTooltip("Paste connection details from clipboard");
-      button.onClick(async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          const parsed = parsePairingPayload(text);
-          if (!parsed) {
-            new Notice("Clipboard does not contain a valid pairing address or code.");
-            return;
-          }
-          currentInput = `${parsed.url}#${parsed.secret}`;
-          if (textInputEl) textInputEl.value = currentInput;
-          await this.service.saveRemoteProfile(parsed.url, parsed.secret);
-          new Notice("Configured desktop connection from clipboard!");
-          await connectAndCompare();
-        } catch (error) {
-          new Notice(error instanceof Error ? error.message : "Could not read clipboard.");
-        }
-      });
+      button.onClick(() => { void pasteConnectionDetails(); });
     });
 
     let connectBtn: HTMLButtonElement | null = null;
