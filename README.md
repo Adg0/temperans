@@ -253,7 +253,7 @@ Use **Settings → Temperans Habits → Automated API endpoints** to store crede
 
 ## Third-party integrations
 
-The Android companion exports Health Connect data to a local staging file in the vault. Temperans imports supported values for enabled habits. See the [companion guide](android-companion/README.md) for setup and supported metrics.
+The Habit Sync Companion exports Health Connect metrics and habit sessions as JSON or CSV. Temperans Habits imports the staged data for enabled habits from `habit-sync-staging.json` or `habit-sync-staging.csv` in the configured operation folder. See the [companion guide](android-companion/README.md) for setup and supported metrics.
 
 ## Local peer sync
 
@@ -321,7 +321,7 @@ reading:
   sessions: []
 ```
 
-Obsidian plugin storage retains local display/configuration state; the optional Monkeytype ApeKey and peer-sync pairing secrets use Obsidian Secret Storage. Health Connect staging data remains only in the selected local vault folder until replaced by the companion or removed by you.
+Obsidian plugin storage retains local display/configuration state; the optional Monkeytype ApeKey and peer-sync pairing secrets use Obsidian Secret Storage. Companion JSON and CSV staging data remain only in the selected local vault folder until replaced by the companion or removed by you.
 
 The plugin and companion have no hosted backend or telemetry. Optional endpoint integrations contact the services you configure. Local peer sync transfers selected habit files, which can contain health data, to the paired device.
 

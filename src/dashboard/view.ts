@@ -3,6 +3,7 @@ import { calendarModeFor } from "./format";
 import { ItemView, Notice, Platform, WorkspaceLeaf } from "obsidian";
 import { daysInYear, monthOf, todayInZone, yearOf } from "../date";
 import { HabitId } from "../types";
+import { DEFAULT_STATE } from "../default-state";
 import { DashboardHost, WidgetContext } from "./types";
 import { defaultWidgetRegistry, DashboardWidgetRegistry } from "./registry";
 import { ensureDashboardFile, loadDashboardLayout } from "./layout-loader";
@@ -35,7 +36,7 @@ export class HabitDashboardView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf, private readonly host: DashboardHost) { super(leaf); }
   getViewType(): string { return DASHBOARD_VIEW_TYPE; }
-  getDisplayText(): string { return this.host.state.dashboardTitle || "Temperans Habits"; }
+  getDisplayText(): string { return this.host.state.dashboardTitle || DEFAULT_STATE.dashboardTitle; }
   getIcon(): string { return "chart-no-axes-combined"; }
 
   async onOpen(): Promise<void> {

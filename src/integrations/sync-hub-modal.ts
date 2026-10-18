@@ -15,7 +15,7 @@ export class ThirdPartySyncHubModal extends Modal {
 
   onOpen(): void {
     this.modalEl.addClass("temperans-modal", "temperans-third-party-sync-modal");
-    this.contentEl.createEl("h2", { text: "Health Connect sync" });
+    this.contentEl.createEl("h2", { text: "Companion data import" });
     renderHealthConnectPanel(this.contentEl, (weekEnding) => this.host.importHealthConnect(weekEnding), async () => this.close(), this.host.healthConnectPathControl?.());
   }
 

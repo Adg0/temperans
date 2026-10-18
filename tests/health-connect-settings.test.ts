@@ -25,7 +25,7 @@ function fixture() {
 }
 it("persists a custom path, resets to the current folder, and avoids redundant writes", async () => {
   const f = fixture();
-  expect(f.path()).toBe("Habit Logs/.temperance-staging.json");
+  expect(f.path()).toBe("Habit Logs/habit-sync-staging.json");
   await f.control().save(" Habit Logs/Exports/health.json ");
   expect(f.path()).toBe("Habit Logs/Exports/health.json");
   expect(f.host.saveData).toHaveBeenCalledWith(expect.objectContaining({ healthConnectStagingPath: "Habit Logs/Exports/health.json" }));
@@ -33,7 +33,7 @@ it("persists a custom path, resets to the current folder, and avoids redundant w
   expect(f.host.saveData).toHaveBeenCalledOnce();
   await f.control().save("");
   f.host.store = { folderPath: "New Habits" } as HabitStore;
-  expect(f.path()).toBe("New Habits/.temperance-staging.json");
+  expect(f.path()).toBe("New Habits/habit-sync-staging.json");
 });
 it("retains the saved path if validation or persistence fails", async () => {
   const f = fixture();
@@ -41,5 +41,5 @@ it("retains the saved path if validation or persistence fails", async () => {
   expect(f.host.saveData).not.toHaveBeenCalled();
   f.host.saveData.mockRejectedValueOnce(new Error("Disk unavailable"));
   await expect(f.control().save("Habit Logs/Exports/health.json")).rejects.toThrow("Disk unavailable");
-  expect(f.path()).toBe("Habit Logs/.temperance-staging.json");
+  expect(f.path()).toBe("Habit Logs/habit-sync-staging.json");
 });

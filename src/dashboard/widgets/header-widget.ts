@@ -6,6 +6,7 @@ import { createTemperansDropdown } from "../../dropdown";
 import { DashboardActionsModal } from "../../dashboard-actions-modal";
 import { HabitLogModal } from "../../modals";
 import { DashboardWidget, WidgetContext } from "../types";
+import { DEFAULT_STATE } from "../../default-state";
 
 export class HeaderWidget implements DashboardWidget {
   id = "header";
@@ -23,10 +24,10 @@ export class HeaderWidget implements DashboardWidget {
 
     const titleText = (typeof config?.title === "string" && config.title.trim())
       || ctx.host.state.dashboardTitle
-      || "Temperans Habits";
+      || DEFAULT_STATE.dashboardTitle;
     const subtitleText = (typeof config?.subtitle === "string")
       ? config.subtitle
-      : (ctx.host.state.dashboardSubtitle ?? "Local habit history, stored in Markdown.");
+      : (ctx.host.state.dashboardSubtitle ?? DEFAULT_STATE.dashboardSubtitle);
 
     const title = container.createDiv({ cls: "temperans-header-title" });
     title.createEl("h2", { text: titleText });

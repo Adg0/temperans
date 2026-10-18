@@ -20,7 +20,7 @@ const context = await esbuild.context({
 
 if (watch) {
   await context.watch();
-  console.log("Watching Temperans Habits source files...");
+  console.log("Watching Temperans source files...");
 } else {
   await context.rebuild();
   await context.dispose();

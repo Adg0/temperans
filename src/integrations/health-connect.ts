@@ -3,8 +3,10 @@ import { hasInvalidPathChar, operationFolder } from "../paths";
 import { App, TFile, normalizePath } from "obsidian";
 import { ExternalMetricImport, HabitSettings, RESERVED_HABIT_IDS } from "../types";
 import {
+  HEALTH_CONNECT_STAGE_CSV_FILE,
   HEALTH_CONNECT_STAGE_FILE,
   normalizeHealthConnectRecord,
+  parseHealthConnectCsv,
   validateHealthConnectStagingDocument
 } from "./health-connect-schema";
 
@@ -32,22 +34,40 @@ export interface HealthConnectImportHost {
     }>;
   };
   getHealthConnectStagingPath?(): string;
+  getHealthConnectStagingPathOverride?(): string;
   refreshAllDashboards(): Promise<void>;
 }
 
-/** Only a vault-relative JSON file is accepted, including the legacy dot filename. */
+/** Only a vault-relative JSON or CSV file is accepted. */
 export function healthConnectStagePath(folderPath: string, override = ""): string {
   folderPath = operationFolder(folderPath);
   const path = (override.trim() || `${folderPath}/${HEALTH_CONNECT_STAGE_FILE}`).replace(/\\/g, "/");
   if (!path.startsWith(folderPath + "/")) throw new Error("The staging file must be inside the configured operation folder: " + folderPath);
   const parts = path.split("/");
-  if (!/\.json$/i.test(path) || parts.some((part, index) => !part || part === "." || part === ".."
+  if (!/\.(json|csv)$/i.test(path) || parts.some((part, index) => !part || part === "." || part === ".."
     || hasInvalidPathChar(part) || /[. ]$/.test(part)
     || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)
     || (index < parts.length - 1 && part.startsWith(".")))) {
-    throw new Error("Use a vault-relative .json path, without hidden folders, parent folders, or reserved filename characters.");
+    throw new Error("Use a vault-relative .json or .csv path, without hidden folders, parent folders, or reserved filename characters.");
   }
   return normalizePath(path);
+}
+
+const LEGACY_STAGE_FILES = [".habit-sync-staging.json", ".habit-sync-staging.csv", ".temperance-staging.json"];
+
+async function resolveStagingPath(app: App, folderPath: string, override = ""): Promise<string> {
+  if (override.trim()) return healthConnectStagePath(folderPath, override);
+
+  const candidates = [HEALTH_CONNECT_STAGE_FILE, HEALTH_CONNECT_STAGE_CSV_FILE, ...LEGACY_STAGE_FILES]
+    .map((filename) => healthConnectStagePath(folderPath, `${operationFolder(folderPath)}/${filename}`));
+  const available: Array<{ path: string; mtime: number; order: number }> = [];
+  for (const [order, path] of candidates.entries()) {
+    if (!(await app.vault.adapter.exists(path))) continue;
+    const stat = await app.vault.adapter.stat?.(path);
+    available.push({ path, mtime: stat?.mtime ?? -1, order });
+  }
+  available.sort((a, b) => (b.mtime - a.mtime) || (a.order - b.order));
+  return available[0]?.path ?? candidates[0];
 }
 
 interface StagingFileContents {
@@ -69,24 +89,29 @@ async function readStagingFile(app: App, stagingPath: string): Promise<StagingFi
   if (await app.vault.adapter.exists(stagingPath)) {
     return { contents: await app.vault.adapter.read(stagingPath), indexedFile: null };
   }
-  throw new Error(`No Health Connect export was found at ${stagingPath}. Check the staging path in Health Connect sync and the companion export destination.`);
+  throw new Error(`No companion export was found at ${stagingPath}. Check the staging file path and the export destination in the companion app.`);
 }
 
 /** Imports a validated stage file, retaining it whenever validation or writing fails. */
 export async function importHealthConnectStaging(host: HealthConnectImportHost, weekEnding?: string): Promise<HealthConnectImportSummary> {
-  const stagingPath = healthConnectStagePath(host.store.folderPath, host.getHealthConnectStagingPath?.());
+  const pathOverride = host.getHealthConnectStagingPathOverride?.() ?? host.getHealthConnectStagingPath?.();
+  const stagingPath = await resolveStagingPath(host.app, host.store.folderPath, pathOverride);
   return serialized(host.app.vault, "staging:" + stagingPath, async () => {
   const stat = await host.app.vault.adapter.stat?.(stagingPath);
   if (stat && stat.size > 2 * 1024 * 1024) throw new Error("Staging export exceeds the 2 MiB size limit.");
   const stagingFile = await readStagingFile(host.app, stagingPath);
   if (new TextEncoder().encode(stagingFile.contents).byteLength > 2 * 1024 * 1024) throw new Error("Staging export exceeds the 2 MiB size limit.");
-  let raw: unknown;
-  try {
-    raw = JSON.parse(stagingFile.contents);
-  } catch {
-    throw new Error("The Health Connect staging file is not valid JSON. It was kept so you can export it again.");
-  }
   const settings = await host.store.loadSettings();
+  let raw: unknown;
+  if (/\.csv$/i.test(stagingPath)) {
+    raw = parseHealthConnectCsv(stagingFile.contents, settings.timezone);
+  } else {
+    try {
+      raw = JSON.parse(stagingFile.contents);
+    } catch {
+      throw new Error("The companion staging file is not valid JSON. It was kept so you can export it again.");
+    }
+  }
   const validated = validateHealthConnectStagingDocument(raw, settings.timezone, weekEnding);
   if (!validated.ok) throw new Error(`${validated.error} The staging file was kept and no habit logs were changed.`);
   const enabledHabitIds = new Set(settings.habits.filter((h) => h.enabled).map((h) => h.id));

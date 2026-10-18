@@ -25,11 +25,11 @@ class TemperansContentSettingPage extends SettingPage {
     try {
       const result = this.renderContent(this.containerEl, () => this.display());
       void Promise.resolve(result).catch((error: unknown) => {
-        console.error(`Temperans Habits could not render ${this.title}.`, error);
+      console.error(`Temperans Habits could not render ${this.title}.`, error);
         new Notice(error instanceof Error ? error.message : `Could not load ${this.title}.`);
       });
     } catch (error) {
-      console.error(`Temperans Habits could not render ${this.title}.`, error);
+        console.error(`Temperans Habits could not render ${this.title}.`, error);
       new Notice(error instanceof Error ? error.message : `Could not load ${this.title}.`);
     }
   }
@@ -136,9 +136,9 @@ export class TemperansSettingTab extends PluginSettingTab {
         items: [
           {
             type: "page",
-            name: "Health Connect sync",
-            desc: "Import staged health metrics exported from the Android companion app.",
-            page: () => this.createSettingsPage("Health Connect sync", (container) => this.renderHealthConnectSettings(container))
+            name: "Companion data import",
+            desc: "Import health metrics and habit sessions from the companion app’s JSON or CSV export.",
+            page: () => this.createSettingsPage("Companion data import", (container) => this.renderHealthConnectSettings(container))
           },
           {
             type: "page",

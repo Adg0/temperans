@@ -4,11 +4,13 @@ import { ThirdPartySyncHubHost, ThirdPartySyncHubModal } from "./sync-hub-modal"
 
 export {
   HEALTH_CONNECT_INTEGRATION,
+  HEALTH_CONNECT_STAGE_CSV_FILE,
   HEALTH_CONNECT_STAGE_FILE,
   HEALTH_CONNECT_STAGE_SCHEMA_VERSION,
   healthConnectStagePath,
   importHealthConnectStaging,
   normalizeHealthConnectRecord,
+  parseHealthConnectCsv,
   validateHealthConnectStagingDocument
 } from "./health-connect";
 export { syncHabitFromEndpoint, testEndpointConnection } from "./endpoint-runner";

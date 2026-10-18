@@ -2,7 +2,7 @@ import { DebouncedTask } from "./async";
 import { operationFolder } from "./paths";
 import { healthConnectStagePath } from "./integrations/health-connect";
 import { HealthConnectPathControl } from "./integrations/health-connect-panel";
-import { DEFAULT_NOTE_PATH, NotePathSettings, noteFormat, restoreNotePath, validateNoteFormat } from "./note-paths";
+import { NotePathSettings, noteFormat, restoreNotePath, validateNoteFormat } from "./note-paths";
 import { Notice, Plugin, TAbstractFile, TFile, TFolder, normalizePath, requestUrl } from "obsidian";
 import { HabitStore } from "./data";
 import { DASHBOARD_VIEW_TYPE, HabitDashboardView } from "./dashboard";
@@ -17,24 +17,12 @@ import { PeerSyncModal } from "./peer-sync/modal";
 import { PeerSyncService } from "./peer-sync/service";
 import { TemperansSettingTab } from "./settings";
 import { HabitId, PluginState } from "./types";
-
-const DEFAULT_STATE: PluginState = {
-  folder: "Habit Logs",
-  healthConnectStagingPath: "",
-  notePath: { ...DEFAULT_NOTE_PATH },
-  lastMonkeytypeTimestamp: 0,
-  monkeytypeSecretName: "temperans-habits-monkeytype-apekey",
-  heatmapColor: "#22c55e",
-  dashboardTitle: "Temperans Habits",
-  dashboardSubtitle: "Local habit history, stored in Markdown.",
-  peerSyncPort: 43887,
-  peerSyncRemoteUrl: "",
-  peerSyncHostSecretName: "temperans-habits-peer-host-secret",
-  peerSyncRemoteSecretName: "temperans-habits-peer-remote-secret"
-};
+import { DEFAULT_STATE, LEGACY_DEFAULT_DASHBOARD_SUBTITLES, LEGACY_DEFAULT_DASHBOARD_TITLES } from "./default-state";
 
 function restoreState(value: unknown): PluginState {
   const saved = value && typeof value === "object" ? value as Partial<PluginState> : {};
+  const savedDashboardTitle = typeof saved.dashboardTitle === "string" ? saved.dashboardTitle.trim() : "";
+  const savedDashboardSubtitle = typeof saved.dashboardSubtitle === "string" ? saved.dashboardSubtitle : null;
   return {
     notePath: restoreNotePath(saved.notePath),
     healthConnectStagingPath: typeof saved.healthConnectStagingPath === "string" ? saved.healthConnectStagingPath : "",
@@ -48,11 +36,11 @@ function restoreState(value: unknown): PluginState {
     heatmapColor: typeof saved.heatmapColor === "string" && /^#[0-9a-f]{6}$/i.test(saved.heatmapColor)
       ? saved.heatmapColor
       : DEFAULT_STATE.heatmapColor,
-    dashboardTitle: typeof saved.dashboardTitle === "string" && saved.dashboardTitle.trim()
-      ? saved.dashboardTitle.trim()
+    dashboardTitle: savedDashboardTitle && !LEGACY_DEFAULT_DASHBOARD_TITLES.has(savedDashboardTitle.toLowerCase())
+      ? savedDashboardTitle
       : DEFAULT_STATE.dashboardTitle,
-    dashboardSubtitle: typeof saved.dashboardSubtitle === "string"
-      ? saved.dashboardSubtitle
+    dashboardSubtitle: savedDashboardSubtitle !== null && !LEGACY_DEFAULT_DASHBOARD_SUBTITLES.has(savedDashboardSubtitle.trim().toLowerCase())
+      ? savedDashboardSubtitle
       : DEFAULT_STATE.dashboardSubtitle,
     peerSyncPort: typeof saved.peerSyncPort === "number" && Number.isInteger(saved.peerSyncPort) && saved.peerSyncPort >= 1024 && saved.peerSyncPort <= 65535
       ? saved.peerSyncPort
@@ -112,7 +100,7 @@ export default class TemperansHabitsPlugin extends Plugin {
     this.addCommand({ id: "open-analytics-summary", name: "Open habit analytics summary", callback: () => this.openAnalyticsSummary() });
     this.addCommand({ id: "customize-dashboard-layout", name: "Customize dashboard layout (Dashboard.md)", callback: () => void this.openDashboardConfig() });
     this.addCommand({ id: "open-third-party-sync", name: "Open third-party sync", callback: () => this.openThirdPartySync() });
-    this.addCommand({ id: "import-health-connect", name: "Import Health Connect staged data", callback: () => void this.importHealthConnect() });
+    this.addCommand({ id: "import-health-connect", name: "Import companion data", callback: () => void this.importHealthConnect() });
     this.addCommand({ id: "open-peer-sync", name: "Open local peer sync", callback: () => this.openPeerSync() });
     this.addSettingTab(new TemperansSettingTab(this.app, this));
 
@@ -373,6 +361,10 @@ export default class TemperansHabitsPlugin extends Plugin {
     return healthConnectStagePath(this.store.folderPath, this.state.healthConnectStagingPath);
   }
 
+  getHealthConnectStagingPathOverride(): string {
+    return this.state.healthConnectStagingPath;
+  }
+
   healthConnectPathControl(): HealthConnectPathControl {
     return {
       path: this.state.healthConnectStagingPath,
@@ -391,14 +383,14 @@ export default class TemperansHabitsPlugin extends Plugin {
   async importHealthConnect(weekEnding?: string): Promise<HealthConnectImportSummary | null> {
     try {
       const summary = await importHealthConnectStaging(this, weekEnding);
-      new Notice(`Health Connect: ${summary.imported} imported, ${summary.updated} updated, ${summary.protected} protected, ${summary.skipped} skipped. Export retained for retry.`);
+      new Notice(`Companion data: ${summary.imported} imported, ${summary.updated} updated, ${summary.protected} protected, ${summary.skipped} skipped. Export retained for retry.`);
       if (summary.unconfiguredMetrics && summary.unconfiguredMetrics.length > 0) {
         new Notice(`Found staged data for ${summary.unconfiguredMetrics.join(", ")}. Add matching habits in settings to track them.`);
       }
       return summary;
     } catch (error) {
-      console.error("Temperans Health Connect import failed.", error);
-      new Notice(error instanceof Error ? error.message : "Health Connect import failed. The staging file was kept.");
+      console.error("Temperans Habits companion import failed.", error);
+      new Notice(error instanceof Error ? error.message : "Companion import failed. The staging file was kept.");
       return null;
     }
   }

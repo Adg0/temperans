@@ -25,7 +25,7 @@ it.each([false, true])("imports an unindexed staging file on mobile=%s", async m
   Platform.isMobileApp = mobile;
   const { host, adapter, apply } = fixture();
   const summary = await importHealthConnectStaging(host);
-  expect(adapter.read).toHaveBeenCalledWith("My Habits/.temperance-staging.json");
+  expect(adapter.read).toHaveBeenCalledWith("My Habits/habit-sync-staging.json");
   expect(apply).toHaveBeenCalledWith([expect.objectContaining({ date: "2026-09-26", metrics: { hydration: 1500 }, source: "health-connect" })]);
   expect(summary.imported).toBe(1);
   expect(adapter.remove).not.toHaveBeenCalled();
@@ -56,7 +56,7 @@ it.each(["../health.json", "/health.json", "C:\\health.json", ".obsidian/health.
 });
 
 it("resets to the current habit folder and normalizes Windows separators", () => {
-  expect(healthConnectStagePath("My Habits", "   ")).toBe("My Habits/.temperance-staging.json");
+  expect(healthConnectStagePath("My Habits", "   ")).toBe("My Habits/habit-sync-staging.json");
   expect(healthConnectStagePath("My Habits", "My Habits\\Exports\\health.json")).toBe("My Habits/Exports/health.json");
 });
 

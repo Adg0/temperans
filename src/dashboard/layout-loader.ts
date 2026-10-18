@@ -1,6 +1,7 @@
 import { App, TFile } from "obsidian";
 import { parseYamlSafe } from "./codeblock-parser";
 import { DashboardLayoutConfig, DashboardWidgetConfig } from "./types";
+import { DEFAULT_STATE } from "../default-state";
 
 export const DASHBOARD_FILE = "Dashboard.md";
 
@@ -67,8 +68,8 @@ The dashboard layout is defined as a list under \`layout:\`. Widgets are rendere
 
 ### 1. \`header\`
 Displays the top dashboard banner, active period navigation, and action buttons.
-- \`title\`: *(string)* Custom dashboard title (default: \`"Temperans Habits"\`).
-- \`subtitle\`: *(string)* Custom subtitle or motivational description (default: \`"Local habit history, stored in Markdown."\`).
+- \`title\`: *(string)* Custom dashboard title (default: \`"${DEFAULT_STATE.dashboardTitle}"\`).
+- \`subtitle\`: *(string)* Custom subtitle or motivational description (default: \`"${DEFAULT_STATE.dashboardSubtitle}"\`).
 - \`showActions\`: *(boolean, default: true)* Shows the **Log today** CTA button and **Actions** hub button.
 - \`showPeriodNav\`: *(boolean, default: true)* Shows the year/month switcher buttons (\`‹ 2026 ›\`).
 - \`showFilter\`: *(boolean, default: true)* Shows the habit filter dropdown for switching between all habits and specific habits.

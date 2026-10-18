@@ -94,10 +94,10 @@ try {
     await page.getByRole('button', { name: 'Save format', exact: true }).click();
     await page.waitForFunction(() => window.savedNotePath.format === 'DD-MM-YYYY');
     await page.evaluate(mobile => window.renderFixture('health', { mobile }), width < 650);
-    const importButton = page.getByRole('button', { name: 'Import staged data', exact: true });
+    const importButton = page.getByRole('button', { name: 'Import companion data', exact: true });
     const importBox = await importButton.boundingBox();
     assert(importBox && importBox.y >= 0 && importBox.y + importBox.height <= height, 'Health import needs scrolling');
-    const stagingInput = page.getByPlaceholder('Habit Logs/.temperance-staging.json');
+    const stagingInput = page.getByPlaceholder('Habit Logs/habit-sync-staging.json');
     assert.equal(await stagingInput.isVisible(), false, 'Staging editor should start collapsed');
     await page.locator('.temperans-staging-path-details > summary').first().click();
     await stagingInput.fill('../bad.json');

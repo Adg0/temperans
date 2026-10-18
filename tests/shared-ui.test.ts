@@ -102,24 +102,24 @@ describe("shared habit creation", () => {
 });
 
 describe("shared sync and analytics panels", () => {
-  it.each([false, true])("imports staged health data on mobile=%s", async mobile => {
+  it.each([false, true])("imports companion data on mobile=%s", async mobile => {
     Platform.isMobileApp = mobile;
     const root = new Element(), importer = vi.fn().mockResolvedValue({ imported: 4 }), refreshed = vi.fn();
     renderHealthConnectPanel(root.element(), importer, refreshed);
-    await root.button("Import staged data").onclick!();
+    await root.button("Import companion data").onclick!();
     expect(importer).toHaveBeenCalledOnce();
     expect(refreshed).toHaveBeenCalledOnce();
-    expect(root.button("Import staged data").disabled).toBe(false);
+    expect(root.button("Import companion data").disabled).toBe(false);
   });
 
   it("restores the import action after a failure and allows retrying", async () => {
     const root = new Element(), importer = vi.fn().mockRejectedValueOnce(new Error("Missing staging file")).mockResolvedValue({ imported: 1 }), refreshed = vi.fn();
     renderHealthConnectPanel(root.element(), importer, refreshed);
-    await root.button("Import staged data").onclick!();
+    await root.button("Import companion data").onclick!();
     expect(notices).toContain("Missing staging file");
     expect(refreshed).not.toHaveBeenCalled();
-    expect(root.button("Import staged data").disabled).toBe(false);
-    await root.button("Import staged data").onclick!();
+    expect(root.button("Import companion data").disabled).toBe(false);
+    await root.button("Import companion data").onclick!();
     expect(refreshed).toHaveBeenCalledOnce();
   });
 
@@ -164,17 +164,17 @@ describe("shared sync and analytics panels", () => {
 it("saves the edited staging path before importing and blocks import if saving fails", async () => {
   const root = new Element(), importer = vi.fn().mockResolvedValue({ imported: 1 }), refreshed = vi.fn();
   const save = vi.fn().mockRejectedValueOnce(new Error("Invalid staging path"));
-  renderHealthConnectPanel(root.element(), importer, refreshed, { path: "", defaultPath: "Habit Logs/.temperance-staging.json", save });
+  renderHealthConnectPanel(root.element(), importer, refreshed, { path: "", defaultPath: "Habit Logs/habit-sync-staging.json", save });
   change(root, "Staging file path", "Habit Logs/Exports/health.json");
-  await root.button("Import staged data").onclick!();
+  await root.button("Import companion data").onclick!();
   expect(importer).not.toHaveBeenCalled();
   expect(notices).toContain("Invalid staging path");
-  await root.button("Import staged data").onclick!();
+  await root.button("Import companion data").onclick!();
   expect(save).toHaveBeenLastCalledWith("Habit Logs/Exports/health.json");
   expect(importer).toHaveBeenCalledOnce();
   expect(save.mock.invocationCallOrder[1]).toBeLessThan(importer.mock.invocationCallOrder[0]);
   change(root, "Staging file path", "");
   await root.field("Staging file path").controls[1].click();
   expect(save).toHaveBeenLastCalledWith("");
-  expect(root.all().some(node => node.textContent === "File: Habit Logs/.temperance-staging.json")).toBe(true);
+  expect(root.all().some(node => node.textContent === "File: Habit Logs/habit-sync-staging.json")).toBe(true);
 });

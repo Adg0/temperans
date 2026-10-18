@@ -100,10 +100,10 @@ export class DashboardActionsModal extends Modal {
       },
       {
         icon: "heart-pulse",
-        title: "Health Connect staging hub",
-        description: "Import staged health data on Android or review workflow on desktop.",
+        title: "Import companion data",
+        description: "Import health metrics and habit sessions from the companion’s JSON or CSV export.",
         actionButton: {
-          label: "Import staged",
+          label: "Import data",
           icon: "download",
           onClick: async () => {
             try {
@@ -112,7 +112,7 @@ export class DashboardActionsModal extends Modal {
                 await this.onTasksChanged();
               }
             } catch (error) {
-              new Notice(error instanceof Error ? error.message : "Could not import staged data.");
+              new Notice(error instanceof Error ? error.message : "Could not import companion data.");
             }
           }
         },
@@ -203,8 +203,8 @@ export class DashboardActionsModal extends Modal {
   private renderSyncHub(container: HTMLElement): void {
     this.renderSubpageHeader(
       container,
-      "Health Connect sync",
-      ""
+      "Companion data import",
+      "Import health metrics and habit sessions from a JSON or CSV companion export."
     );
 
     renderHealthConnectPanel(container, async (weekEnding) => this.host.importHealthConnect?.(weekEnding), this.onTasksChanged, this.host.healthConnectPathControl?.());

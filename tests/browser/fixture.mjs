@@ -61,7 +61,7 @@ window.renderFixture = async (kind, options = {}) => {
     window.healthStagingPath = '';
     new ThirdPartySyncHubModal(app, {
       importHealthConnect: async () => { window.healthImported = true; return { imported: 1 }; },
-      healthConnectPathControl: () => ({ path: '', defaultPath: 'Habit Logs/.temperance-staging.json', save: async path => {
+      healthConnectPathControl: () => ({ path: '', defaultPath: 'Habit Logs/habit-sync-staging.json', save: async path => {
         window.healthStagingPath = healthConnectStagePath('Habit Logs', path);
       } })
     }).open();

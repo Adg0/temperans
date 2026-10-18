@@ -2,15 +2,16 @@ import { addDays, todayInZone } from "../date";
 import { ExternalMetricImport, HabitDefinition, HabitId, HabitSession, HabitSource, RESERVED_HABIT_IDS } from "../types";
 import { IntegrationDescriptor } from "./contracts";
 
-/** Versioned JSON contract shared with the Android Health Connect companion. */
-export const HEALTH_CONNECT_STAGE_FILE = ".temperance-staging.json";
+/** Companion export filenames shared with the Android app. */
+export const HEALTH_CONNECT_STAGE_FILE = "habit-sync-staging.json";
+export const HEALTH_CONNECT_STAGE_CSV_FILE = "habit-sync-staging.csv";
 export const HEALTH_CONNECT_STAGE_SCHEMA_VERSION = 1;
 
 export const HEALTH_CONNECT_INTEGRATION: IntegrationDescriptor = {
   id: "health-connect",
-  name: "Health Connect",
+  name: "Companion data",
   status: "ready",
-  description: "Imports a manually exported Health Connect staging file from the vault."
+  description: "Imports health metrics and habit sessions from a companion JSON or CSV export."
 };
 
 export interface HealthConnectMetricSession {
@@ -167,7 +168,7 @@ export function validateHealthConnectStagingDocument(value: unknown, expectedTim
   if (!isValidDate(today) || today > todayInZone(expectedTimezone)) return { ok: false, error: "Choose a valid recovery week ending today or earlier." };
   const raw = asRecord(value);
   if (raw.schemaVersion !== HEALTH_CONNECT_STAGE_SCHEMA_VERSION || raw.integration !== "health-connect") {
-    return { ok: false, error: "This is not a supported Temperans Health Connect staging file." };
+    return { ok: false, error: "This is not a supported companion staging export." };
   }
   const timezone = typeof raw.timezone === "string" ? raw.timezone : "";
   if (!isValidTimezone(timezone)) return { ok: false, error: "The staging file has an invalid time zone." };
@@ -190,6 +191,150 @@ export function validateHealthConnectStagingDocument(value: unknown, expectedTim
     records.push(record);
   }
   return { ok: true, value: { schemaVersion: HEALTH_CONNECT_STAGE_SCHEMA_VERSION, integration: "health-connect", generatedAt, timezone, sources, records } };
+}
+
+interface CsvFieldGroup {
+  unit: string;
+  source: string;
+  rows: Array<{ value: number; note: string; kind?: "metric" | "session" }>;
+}
+
+function parseCsvRows(contents: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+  let afterQuote = false;
+
+  for (let i = 0; i < contents.length; i += 1) {
+    const char = contents[i];
+    if (quoted) {
+      if (char === '"' && contents[i + 1] === '"') {
+        field += '"';
+        i += 1;
+      } else if (char === '"') {
+        quoted = false;
+        afterQuote = true;
+      } else {
+        field += char;
+      }
+      continue;
+    }
+
+    if (afterQuote) {
+      if (char === ",") {
+        row.push(field);
+        field = "";
+        afterQuote = false;
+      } else if (char === "\n" || char === "\r") {
+        row.push(field);
+        field = "";
+        if (row.some((value) => value.length > 0)) rows.push(row);
+        row = [];
+        afterQuote = false;
+        if (char === "\r" && contents[i + 1] === "\n") i += 1;
+      } else {
+        throw new Error("The companion CSV contains characters after a quoted field.");
+      }
+    } else if (char === '"') {
+      if (field.length > 0) throw new Error("The companion CSV contains a malformed quoted field.");
+      quoted = true;
+    } else if (char === ",") {
+      row.push(field);
+      field = "";
+    } else if (char === "\n" || char === "\r") {
+      row.push(field);
+      field = "";
+      if (row.some((value) => value.length > 0)) rows.push(row);
+      row = [];
+      if (char === "\r" && contents[i + 1] === "\n") i += 1;
+    } else {
+      field += char;
+    }
+  }
+
+  if (quoted) throw new Error("The companion CSV contains an unterminated quoted field.");
+  row.push(field);
+  if (row.some((value) => value.length > 0)) rows.push(row);
+  return rows;
+}
+
+/** Converts the companion's CSV export into the same validated shape as its JSON export. */
+export function parseHealthConnectCsv(contents: string, timezone: string, generatedAt = new Date().toISOString()): unknown {
+  const rows = parseCsvRows(contents.replace(/^\uFEFF/, ""));
+  const header = rows.shift()?.map((field) => field.trim().toLowerCase());
+  const expectedHeader = ["date", "metric", "value", "unit", "source", "note"];
+  if (!header || (header.length !== 6 && header.length !== 7)
+    || expectedHeader.some((name, index) => header[index] !== name)
+    || (header.length === 7 && header[6] !== "type")) {
+    throw new Error("The companion CSV must use the Date, Metric, Value, Unit, Source, Note columns, with an optional Type column.");
+  }
+  if (rows.length > 10000) throw new Error("The companion CSV contains too many rows.");
+
+  const grouped = new Map<string, Map<string, CsvFieldGroup>>();
+  const sourceIds = new Set<string>();
+  for (const row of rows) {
+    if (row.length !== header.length) throw new Error("The companion CSV contains a row with the wrong number of columns.");
+    const date = row[0].trim();
+    if (!isValidDate(date)) throw new Error(`The companion CSV contains an invalid date: ${date || "(blank)"}.`);
+    const metricId = row[1].trim().replace(/_/g, "-");
+    if (!/^[a-z0-9-]+$/.test(metricId) || RESERVED_HABIT_IDS.has(metricId)) {
+      throw new Error(`The companion CSV contains an invalid metric ID: ${metricId || "(blank)"}.`);
+    }
+    const amount = asFiniteNonNegativeNumber(row[2].trim());
+    if (amount === null) throw new Error(`The companion CSV contains an invalid value for ${metricId} on ${date}.`);
+    const unit = row[3].trim();
+    const source = row[4].trim();
+    if (!unit || !source || !/^[A-Za-z0-9._-]{1,200}$/.test(source)) {
+      throw new Error(`The companion CSV contains an invalid unit or source for ${metricId} on ${date}.`);
+    }
+    const kindText = header.length === 7 ? (row[6] ?? "").trim().toLowerCase() : "";
+    const kind = kindText ? (kindText === "metric" || kindText === "session" ? kindText : null) : undefined;
+    if (kind === null) throw new Error(`The companion CSV contains an unsupported row type for ${metricId} on ${date}.`);
+    const byMetric = grouped.get(date) ?? new Map<string, CsvFieldGroup>();
+    const existing = byMetric.get(metricId);
+    if (existing) {
+      if (existing.unit !== unit || existing.source !== source) {
+        throw new Error(`The companion CSV mixes units or sources for ${metricId} on ${date}.`);
+      }
+      if (existing.rows.length >= 1000) throw new Error(`The companion CSV contains too many sessions for ${metricId} on ${date}.`);
+      existing.rows.push({ value: amount, note: row[5], ...(kind ? { kind } : {}) });
+    } else {
+      byMetric.set(metricId, { unit, source, rows: [{ value: amount, note: row[5], ...(kind ? { kind } : {}) }] });
+    }
+    grouped.set(date, byMetric);
+    sourceIds.add(source);
+  }
+
+  const records: HealthConnectDailyRecord[] = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, metrics]) => {
+    const record: HealthConnectDailyRecord = { date };
+    for (const [metricId, group] of metrics) {
+      const explicitKinds = new Set(group.rows.map((item) => item.kind).filter((kind): kind is "metric" | "session" => Boolean(kind)));
+      if (explicitKinds.size > 1) throw new Error(`The companion CSV mixes aggregate and session rows for ${metricId} on ${date}.`);
+      const isSession = explicitKinds.has("session") || (explicitKinds.size === 0 && group.source === "companion");
+      if (!isSession && group.rows.length > 1) throw new Error(`The companion CSV repeats aggregate metric ${metricId} on ${date}.`);
+      const value = group.rows.reduce((total, item) => total + item.value, 0);
+      const sessions = isSession
+        ? group.rows.map((item) => ({ value: item.value, ...(item.note.trim() ? { note: item.note.trim() } : {}) }))
+        : undefined;
+      record[metricId] = {
+        value,
+        unit: group.unit,
+        source: group.source,
+        ...(sessions ? { sessions } : {})
+      };
+    }
+    return record;
+  });
+
+  return {
+    schemaVersion: HEALTH_CONNECT_STAGE_SCHEMA_VERSION,
+    integration: "health-connect",
+    generatedAt,
+    timezone,
+    sources: [...sourceIds].sort(),
+    records
+  };
 }
 
 export function normalizeHealthConnectRecord(

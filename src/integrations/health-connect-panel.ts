@@ -14,8 +14,8 @@ export function renderHealthConnectPanel(
   onImported: () => Promise<void>,
   pathControl?: HealthConnectPathControl
 ): void {
-  // Card 1: Staged health data (File status + Import button together)
-  const { card } = createSubpageCard(container, "heart-pulse", "Staged health data");
+  // Card 1: Companion export status and import action.
+  const { card } = createSubpageCard(container, "heart-pulse", "Companion data");
   card.addClass("temperans-health-connect-card");
 
   let draft = pathControl?.path ?? "";
@@ -28,11 +28,11 @@ export function renderHealthConnectPanel(
 
   const statusHint = fileInfo.createDiv({
     cls: "temperans-staging-status-hint",
-    text: "Ready to import staged data into your daily Habit Logs."
+    text: "Import health metrics and habit sessions from a JSON or CSV companion export."
   });
 
   const showPath = () => {
-    fileCode.textContent = pathControl ? (draft.trim() || pathControl.defaultPath) : "Habit Logs/.temperance-staging.json";
+    fileCode.textContent = pathControl ? (draft.trim() || pathControl.defaultPath) : "Habit Logs/habit-sync-staging.json";
   };
   const savePath = async () => {
     await pathControl?.save(draft);
@@ -40,7 +40,7 @@ export function renderHealthConnectPanel(
   };
   showPath();
 
-  const importBtn = actionRow.createEl("button", { cls: "mod-cta", text: "Import staged data", attr: { type: "button" } });
+  const importBtn = actionRow.createEl("button", { cls: "mod-cta", text: "Import companion data", attr: { type: "button" } });
   importBtn.onclick = async () => {
     importBtn.disabled = true;
     importBtn.textContent = "Importing…";
@@ -48,10 +48,10 @@ export function renderHealthConnectPanel(
       await savePath();
       if (await importHealthConnect(undefined)) await onImported();
     } catch (error) {
-      new Notice(error instanceof Error ? error.message : "Could not import staged data.");
+      new Notice(error instanceof Error ? error.message : "Could not import companion data.");
     } finally {
       importBtn.disabled = false;
-      importBtn.textContent = "Import staged data";
+      importBtn.textContent = "Import companion data";
     }
   };
 
@@ -60,7 +60,7 @@ export function renderHealthConnectPanel(
     const pathDetails = container.createEl("details", { cls: "temperans-staging-path-details" });
     pathDetails.createEl("summary", { text: "Staging file path" });
     new Setting(pathDetails).setName("Staging file path")
-      .setDesc("JSON path inside the operation folder. Leave blank for default.")
+      .setDesc("JSON or csv path inside the operation folder. Leave blank for the default.")
       .addText(input => input.setValue(draft).setPlaceholder(pathControl.defaultPath)
         .onChange(value => {
           draft = value;
