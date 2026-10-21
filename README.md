@@ -2,6 +2,9 @@
 
 Bring habit data together from websites, APIs, and companion apps, alongside ordinary manual logging. Temperans keeps the combined history as readable Markdown in your configured operation folder (default: `Habit Logs`) and provides calendar views, targets, and analytics. Endpoint and companion imports are core features.
 
+- **Documentation & Live Guide**: [adg0.github.io/temperans](https://adg0.github.io/temperans/)
+- **Android Health Connect Bridge**: [Temperance Companion on F-Droid (v0.1.15)](https://f-droid.org/packages/com.temperance.companion/) · [Companion Source & Guide](https://github.com/Adg0/android-companion)
+
 ![Temperans Habits Dashboard](assets/dashboard-main.png)
 
 ## Tasks and schedules
@@ -33,6 +36,10 @@ Jump-start tracking with pre-configured templates accessible from the **Browse p
 
 - **Health Connect**: Sleep duration, hydration volume, daily steps, nutrition calories, and exercise minutes.
 - **Connected APIs**: GitHub contributions, Monkeytype typing duration, and Duolingo streak tracking.
+
+| Health Connect presets | Connected API presets |
+| :---: | :---: |
+| ![Health Connect presets](assets/settings-browse-preset-health-connect.png) | ![Connected API presets](assets/settings-browse-preset-connect-apis.png) |
 
 To change targets or add a historic target revision manually, edit `Habit Logs/Settings.md`. For example:
 
@@ -205,6 +212,8 @@ widgets:
 
 Embedded codeblocks are reactive and automatically update when you log or edit habits.
 
+![Embedded temperans-dashboard codeblock preview](assets/embedded-codeblock-preview.png)
+
 ## Habit analytics & performance insights
 
 Temperans Habits provides a generic analytics engine that automatically computes deep metrics for **any** task:
@@ -249,15 +258,21 @@ Add an `endpoint` block to a habit in `Habit Logs/Settings.md` to fetch and map 
 
 Response mapping supports arrays or date-keyed objects. Use `aggregation` (`sum`, `count`, `max`, `latest`, or `average`) and optional numeric `valueTransform` (`divideBy:<number>` or `multiplyBy:<number>`). For JSON responses that contain a text field with a numeric value, `valuePattern` can extract the first capture group. Templates include `{{today}}`, `{{startDate}}`, `{{endDate}}`, and ISO or epoch variants.
 
-Use **Settings → Temperans Habits → Automated API endpoints** to store credentials, test a request, or sync the past seven days. See the [API gallery](https://adg0.github.io/temperans/#api-gallery) and the [copyable YAML examples](examples/).
+Use **Settings → Temperans Habits → Automated API endpoints** to store credentials, test a request, or sync the past seven days. Browse or contribute community endpoint recipes in the [examples/ directory](https://github.com/Adg0/temperans/tree/main/examples) and the [API Recipe Gallery](https://adg0.github.io/temperans/#api-recipes).
+
+![Linking secret storage, testing connection, and syncing API endpoints](assets/api-endpoint-sync.gif)
 
 ## Third-party integrations
 
-The Habit Sync Companion exports Health Connect metrics and habit sessions as JSON or CSV. Temperans Habits imports the staged data for enabled habits from `habit-sync-staging.json` or `habit-sync-staging.csv` in the configured operation folder. See the [companion guide](android-companion/README.md) for setup and supported metrics.
+[**Temperance Companion** (v0.1.15 on F-Droid)](https://f-droid.org/packages/com.temperance.companion/) reads permission-granted Android Health Connect metrics (sleep, hydration, steps, nutrition calories, exercise) and optional offline habit timers/counters, exporting them as `habit-sync-staging.json` or `habit-sync-staging.csv` into your chosen vault folder.
+
+In Obsidian (on either **mobile or desktop**, whenever the staging file is present in your operation folder), run **Companion data import → Import companion data** to ingest the staged records into your daily Markdown logs. See the [Temperance Companion repository and guide](https://github.com/Adg0/android-companion) for setup details.
+
+![Companion data import in Obsidian](assets/settings-health-connect-import.png)
 
 ## Local peer sync
 
-Transfer habit configurations (`Habit Logs/Settings.md`) and dated daily logs securely between desktop and mobile over your local Wi-Fi with authenticated AES-256-GCM encryption — zero cloud accounts or third-party servers required.
+If you do not already use a vault sync tool (such as Obsidian Sync, Syncthing, or cloud storage) between your phone and computer, Local Peer Sync provides an optional, built-in way to transfer habit configurations (`Habit Logs/Settings.md`) and dated daily logs directly over your local Wi-Fi with authenticated AES-256-GCM encryption — zero cloud accounts or third-party servers required.
 
 ### 1. Desktop host setup & QR generation
 

@@ -12,30 +12,32 @@
       --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
       
       /* Dark Theme (Default) */
-      --bg-canvas: #0f1115;
-      --bg-surface: #16181d;
-      --bg-surface-elevated: #1f2229;
-      --bg-surface-hover: #262a33;
-      --border-subtle: #2d3139;
-      --border-strong: #3d424d;
-      --text-main: #f0f2f5;
-      --text-muted: #9aa1ad;
-      --text-faint: #676e79;
+      --bg-canvas: #0b0d11;
+      --bg-surface: #12151c;
+      --bg-surface-elevated: #1a1e28;
+      --bg-surface-hover: #232834;
+      --border-subtle: #262b38;
+      --border-strong: #363d4f;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
       
       --accent: #22c55e;
       --accent-hover: #16a34a;
       --accent-soft: rgba(34, 197, 94, 0.12);
       --accent-border: rgba(34, 197, 94, 0.35);
+      --fdroid-blue: #1976d2;
+      --fdroid-green: #8ab000;
       
-      --code-bg: #111317;
-      --nav-width: 280px;
-      --content-max-width: 1040px;
+      --code-bg: #0d1016;
+      --nav-width: 272px;
+      --content-max-width: 1020px;
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 16px;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.25);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
-      --shadow-lg: 0 12px 32px rgba(0,0,0,0.45);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 6px 18px rgba(0,0,0,0.38);
+      --shadow-lg: 0 16px 40px rgba(0,0,0,0.5);
     }
 
     [data-theme="light"] {
@@ -46,7 +48,7 @@
       --border-subtle: #e2e8f0;
       --border-strong: #cbd5e1;
       --text-main: #0f172a;
-      --text-muted: #64748b;
+      --text-muted: #475569;
       --text-faint: #94a3b8;
       
       --accent: #16a34a;
@@ -54,7 +56,7 @@
       --accent-soft: rgba(22, 163, 74, 0.1);
       --accent-border: rgba(22, 163, 74, 0.3);
       
-      --code-bg: #f1f5f9;
+      --code-bg: #0f172a;
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
       --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
@@ -75,7 +77,7 @@
       font-family: var(--font-sans);
       background-color: var(--bg-canvas);
       color: var(--text-main);
-      line-height: 1.6;
+      line-height: 1.65;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -111,7 +113,7 @@
     }
 
     .sidebar-header {
-      padding: 1.25rem 1.5rem;
+      padding: 1.15rem 1.35rem;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
@@ -121,40 +123,57 @@
     .logo-badge {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.6rem;
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1rem;
+      color: var(--text-main);
+    }
+    .logo-badge:hover {
+      text-decoration: none;
       color: var(--text-main);
     }
     .logo-badge svg {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .version-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
     }
 
     .sidebar-nav {
       flex: 1;
       overflow-y: auto;
-      padding: 1rem 0.75rem;
+      padding: 0.85rem 0.75rem 1.25rem;
     }
 
     .nav-group-title {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-faint);
-      padding: 0.75rem 0.75rem 0.35rem;
+      padding: 0.85rem 0.75rem 0.35rem;
     }
 
     .nav-item {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      padding: 0.45rem 0.75rem;
-      font-size: 0.88rem;
+      padding: 0.42rem 0.75rem;
+      font-size: 0.86rem;
       color: var(--text-muted);
       border-radius: var(--radius-sm);
+      border-left: 2px solid transparent;
       transition: all 0.15s ease;
       margin-bottom: 2px;
     }
@@ -166,11 +185,12 @@
     .nav-item.active {
       background: var(--accent-soft);
       color: var(--accent);
+      border-left-color: var(--accent);
       font-weight: 600;
     }
 
     .sidebar-footer {
-      padding: 1rem 1.25rem;
+      padding: 0.85rem 1.15rem;
       border-top: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
@@ -178,17 +198,48 @@
       gap: 0.5rem;
     }
 
+    .sidebar-icon-links {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .icon-link {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .icon-link:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-main);
+      border-color: var(--border-strong);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .icon-link svg {
+      width: 17px;
+      height: 17px;
+    }
+
     .theme-toggle-btn {
       background: var(--bg-surface-elevated);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
-      padding: 0.4rem 0.75rem;
+      padding: 0.4rem 0.7rem;
       color: var(--text-muted);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
+      font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.4rem;
       transition: all 0.15s ease;
     }
     .theme-toggle-btn:hover {
@@ -232,13 +283,13 @@
       max-width: var(--content-max-width);
       width: 100%;
       margin: 0 auto;
-      padding: 2.5rem 2rem 5rem;
+      padding: 2.5rem 2.25rem 5rem;
     }
 
     /* Hero section */
     .hero {
       text-align: center;
-      padding: 2.5rem 1rem 3.5rem;
+      padding: 2rem 1rem 3.5rem;
       border-bottom: 1px solid var(--border-subtle);
       margin-bottom: 3.5rem;
     }
@@ -251,49 +302,49 @@
       border: 1px solid var(--accent-border);
       border-radius: 9999px;
       padding: 0.3rem 0.9rem;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       color: var(--accent);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.35rem;
     }
 
     .hero-title {
       font-size: 3rem;
       font-weight: 800;
       letter-spacing: -0.03em;
-      line-height: 1.15;
-      margin-bottom: 1.25rem;
+      line-height: 1.14;
+      margin-bottom: 1.15rem;
     }
     .hero-title span {
-      background: linear-gradient(135deg, var(--text-main) 30%, var(--accent));
+      background: linear-gradient(135deg, var(--text-main) 25%, var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .hero-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       color: var(--text-muted);
-      max-width: 680px;
-      margin: 0 auto 2rem;
-      line-height: 1.5;
+      max-width: 670px;
+      margin: 0 auto 1.85rem;
+      line-height: 1.55;
     }
 
     .hero-actions {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
-      margin-bottom: 3rem;
+      margin-bottom: 2.75rem;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.55rem;
+      gap: 0.5rem;
       font-weight: 600;
-      font-size: 0.92rem;
-      padding: 0.65rem 1.35rem;
+      font-size: 0.9rem;
+      padding: 0.62rem 1.25rem;
       border-radius: var(--radius-md);
       transition: all 0.15s ease;
       cursor: pointer;
@@ -321,6 +372,30 @@
       color: var(--text-main);
       border-color: var(--border-strong);
       text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    /* Compact Icon Button (F-Droid, GitHub, etc.) */
+    .btn-icon-only {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      justify-content: center;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      position: relative;
+    }
+    .btn-icon-only:hover {
+      background: var(--bg-surface-hover);
+      border-color: var(--accent-border);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+    .btn-icon-only svg {
+      width: 22px;
+      height: 22px;
     }
 
     /* Hero preview image */
@@ -342,16 +417,17 @@
     /* Pillar grid */
     .pillars-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 4rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.15rem;
+      margin-top: 2rem;
     }
 
     .pillar-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 1.5rem;
+      padding: 1.35rem;
+      text-align: left;
       transition: border-color 0.15s ease, transform 0.15s ease;
     }
     .pillar-card:hover {
@@ -359,25 +435,32 @@
       transform: translateY(-2px);
     }
     .pillar-icon {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: var(--radius-sm);
       background: var(--accent-soft);
       color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
     .pillar-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
+      font-size: 1.02rem;
+      font-weight: 650;
+      margin-bottom: 0.4rem;
     }
     .pillar-desc {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--text-muted);
       line-height: 1.5;
+    }
+    .pillar-desc code {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: var(--bg-surface-elevated);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
     }
 
     /* Section Typography & Layout */
@@ -390,23 +473,32 @@
       margin-bottom: 1.5rem;
     }
     .section-tag {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--accent);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
     }
     .section-title {
-      font-size: 1.85rem;
-      font-weight: 700;
+      font-size: 1.8rem;
+      font-weight: 750;
       letter-spacing: -0.02em;
-      margin-bottom: 0.65rem;
+      margin-bottom: 0.55rem;
     }
     .section-desc {
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       color: var(--text-muted);
       line-height: 1.6;
+    }
+    .section-desc code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 0.12rem 0.4rem;
+      border-radius: 4px;
+      color: var(--text-main);
     }
 
     /* Media Showcase Grids */
@@ -422,13 +514,19 @@
       gap: 1.25rem;
       margin: 1.5rem 0;
     }
+    .showcase-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
     .section-subtitle-bar {
       margin: 2rem 0 1rem;
       padding-top: 1.25rem;
       border-top: 1px solid var(--border-subtle);
     }
     .section-subtitle-bar h3 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       color: var(--text-main);
       margin-bottom: 0.25rem;
     }
@@ -442,10 +540,13 @@
       border-radius: var(--radius-md);
       overflow: hidden;
       box-shadow: var(--shadow-sm);
-      transition: border-color 0.15s ease;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+      display: flex;
+      flex-direction: column;
     }
     .media-card:hover {
       border-color: var(--border-strong);
+      transform: translateY(-2px);
     }
     .media-card img {
       width: 100%;
@@ -454,12 +555,58 @@
       cursor: zoom-in;
     }
     .media-caption {
-      padding: 0.75rem 1rem;
-      font-size: 0.84rem;
+      padding: 0.7rem 0.95rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
       font-weight: 500;
       border-top: 1px solid var(--border-subtle);
       background: var(--bg-surface-elevated);
+      margin-top: auto;
+    }
+
+    /* Companion App Banner Card */
+    .companion-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .companion-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+      min-width: 260px;
+    }
+    .companion-app-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      flex-shrink: 0;
+    }
+    .companion-meta h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.2rem;
+    }
+    .companion-meta p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .companion-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
     }
 
     /* Code blocks */
@@ -467,7 +614,7 @@
       background: var(--code-bg);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      margin: 1.5rem 0;
+      margin: 1.25rem 0;
       overflow: hidden;
     }
     .code-header {
@@ -475,7 +622,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0.5rem 1rem;
-      background: rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.03);
       border-bottom: 1px solid var(--border-subtle);
       font-family: var(--font-mono);
       font-size: 0.75rem;
@@ -485,8 +632,8 @@
       background: transparent;
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -497,10 +644,10 @@
     }
     pre code {
       display: block;
-      padding: 1.25rem;
+      padding: 1.15rem 1.25rem;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
-      line-height: 1.5;
+      font-size: 0.84rem;
+      line-height: 1.55;
       overflow-x: auto;
       color: #e2e8f0;
     }
@@ -509,69 +656,9 @@
     .feature-list {
       list-style: none;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
       gap: 1rem;
       margin: 1.5rem 0;
-    }
-
-    /* User Guide Walkthrough */
-    .user-guide-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-      margin: 1.5rem 0;
-    }
-    .guide-step {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 1.35rem;
-      display: flex;
-      gap: 1.15rem;
-      align-items: flex-start;
-      transition: border-color 0.15s ease, transform 0.15s ease;
-    }
-    .guide-step:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
-    }
-    .step-badge {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      color: var(--accent);
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 0.95rem;
-      margin-top: 2px;
-    }
-    .step-content {
-      flex: 1;
-    }
-    .step-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 0.35rem;
-      color: var(--text-main);
-    }
-    .step-desc {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-    .step-desc code {
-      font-family: var(--font-mono);
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--border-subtle);
-      padding: 0.15rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.85em;
-      color: var(--text-main);
     }
     .feature-item {
       display: flex;
@@ -584,18 +671,194 @@
     }
     .feature-check {
       color: var(--accent);
+      font-weight: 700;
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 1px;
     }
     .feature-item strong {
       display: block;
-      font-size: 0.95rem;
+      font-size: 0.94rem;
       margin-bottom: 0.2rem;
     }
     .feature-item p {
       font-size: 0.85rem;
       color: var(--text-muted);
-      line-height: 1.4;
+      line-height: 1.45;
+    }
+    .feature-item code {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: var(--bg-surface-elevated);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    /* Installation Cards Grid */
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .install-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.45rem;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .install-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+    .install-card.is-featured {
+      border-color: var(--accent-border);
+      background: linear-gradient(180deg, var(--accent-soft) 0%, var(--bg-surface) 48%);
+    }
+    .install-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .install-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .install-card-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+    .install-card.is-featured .install-card-badge {
+      background: var(--accent-soft);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+    .install-card h3 {
+      font-size: 1.06rem;
+      font-weight: 700;
+      margin-bottom: 0.45rem;
+      color: var(--text-main);
+    }
+    .install-card p {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 1.15rem;
+      flex: 1;
+    }
+    .install-card code {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      color: var(--text-main);
+    }
+    .install-steps-mini {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .install-steps-mini li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .install-steps-mini li span {
+      color: var(--accent);
+      font-weight: 700;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+    .install-card-footer {
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    /* User Guide Walkthrough */
+    .user-guide-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      margin: 1.5rem 0;
+    }
+    .guide-step {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.35rem;
+      display: flex;
+      gap: 1.1rem;
+      align-items: flex-start;
+      transition: border-color 0.15s ease;
+    }
+    .guide-step:hover {
+      border-color: var(--border-strong);
+    }
+    .step-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-size: 1.02rem;
+      font-weight: 650;
+      margin-bottom: 0.3rem;
+      color: var(--text-main);
+    }
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .step-desc code {
+      font-family: var(--font-mono);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 0.12rem 0.38rem;
+      border-radius: 4px;
+      font-size: 0.84em;
+      color: var(--text-main);
     }
 
     /* Lightbox Modal */
@@ -641,20 +904,34 @@
     /* Footer */
     .footer {
       border-top: 1px solid var(--border-subtle);
-      padding: 3rem 2rem;
+      padding: 2.5rem 2rem;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
+    }
+    .footer-inner {
+      max-width: var(--content-max-width);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+    .footer-icons {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
     }
     .footer-links {
       display: flex;
       justify-content: center;
-      gap: 1.5rem;
-      margin-bottom: 1rem;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
     }
 
     /* Responsive adjustments */
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .app-shell {
         flex-direction: column;
       }
@@ -672,17 +949,50 @@
       .top-bar-mobile {
         display: flex;
       }
+      .pillars-grid,
+      .install-grid,
       .showcase-grid-2,
       .showcase-grid-3 {
         grid-template-columns: 1fr;
       }
+      .showcase-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
       .hero-title {
         font-size: 2.25rem;
+      }
+      .main-content {
+        padding: 1.75rem 1.25rem 4rem;
+      }
+    }
+    @media (max-width: 540px) {
+      .showcase-grid-4 {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
+
+  <!-- Reusable SVG Symbols -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <!-- Official-style F-Droid Robot Icon -->
+      <g id="icon-fdroid">
+        <path d="M5.5 3.2L7.3 5.5M18.5 3.2L16.7 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="4" y="5" width="16" height="5.5" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="8.5" cy="7.8" r="1" fill="currentColor"/>
+        <circle cx="15.5" cy="7.8" r="1" fill="currentColor"/>
+        <rect x="4" y="12" width="16" height="9" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="12" cy="16.5" r="2.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 18.6v1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </g>
+      <!-- GitHub Icon -->
+      <g id="icon-github">
+        <path fill="currentColor" d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+      </g>
+    </defs>
+  </svg>
 
   <!-- Lightbox Viewer -->
   <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox(event)">
@@ -706,46 +1016,52 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <a href="#" class="logo-badge">
+        <a href="#overview" class="logo-badge">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
           Temperans
         </a>
+        <span class="version-pill">v0.0.6</span>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-group-title">Overview</div>
-        <a href="#hero" class="nav-item active">Introduction</a>
-        <a href="#features" class="nav-item">Core Capabilities</a>
+        <div class="nav-group-title">Start Here</div>
+        <a href="#overview" class="nav-item active">Overview</a>
+        <a href="#quick-start" class="nav-item">Quick Start</a>
+        <a href="#installation" class="nav-item">Installation</a>
 
-        <div class="nav-group-title">Habits & Schedules</div>
-        <a href="#archetypes" class="nav-item">Three Archetypes</a>
-        <a href="#presets" class="nav-item">Preset Catalog</a>
-        <a href="#logging" class="nav-item">Daily Logging & Sessions</a>
+        <div class="nav-group-title">Habits &amp; Logging</div>
+        <a href="#habit-types" class="nav-item">Habit Archetypes</a>
+        <a href="#presets" class="nav-item">Preset Templates</a>
+        <a href="#daily-logging" class="nav-item">Daily Logging</a>
 
-        <div class="nav-group-title">Dashboards & Views</div>
-        <a href="#dashboard" class="nav-item">Annual Heat Map</a>
-        <a href="#codeblocks" class="nav-item">Embedded Codeblocks</a>
-        <a href="#analytics" class="nav-item">Analytics Engine</a>
+        <div class="nav-group-title">Views &amp; Analytics</div>
+        <a href="#heatmaps" class="nav-item">Heat Maps &amp; Mobile</a>
+        <a href="#analytics" class="nav-item">Analytics &amp; Insights</a>
+        <a href="#layout-embeds" class="nav-item">Layouts &amp; Embeds</a>
 
-        <div class="nav-group-title">Integrations & Sync</div>
-        <a href="#api-endpoints" class="nav-item">Automated REST APIs</a>
-        <a href="#api-gallery" class="nav-item">Creative API Samples</a>
-        <a href="#health-connect" class="nav-item">Android Health Connect</a>
+        <div class="nav-group-title">Sync &amp; Ecosystem</div>
+        <a href="#companion-app" class="nav-item">Health Connect Bridge</a>
         <a href="#peer-sync" class="nav-item">Local Peer Sync</a>
-
-        <div class="nav-group-title">User Guide</div>
-        <a href="#user-guide" class="nav-item">Getting Started</a>
+        <a href="#api-endpoints" class="nav-item">Automated APIs</a>
+        <a href="#api-recipes" class="nav-item">API Recipe Gallery</a>
 
         <div class="nav-group-title">Reference</div>
-        <a href="#data-schema" class="nav-item">Markdown Data Schema</a>
-        <a href="#install" class="nav-item">Installation</a>
+        <a href="#data-format" class="nav-item">Markdown Schema</a>
       </nav>
 
       <div class="sidebar-footer">
         <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark/light theme">
           <span id="themeIcon">☀️</span>
-          <span id="themeLabel">Light Mode</span>
+          <span id="themeLabel">Light</span>
         </button>
+        <div class="sidebar-icon-links">
+          <a href="https://github.com/Adg0/temperans" class="icon-link" target="_blank" rel="noopener" title="GitHub Repository" aria-label="GitHub Repository">
+            <svg viewBox="0 0 24 24"><use href="#icon-github"/></svg>
+          </a>
+          <a href="https://f-droid.org/packages/com.temperance.companion/" class="icon-link" target="_blank" rel="noopener" title="Temperance Companion on F-Droid (v0.1.15)" aria-label="Temperance Companion on F-Droid (v0.1.15)">
+            <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
+          </a>
+        </div>
       </div>
     </aside>
 
@@ -753,12 +1069,12 @@
     <div class="main-wrapper">
       <main class="main-content">
 
-        <!-- Hero Section -->
-        <section class="hero" id="hero">
+        <!-- 1. Overview & Hero Section -->
+        <section class="hero" id="overview">
           <div class="hero-badge-row">
-            <span>Obsidian Community Plugin</span>
+            <span>Obsidian Plugin</span>
             <span>•</span>
-            <span>Local-First</span>
+            <span>100% Local Markdown</span>
             <span>•</span>
             <span>Zero Telemetry</span>
           </div>
@@ -769,16 +1085,19 @@
           </h1>
 
           <p class="hero-subtitle">
-            Bring habit data together from companion health apps, automated REST APIs, and everyday manual logging. Stored transparently in plain Markdown inside your Obsidian vault.
+            Unify manual daily journaling, Android Health Connect metrics, and automated REST APIs inside your Obsidian vault—with annual heatmaps, streak analytics, and encrypted local Wi-Fi sync.
           </p>
 
           <div class="hero-actions">
-            <a href="https://github.com/Adg0/temperans" class="btn btn-primary" target="_blank" rel="noopener">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-              GitHub Repository
+            <a href="#quick-start" class="btn btn-primary">
+              Get Started
             </a>
-            <a href="#dashboard" class="btn btn-secondary">
-              Explore Features
+            <a href="https://github.com/Adg0/temperans" class="btn btn-secondary" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24"><use href="#icon-github"/></svg>
+              GitHub
+            </a>
+            <a href="https://f-droid.org/packages/com.temperance.companion/" class="btn btn-icon-only" target="_blank" rel="noopener" title="Temperance Companion on F-Droid (v0.1.15)" aria-label="Temperance Companion on F-Droid (v0.1.15)">
+              <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
             </a>
           </div>
 
@@ -786,49 +1105,156 @@
           <div class="hero-preview">
             <img src="assets/dashboard-main.png" alt="Temperans Habits Main Dashboard" onclick="openLightbox(this.src)">
           </div>
-        </section>
 
-        <!-- Core Pillars -->
-        <section class="doc-section" id="features">
-          <div class="section-header">
-            <div class="section-tag">Architecture</div>
-            <h2 class="section-title">Built around your vault, not our cloud.</h2>
-            <p class="section-desc">Everything stays in your hands: plain YAML frontmatter, atomic file updates, and zero telemetry.</p>
-          </div>
-
+          <!-- Core Pillars -->
           <div class="pillars-grid">
             <div class="pillar-card">
               <div class="pillar-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
               </div>
-              <h3 class="pillar-title">100% Markdown Storage</h3>
-              <p class="pillar-desc">Habits live in <code>Habit Logs/YYYY-MM-DD.md</code>. Transparent, future-proof, and fully indexable by Dataview.</p>
+              <h3 class="pillar-title">Plain Markdown Storage</h3>
+              <p class="pillar-desc">Logs live in <code>Habit Logs/YYYY-MM-DD.md</code> as clean YAML frontmatter—human-readable, future-proof, and Dataview-ready.</p>
             </div>
 
             <div class="pillar-card">
               <div class="pillar-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
               </div>
-              <h3 class="pillar-title">53-Week Annual Heatmap</h3>
-              <p class="pillar-desc">Continuous 4-shade progress gradients. See exact goal completion percentages across the entire calendar year.</p>
+              <h3 class="pillar-title">53-Week &amp; Monthly Grids</h3>
+              <p class="pillar-desc">Continuous 4-shade progress gradients on desktop and adaptive 7×5 monthly calendars on mobile viewports.</p>
             </div>
 
             <div class="pillar-card">
               <div class="pillar-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <h3 class="pillar-title">Data Ownership Guard</h3>
-              <p class="pillar-desc">Manual journal entries are protected by a strict ownership policy. API syncs and companion imports never overwrite your manual notes.</p>
+              <h3 class="pillar-title">Manual Ownership Guard</h3>
+              <p class="pillar-desc">Manual journal entries take strict precedence. Automated API syncs and companion imports never overwrite manual notes.</p>
             </div>
           </div>
         </section>
 
-        <!-- Archetypes & Schedules -->
-        <section class="doc-section" id="archetypes">
+        <!-- 2. Quick Start -->
+        <section class="doc-section" id="quick-start">
           <div class="section-header">
-            <div class="section-tag">Flexible Tracking</div>
-            <h2 class="section-title">Three Habit Archetypes</h2>
-            <p class="section-desc">Not all habits are simple checkboxes. Temperans natively supports build goals, avoidance routines, and goal-free variable tracking.</p>
+            <div class="section-tag">Onboarding</div>
+            <h2 class="section-title">Quick Start</h2>
+            <p class="section-desc">Get your habit dashboard running in under two minutes.</p>
+          </div>
+
+          <div class="user-guide-steps">
+            <div class="guide-step">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <h3 class="step-title">Open the Habit Dashboard</h3>
+                <p class="step-desc">
+                  Click the <strong>calendar-check icon</strong> in the Obsidian left ribbon, or press <code>Ctrl+P</code> / <code>Cmd+P</code> and run <code>Temperans Habits: Open habit dashboard</code>. On mobile, launch it from the navigation drawer or command palette.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <h3 class="step-title">Configure Habits or Pick Presets</h3>
+                <p class="step-desc">
+                  New vaults start with one clean starter habit (<strong>Reading</strong>). Open <strong>Settings → Temperans Habits → Configure habits</strong> to add custom habits, or click <strong>Browse presets</strong> to enable <em>Sleep</em>, <em>Hydration</em>, <em>Daily steps</em>, <em>Nutrition</em>, <em>Exercise</em>, <em>GitHub contributions</em>, or <em>Typing practice</em> in one click.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <h3 class="step-title">Log Today's Progress</h3>
+                <p class="step-desc">
+                  Click <strong>Log today</strong> in the dashboard header. Tap quick-entry pills, enter numbers, or type natural durations like <code>1h 30m</code>, <code>45m</code>, or <code>1:30</code>. Multi-entry habits (like books or workouts) support individual session titles and notes.
+                </p>
+              </div>
+            </div>
+
+            <div class="guide-step">
+              <div class="step-badge">4</div>
+              <div class="step-content">
+                <h3 class="step-title">Import Health Connect &amp; API Data (Mobile or Desktop)</h3>
+                <p class="step-desc">
+                  Export Android Health Connect metrics to <code>habit-sync-staging.json</code> (or <code>.csv</code>) using the <a href="#companion-app">Temperance Companion app</a>, then click <strong>Import companion data</strong> in Obsidian on either mobile or desktop whenever the staging file is in your vault. If you don't use a cloud vault sync tool between devices, you can also use optional <a href="#peer-sync">Local Peer Sync</a> over Wi-Fi.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Installation -->
+        <section class="doc-section" id="installation">
+          <div class="section-header">
+            <div class="section-tag">Setup</div>
+            <h2 class="section-title">Installation</h2>
+            <p class="section-desc">Choose how you want to install the Obsidian plugin, plus the optional Android Health Connect bridge.</p>
+          </div>
+
+          <div class="install-grid">
+            <!-- Card 1: Obsidian Community Plugins -->
+            <div class="install-card is-featured">
+              <div class="install-card-top">
+                <div class="install-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <span class="install-card-badge">Recommended</span>
+              </div>
+              <h3>Obsidian Community Plugins</h3>
+              <p>Install directly from Obsidian's built-in plugin directory for one-click setup and automatic updates.</p>
+              <ul class="install-steps-mini">
+                <li><span>01</span> Open <strong>Settings → Community plugins</strong></li>
+                <li><span>02</span> Select <strong>Browse</strong> &amp; search <code>Temperans Habits</code></li>
+                <li><span>03</span> Click <strong>Install</strong>, then <strong>Enable</strong></li>
+              </ul>
+            </div>
+
+            <!-- Card 2: Manual GitHub Release -->
+            <div class="install-card">
+              <div class="install-card-top">
+                <div class="install-card-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24"><use href="#icon-github"/></svg>
+                </div>
+                <span class="install-card-badge">Manual Archive</span>
+              </div>
+              <h3>GitHub Release Assets</h3>
+              <p>Download attested release assets directly into your vault's plugin directory: <code>.obsidian/plugins/temperans-habits/</code>.</p>
+              <div class="install-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono);">main.js • manifest.json • styles.css</span>
+                <a href="https://github.com/Adg0/temperans/releases" class="icon-link" target="_blank" rel="noopener" title="Download from GitHub Releases" aria-label="Download from GitHub Releases">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                </a>
+              </div>
+            </div>
+
+            <!-- Card 3: Android Health Connect Companion -->
+            <div class="install-card">
+              <div class="install-card-top">
+                <div class="install-card-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><use href="#icon-fdroid"/></svg>
+                </div>
+                <span class="install-card-badge">Optional • v0.1.15</span>
+              </div>
+              <h3>Health Connect Bridge</h3>
+              <p>Stage Android Health Connect metrics (sleep, steps, hydration, nutrition) into JSON or CSV for the plugin to import.</p>
+              <div class="install-card-footer">
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono);">com.temperance.companion</span>
+                <a href="https://f-droid.org/packages/com.temperance.companion/" class="icon-link" target="_blank" rel="noopener" title="Get Temperance Companion on F-Droid (v0.1.15)" aria-label="Get Temperance Companion on F-Droid (v0.1.15)">
+                  <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Habit Archetypes -->
+        <section class="doc-section" id="habit-types">
+          <div class="section-header">
+            <div class="section-tag">Habits &amp; Schedules</div>
+            <h2 class="section-title">Habit Archetypes &amp; Cadences</h2>
+            <p class="section-desc">Model positive routines, habits you want to quit, and neutral biometric trackers across daily, weekly, monthly, quarterly, or annual schedules.</p>
           </div>
 
           <ul class="feature-list">
@@ -842,15 +1268,15 @@
             <li class="feature-item">
               <div class="feature-check">✓</div>
               <div>
-                <strong>Avoidance Habits (Negative Habits)</strong>
-                <p>Quit or minimize slips (e.g. Fast Food, Smoking, Social Media). Clean days (0 slips) build streaks; values above tolerance register slips.</p>
+                <strong>Avoidance Habits (Quit / Limit)</strong>
+                <p>Minimize slips (e.g. No Junk Food, No Smoking). Clean days (0 slips) build streaks; values above tolerance register slips.</p>
               </div>
             </li>
             <li class="feature-item">
               <div class="feature-check">✓</div>
               <div>
                 <strong>Zero-Goal Metric Trackers</strong>
-                <p>Record numerical variables (Weight, Mood, Blood Pressure, Net Worth). Missing a day never penalizes streaks or completion rates.</p>
+                <p>Record numerical variables (Weight, Mood, Blood Pressure). Missing a day never penalizes streaks or consistency scores.</p>
               </div>
             </li>
           </ul>
@@ -858,99 +1284,130 @@
           <div class="showcase-grid-2">
             <div class="media-card">
               <img src="assets/settings-configure-habits.png" alt="Drag and drop habit reordering" onclick="openLightbox(this.src)">
-              <div class="media-caption">Drag cards with the left grip handle to set the authoritative order across all views.</div>
+              <div class="media-caption">Drag cards by the grip handle to set the authoritative order across all views.</div>
             </div>
             <div class="media-card">
               <img src="assets/settings-add-habit.png" alt="Add habit definition form" onclick="openLightbox(this.src)">
-              <div class="media-caption">Interactive habit creation with archetype cards, custom units, and goal cadences.</div>
+              <div class="media-caption">Create habits with archetype cards, custom units, and flexible cadences.</div>
             </div>
           </div>
         </section>
 
-        <!-- Presets Section -->
+        <!-- 5. Preset Templates -->
         <section class="doc-section" id="presets">
           <div class="section-header">
-            <div class="section-tag">Instant Setup</div>
-            <h2 class="section-title">Preset Templates Catalog</h2>
-            <p class="section-desc">New vaults start with 1 clean starter (<code>Reading</code>). Access one-click presets for Health Connect metrics and connected APIs whenever you need them.</p>
+            <div class="section-tag">One-Click Templates</div>
+            <h2 class="section-title">Preset Templates</h2>
+            <p class="section-desc">Start clean with zero bloat, then add pre-configured Health Connect metrics or API integrations whenever you need them.</p>
           </div>
 
+          <div class="showcase-grid-2">
+            <div class="media-card">
+              <img src="assets/settings-browse-preset-health-connect.png" alt="Health Connect Presets" onclick="openLightbox(this.src)">
+              <div class="media-caption">Health Connect presets: Sleep (8h), Hydration (2,000 ml), Daily steps (10k), Nutrition (2,000 kcal), and Exercise (30m).</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/settings-browse-preset-connect-apis.png" alt="Connected API Presets" onclick="openLightbox(this.src)">
+              <div class="media-caption">Connected API presets: GitHub contributions, Monkeytype typing duration, and Duolingo streak.</div>
+            </div>
+          </div>
         </section>
 
-        <!-- Daily Logging -->
-        <section class="doc-section" id="logging">
+        <!-- 6. Daily Logging -->
+        <section class="doc-section" id="daily-logging">
           <div class="section-header">
-            <div class="section-tag">Daily Journaling</div>
-            <h2 class="section-title">Smart Logging & Time Durations</h2>
-            <p class="section-desc">Log amounts using numbers or intuitive duration formats like <code>1h 30m</code>, <code>90m</code>, or <code>1:30</code>. Record multi-entry sessions with custom activity titles and notes.</p>
+            <div class="section-tag">Journaling</div>
+            <h2 class="section-title">Daily Logging &amp; Sessions</h2>
+            <p class="section-desc">Log values with quick-entry pills or natural duration strings like <code>1h 30m</code>, <code>90m</code>, or <code>1:30</code>. Record multi-entry sessions with custom titles and reflections.</p>
           </div>
 
           <div class="showcase-grid-2">
             <div class="media-card">
               <img src="assets/dashboard-sleep-log-today.png" alt="Daily habit logging modal" onclick="openLightbox(this.src)">
-              <div class="media-caption">Fast quick-entry pills and keyboard navigation in the daily logger.</div>
+              <div class="media-caption">Quick-entry pills and keyboard navigation in the daily logger.</div>
             </div>
             <div class="media-card">
               <img src="assets/dashboard-sleep-log-today-goal-met.png" alt="Goal met completion screen" onclick="openLightbox(this.src)">
-              <div class="media-caption">Real-time completion badges and progress feedback as you log.</div>
+              <div class="media-caption">Instant target progress feedback and completion status badges.</div>
             </div>
           </div>
         </section>
 
-        <!-- Dashboard & Heat Map -->
-        <section class="doc-section" id="dashboard">
+        <!-- 7. Heat Maps & Mobile -->
+        <section class="doc-section" id="heatmaps">
           <div class="section-header">
             <div class="section-tag">Visualization</div>
-            <h2 class="section-title">Annual Heat Map & Inspection</h2>
-            <p class="section-desc">Hover over any day to inspect recorded totals and multi-entry notes. Filter by any single habit to focus your progress.</p>
+            <h2 class="section-title">Heat Maps &amp; Responsive Mobile View</h2>
+            <p class="section-desc">Inspect any day across the 53-week annual grid on desktop, or switch automatically to a touch-friendly 7×5 monthly calendar on mobile.</p>
           </div>
 
           <div class="showcase-grid-2">
             <div class="media-card">
               <img src="assets/dashboard-heat-map-hover.png" alt="Heat map hover tooltip" onclick="openLightbox(this.src)">
-              <div class="media-caption">Hover or tap on any day in the 53-week grid for detailed statistics.</div>
+              <div class="media-caption">Hover or tap any day in the 53-week grid for detailed progress breakdowns.</div>
             </div>
             <div class="media-card">
               <img src="assets/dashboard-sleep-filter.png" alt="Sleep habit filter view" onclick="openLightbox(this.src)">
-              <div class="media-caption">Filter the entire dashboard to a single habit with specialized stats.</div>
+              <div class="media-caption">Filter the entire dashboard to a single habit with dedicated statistics.</div>
             </div>
           </div>
 
-          <div class="section-subtitle-bar">
-            <h3>Responsive Mobile & Tablet View</h3>
-            <p>On mobile phones and compact windows, the dashboard automatically shifts to an intuitive 7×5 monthly calendar with touch-friendly controls.</p>
-          </div>
-
-          <div class="showcase-grid-3">
+          <div class="showcase-grid-4">
+            <div class="media-card">
+              <img src="assets/mobile-open-plugin-navigation.jpg" alt="Opening Temperans Habits on mobile" onclick="openLightbox(this.src)">
+              <div class="media-caption">Quick access from the Obsidian mobile navigation drawer.</div>
+            </div>
             <div class="media-card">
               <img src="assets/mobile-dashboard-main.jpg" alt="Mobile dashboard view" onclick="openLightbox(this.src)">
-              <div class="media-caption">Mobile dashboard header, widgets, and target progress.</div>
+              <div class="media-caption">Responsive mobile header and summary cards.</div>
             </div>
             <div class="media-card">
               <img src="assets/mobile-heatmap-monthly.jpg" alt="Mobile monthly heat map calendar" onclick="openLightbox(this.src)">
-              <div class="media-caption">Adaptive 7×5 monthly calendar grid with daily completion intensity.</div>
+              <div class="media-caption">Adaptive 7×5 monthly calendar grid.</div>
             </div>
             <div class="media-card">
               <img src="assets/mobile-logging-habit.jpg" alt="Mobile logging modal" onclick="openLightbox(this.src)">
-              <div class="media-caption">Fast habit logger with touch-friendly quick-entry pills.</div>
+              <div class="media-caption">Touch-friendly quick-entry logging on mobile.</div>
             </div>
           </div>
         </section>
 
-        <!-- Embedded Codeblocks -->
-        <section class="doc-section" id="codeblocks">
+        <!-- 8. Analytics & Insights -->
+        <section class="doc-section" id="analytics">
           <div class="section-header">
-            <div class="section-tag">Obsidian Embeds</div>
-            <h2 class="section-title">Reactive Markdown Codeblocks</h2>
-            <p class="section-desc">Embed live habit heatmaps and summary cards directly into your daily notes, dashboards, or project canvases using <code>```temperans-dashboard</code>.</p>
+            <div class="section-tag">Performance</div>
+            <h2 class="section-title">Analytics &amp; Insights</h2>
+            <p class="section-desc">Track consistency rates, cumulative volume, active-day averages, streaks, and single-day peaks—accurately bounded from each habit's earliest effective date.</p>
           </div>
 
-          <div class="code-block-wrapper">
-            <div class="code-header">
-              <span>markdown</span>
-              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+          <div class="showcase-grid-2">
+            <div class="media-card">
+              <img src="assets/habit-actions-palette.png" alt="Habit actions palette" onclick="openLightbox(this.src)">
+              <div class="media-caption">Unified Habit actions palette for quick syncs, habit management, and analytics.</div>
             </div>
-            <pre><code>```temperans-dashboard
+            <div class="media-card">
+              <img src="assets/habit-analytics-modal.png" alt="Habit analytics modal" onclick="openLightbox(this.src)">
+              <div class="media-caption">Side-by-side comparison of streaks, peak dates, and total volume across all habits.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. Layouts & Embeds -->
+        <section class="doc-section" id="layout-embeds">
+          <div class="section-header">
+            <div class="section-tag">Customization</div>
+            <h2 class="section-title">Declarative Layouts &amp; Note Embeds</h2>
+            <p class="section-desc">Customize widget order in <code>Habit Logs/Dashboard.md</code> or embed live habit widgets inside any note with <code>```temperans-dashboard</code>.</p>
+          </div>
+
+          <div class="showcase-grid-2" style="align-items: start;">
+            <div>
+              <div class="code-block-wrapper" style="margin-top: 0;">
+                <div class="code-header">
+                  <span>Embedded Markdown Codeblock</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>```temperans-dashboard
 habit: reading
 year: 2026
 widgets:
@@ -958,47 +1415,183 @@ widgets:
   - calendar
   - day-detail
 ```</code></pre>
+              </div>
+              <ul class="feature-list" style="grid-template-columns: 1fr; margin-top: 1rem;">
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Single-Habit or Full Overview</strong>
+                    <p>Filter to any habit ID (e.g. <code>habit: reading</code>) or omit <code>habit</code> to embed your combined routine.</p>
+                  </div>
+                </li>
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Modular Widget Stack</strong>
+                    <p>Pick any combination of <code>header</code>, <code>stats</code>, <code>calendar</code>, <code>period-goals</code>, and <code>day-detail</code>.</p>
+                  </div>
+                </li>
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Live Reactive Updates</strong>
+                    <p>Embeds automatically refresh whenever you log a habit or edit a daily note.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="media-card">
+              <img src="assets/embedded-codeblock-preview.png" alt="Live embedded temperans-dashboard codeblock inside a daily note" onclick="openLightbox(this.src)">
+              <div class="media-caption">Rendered <code>temperans-dashboard</code> codeblock showing stats, monthly calendar, and reading session notes.</div>
+            </div>
           </div>
         </section>
 
-        <!-- Analytics -->
-        <section class="doc-section" id="analytics">
+        <!-- 10. Android Companion App -->
+        <section class="doc-section" id="companion-app">
           <div class="section-header">
-            <div class="section-tag">Insights</div>
-            <h2 class="section-title">Comprehensive Analytics Engine</h2>
-            <p class="section-desc">Automatically computes consistency rates, active day averages, streaks, and single-day peaks across all configured tasks.</p>
+            <div class="section-tag">Health Connect Bridge</div>
+            <h2 class="section-title">Android Health Connect Staging &amp; Ingestion</h2>
+            <p class="section-desc">Obsidian plugins cannot query Android's native Health Connect APIs directly. <strong>Temperance Companion</strong> bridges this gap privately: it reads your permission-granted Health Connect metrics (sleep, steps, hydration, nutrition, exercise) and writes a local staging file (<code>habit-sync-staging.json</code> or <code>habit-sync-staging.csv</code>) into your vault folder—with zero internet permissions.</p>
+          </div>
+
+          <!-- Compact Companion Header Card with F-Droid Icon -->
+          <div class="companion-banner">
+            <div class="companion-brand">
+              <img src="assets/companion-icon.png" alt="Temperance Companion Icon" class="companion-app-icon">
+              <div class="companion-meta">
+                <h3>
+                  Temperance Companion
+                  <span class="version-pill">v0.1.15</span>
+                </h3>
+                <p>Stages Health Connect data into JSON/CSV • 100% Offline • Optional timers &amp; counters</p>
+              </div>
+            </div>
+            <div class="companion-actions">
+              <a href="https://f-droid.org/packages/com.temperance.companion/" class="btn btn-icon-only" target="_blank" rel="noopener" title="Download Temperance Companion on F-Droid (v0.1.15)" aria-label="Download Temperance Companion on F-Droid (v0.1.15)">
+                <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
+              </a>
+              <a href="https://github.com/Adg0/android-companion" class="btn btn-secondary" target="_blank" rel="noopener">
+                Companion Repo &amp; Guide
+              </a>
+            </div>
           </div>
 
           <div class="showcase-grid-2">
             <div class="media-card">
-              <img src="assets/habit-actions-palette.png" alt="Habit actions palette" onclick="openLightbox(this.src)">
-              <div class="media-caption">Action palette for quick syncs, habit management, and analytics.</div>
+              <img src="assets/companion-feature-graphic.png" alt="Temperance Companion Health Connect to Obsidian Flow" onclick="openLightbox(this.src)">
+              <div class="media-caption">1. Temperance Companion exports Health Connect metrics into your vault's staging file.</div>
             </div>
             <div class="media-card">
-              <img src="assets/habit-analytics-modal.png" alt="Habit analytics modal" onclick="openLightbox(this.src)">
-              <div class="media-caption">Side-by-side comparison of active streaks, peak dates, and completion volume.</div>
+              <img src="assets/settings-health-connect-import.png" alt="Obsidian Companion data import panel" onclick="openLightbox(this.src)">
+              <div class="media-caption">2. Click "Import companion data" in Obsidian (on mobile or desktop) to ingest staged records into daily Markdown logs.</div>
+            </div>
+          </div>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <div class="feature-check">1</div>
+              <div>
+                <strong>Export Health Connect to Staging</strong>
+                <p>Grant read access in Temperance Companion and export the past 7 days to <code>habit-sync-staging.json</code> or <code>.csv</code> inside your <code>Habit Logs</code> folder.</p>
+              </div>
+            </li>
+            <li class="feature-item">
+              <div class="feature-check">2</div>
+              <div>
+                <strong>Import on Mobile or Desktop</strong>
+                <p>Run <strong>Import companion data</strong> in Obsidian (via Habit actions or Settings). Works directly on mobile or on desktop whenever the staging file is present in your vault.</p>
+              </div>
+            </li>
+            <li class="feature-item">
+              <div class="feature-check">+</div>
+              <div>
+                <strong>Bonus: Quick Offline Timers &amp; Counters</strong>
+                <p>Optionally record quick habit timers or rep counters on the go; they are bundled into the same staging file on export.</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 11. Local Peer Sync -->
+        <section class="doc-section" id="peer-sync">
+          <div class="section-header">
+            <div class="section-tag">Optional Device-to-Device Sync</div>
+            <h2 class="section-title">Encrypted Local Peer Sync</h2>
+            <p class="section-desc">Don't use Obsidian Sync, Syncthing, or a cloud drive between your phone and computer? Local Peer Sync is a built-in, zero-cloud alternative that transfers <code>Settings.md</code> and dated daily logs directly over your local Wi-Fi using authenticated AES-256-GCM encryption.</p>
+          </div>
+
+          <div class="showcase-grid-2">
+            <div class="media-card">
+              <img src="assets/peer-sync-host-modal.png" alt="Desktop peer sync host modal" onclick="openLightbox(this.src)">
+              <div class="media-caption">1. Start the temporary host server on desktop.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-host-qr.png" alt="Desktop QR code generated" onclick="openLightbox(this.src)">
+              <div class="media-caption">2. Scan the pairing QR code with your phone camera.</div>
+            </div>
+          </div>
+
+          <div class="showcase-grid-3">
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-preview.jpg" alt="Transfer preview showing differences" onclick="openLightbox(this.src)">
+              <div class="media-caption">3. Review file differences and choose Send/Receive directions.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-transferred.jpg" alt="Transferring selected notes" onclick="openLightbox(this.src)">
+              <div class="media-caption">4. Stream encrypted note updates over local Wi-Fi.</div>
+            </div>
+            <div class="media-card">
+              <img src="assets/peer-sync-mobile-up-to-date.jpg" alt="All files caught up" onclick="openLightbox(this.src)">
+              <div class="media-caption">5. All habit logs and settings verified and up to date.</div>
             </div>
           </div>
         </section>
 
-        <!-- API Endpoints -->
+        <!-- 12. Automated APIs -->
         <section class="doc-section" id="api-endpoints">
           <div class="section-header">
             <div class="section-tag">Automation</div>
-            <h2 class="section-title">Automated REST API Endpoints</h2>
-            <p class="section-desc">Connect external services declaratively. GitHub contributions and Monkeytype typing practice are shown first; tokens stay in Obsidian Secret Storage, never in plain Markdown.</p>
+            <h2 class="section-title">Automated REST &amp; GraphQL APIs</h2>
+            <p class="section-desc">Fetch activity from external APIs declaratively in <code>Habit Logs/Settings.md</code>. API keys and personal access tokens are stored in Obsidian secret storage—never in plain Markdown.</p>
+          </div>
+
+          <div class="media-card" style="margin: 1.5rem 0;">
+            <img src="assets/api-endpoint-sync.gif" alt="Linking a secret from Obsidian secret storage, testing the connection, and syncing past 7 days" onclick="openLightbox(this.src)">
+            <div class="media-caption">Link an API key from Obsidian secret storage, verify with <strong>Test connection</strong>, and run <strong>Sync past 7 days</strong>.</div>
+          </div>
+
+          <!-- Community Endpoint Examples Callout -->
+          <div class="companion-banner" style="margin: 1.5rem 0;">
+            <div class="companion-brand">
+              <div class="install-card-icon" style="width: 46px; height: 46px; flex-shrink: 0;">
+                <svg width="22" height="22" viewBox="0 0 24 24"><use href="#icon-github"/></svg>
+              </div>
+              <div class="companion-meta">
+                <h3>Community Endpoint Examples (<code>examples/</code>)</h3>
+                <p>Browse the latest ready-to-use YAML endpoint configurations contributed by Temperans Habits users, or submit your own API integration to share with the community.</p>
+              </div>
+            </div>
+            <div class="companion-actions">
+              <a href="https://github.com/Adg0/temperans/tree/main/examples" class="btn btn-primary" target="_blank" rel="noopener">
+                Browse examples/
+              </a>
+              <a href="https://github.com/Adg0/temperans/blob/main/contributions.md#adding-an-endpoint-yaml-example" class="btn btn-secondary" target="_blank" rel="noopener">
+                Contribute an Endpoint
+              </a>
+            </div>
           </div>
 
           <div class="section-subtitle-bar">
-            <h3>1. GitHub contributions</h3>
-            <p>Fetch the signed-in account's daily contribution calendar with a personal access token.</p>
+            <h3>GitHub Contributions (GraphQL Viewer Calendar)</h3>
+            <p>Sync daily commits, pull requests, and reviews using a personal access token stored in secret storage.</p>
           </div>
           <div class="code-block-wrapper">
             <div class="code-header">
               <span>Habit Logs/Settings.md (YAML excerpt)</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
-            <pre><code>- id: github-contributions
+            <pre><code>- id: github
   name: GitHub contributions
   unit: contributions
   cadence: daily
@@ -1031,8 +1624,8 @@ widgets:
           </div>
 
           <div class="section-subtitle-bar">
-            <h3>2. Typing practice</h3>
-            <p>Aggregate Monkeytype test durations into daily minutes.</p>
+            <h3>Monkeytype Typing Practice</h3>
+            <p>Aggregate daily test durations into minutes via your Monkeytype ApeKey.</p>
           </div>
           <div class="code-block-wrapper">
             <div class="code-header">
@@ -1049,7 +1642,7 @@ widgets:
       min: 15
   endpoint:
     sourceName: "monkeytype"
-    url: "https://api.monkeytype.com/results?onOrAfterTimestamp={{startMillis}}&limit=1000"
+    url: "https://api.monkeytype.com/results?onOrAfterTimestamp={{startMillis}}&amp;limit=1000"
     testUrl: "https://api.monkeytype.com/users/currentTestActivity"
     auth:
       type: header
@@ -1065,21 +1658,21 @@ widgets:
           </div>
         </section>
 
-        <!-- Creative API Sample Gallery -->
-        <section class="doc-section" id="api-gallery">
+        <!-- 13. Creative API Recipe Gallery -->
+        <section class="doc-section" id="api-recipes">
           <div class="section-header">
             <div class="section-tag">Endpoint Gallery</div>
-            <h2 class="section-title">Track more than the usual habits</h2>
-            <p class="section-desc">These copyable YAML examples show how one generic endpoint runner can turn sky observations, public events, weather, research activity, and smart-home readings into daily metrics. Add one habit item under <code>habits:</code> in <code>Habit Logs/Settings.md</code>, then customize its query, location, entity, or secret.</p>
+            <h2 class="section-title">API Recipe Gallery</h2>
+            <p class="section-desc">Copyable YAML recipes showing how the generic endpoint runner turns astronomy data, weather readings, smart-home sensors, and public event streams into daily metrics.</p>
           </div>
 
           <div class="section-subtitle-bar">
-            <h3>Astrology and astronomy</h3>
-            <p>Use measured sky data as personal journaling context. These are observations, not claims that celestial events cause changes in behavior.</p>
+            <h3>Astronomy &amp; Space (NASA / JPL)</h3>
+            <p>Record measured sky observations as daily context in your vault.</p>
           </div>
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>NASA/JPL Horizons — geocentric Moon distance at noon UTC</span>
+              <span>NASA/JPL Horizons — Geocentric Moon distance at noon UTC</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: moon-earth-distance
@@ -1100,11 +1693,10 @@ widgets:
       valuePattern: "\\$\\$SOE[\\s\\S]*?\\r?\\n[^\\r\\n]*?,\\s*([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[Ee][+-]?\\d+)?)"
       aggregation: latest</code></pre>
           </div>
-          <p class="section-desc">Horizons returns its ephemeris table as text inside JSON. The response mapping extracts the first CSV range value (kilometres) for the Moon, viewed from Earth's centre, at 12:00 UTC. This is one daily snapshot, not a seven-day historical backfill.</p>
 
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>NASA/JPL — asteroid and comet close approaches in the past week</span>
+              <span>NASA/JPL — Near-Earth asteroid &amp; comet close approaches</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: small-body-approaches
@@ -1124,15 +1716,14 @@ widgets:
       dateField: "3"
       aggregation: count</code></pre>
           </div>
-          <p class="section-desc">The mapper groups each returned close approach by the row's fourth field, JPL's <code>cd</code> date, so events are saved to their matching day in the seven-day window. Dates with no qualifying approaches remain blank instead of receiving zero.</p>
 
           <div class="section-subtitle-bar">
-            <h3>Weather and smart home</h3>
-            <p>Track a current local weather reading or summarize sensor history from Home Assistant.</p>
+            <h3>Weather &amp; Smart Home</h3>
+            <p>Log local outdoor humidity from Open-Meteo or sensor history from Home Assistant.</p>
           </div>
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>Open-Meteo — current outdoor relative humidity</span>
+              <span>Open-Meteo — Outdoor relative humidity (No API key required)</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: outdoor-humidity
@@ -1153,11 +1744,10 @@ widgets:
       valueField: relative_humidity_2m
       aggregation: latest</code></pre>
           </div>
-          <p class="section-desc">No API key is needed. This sample uses central London coordinates and the Europe/London timezone. It stores one current reading for the date returned by the API; it does not backfill past weather days.</p>
 
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>Home Assistant — average living-room temperature</span>
+              <span>Home Assistant — Average living-room temperature</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: living-room-temperature
@@ -1184,15 +1774,14 @@ widgets:
       valueField: state
       aggregation: average</code></pre>
           </div>
-          <p class="section-desc">Replace <code>YOUR_HOME_ASSISTANT_HOST</code> and the entity ID. Use a valid HTTPS URL, or <code>http://localhost:8123</code> if Home Assistant runs on the same machine. The runner averages recorded state changes, not a time-weighted sensor average. It rejects private-LAN HTTP URLs.</p>
 
           <div class="section-subtitle-bar">
-            <h3>Smoke-test examples</h3>
-            <p>Copyable examples for public JSON endpoints, including an aggregate research count and an event stream. The PubMed result is a rolling seven-day count saved as today's snapshot.</p>
+            <h3>Public Research &amp; Event Streams</h3>
+            <p>Track indexed scientific literature on PubMed or global seismic activity from USGS.</p>
           </div>
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>PubMed — new sleep and habit papers indexed in 7 days</span>
+              <span>PubMed — New sleep &amp; habit papers indexed in 7 days</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: pubmed-sleep-research
@@ -1213,9 +1802,10 @@ widgets:
       valueField: count
       aggregation: latest</code></pre>
           </div>
+
           <div class="code-block-wrapper">
             <div class="code-header">
-              <span>USGS — earthquakes of magnitude 2.5 or higher</span>
+              <span>USGS — Global earthquakes (M2.5+)</span>
               <button class="copy-btn" onclick="copyCode(this)">Copy</button>
             </div>
             <pre><code>- id: usgs-earthquake-count
@@ -1237,167 +1827,14 @@ widgets:
       dateField: properties.time
       aggregation: count</code></pre>
           </div>
-
-          <p class="section-desc">A successful <strong>Test connection</strong> confirms an HTTP response, while <strong>Sync past 7 days</strong> also exercises the mapping. The current runner handles one HTTP request with a JSON response; pagination, interactive OAuth/token refresh, and multipart uploads require additional integration support. See the <a href="https://ssd-api.jpl.nasa.gov/doc/horizons.html" target="_blank" rel="noopener">NASA/JPL Horizons API docs</a>, <a href="https://ssd-api.jpl.nasa.gov/doc/cad.html" target="_blank" rel="noopener">close-approach docs</a>, <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo docs</a>, and <a href="https://developers.home-assistant.io/docs/api/rest/" target="_blank" rel="noopener">Home Assistant REST API docs</a>.</p>
         </section>
 
-        <!-- Health Connect -->
-        <section class="doc-section" id="health-connect">
+        <!-- 14. Markdown Data Schema -->
+        <section class="doc-section" id="data-format">
           <div class="section-header">
-            <div class="section-tag">Hardware Integration</div>
-            <h2 class="section-title">Android Health Connect Companion</h2>
-            <p class="section-desc">Read Health Connect metrics (sleep, hydration, steps, calories) on Android via an open companion app, staging data cleanly in your vault.</p>
-          </div>
-
-          <div class="showcase-grid-2">
-            <div class="media-card">
-              <img src="assets/settings-main.png" alt="Temperans settings and companion import" onclick="openLightbox(this.src)">
-              <div class="media-caption">Settings hub for staging folder management, heat-map colors, and local peer sync.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/habit-actions-sync-toast.png" alt="Automated Sync Feedback" onclick="openLightbox(this.src)">
-              <div class="media-caption">Non-intrusive status notices and audit feedback when syncing endpoints.</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Local Peer Sync -->
-        <section class="doc-section" id="peer-sync">
-          <div class="section-header">
-            <div class="section-tag">Direct Sync</div>
-            <h2 class="section-title">Encrypted Local Peer Sync</h2>
-            <p class="section-desc">Transfer habit settings and dated daily notes wirelessly over your local Wi-Fi network using authenticated AES-256-GCM encryption without any cloud intermediaries.</p>
-          </div>
-
-          <div class="section-subtitle-bar">
-            <h3>1. Desktop Host Setup</h3>
-            <p>Start the temporary host on desktop. A pairing QR code is generated instantly with your local network IP and security pairing code.</p>
-          </div>
-
-          <div class="showcase-grid-2">
-            <div class="media-card">
-              <img src="assets/peer-sync-host-modal.png" alt="Desktop peer sync host modal" onclick="openLightbox(this.src)">
-              <div class="media-caption">Host setup: configure operation folder, port, and start the temporary local server.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/peer-sync-host-qr.png" alt="Desktop QR code generated" onclick="openLightbox(this.src)">
-              <div class="media-caption">Pairing QR code generated with AES-256 session credentials and local IP.</div>
-            </div>
-          </div>
-
-          <div class="section-subtitle-bar">
-            <h3>2. Mobile Connection & Transfer Preview</h3>
-            <p>Scan the QR code with your mobile camera or Google Lens to pair instantly, review file version differences, and synchronize changes.</p>
-          </div>
-
-          <div class="showcase-grid-2">
-            <div class="media-card">
-              <img src="assets/peer-sync-mobile-scanned.jpg" alt="Mobile pairing dialog" onclick="openLightbox(this.src)">
-              <div class="media-caption">Scanning the QR code populates the paired host profile instantly via URI deep link.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/peer-sync-mobile-connected.jpg" alt="Mobile connected to host" onclick="openLightbox(this.src)">
-              <div class="media-caption">Authenticated connection established over local Wi-Fi with AES-256-GCM RPC.</div>
-            </div>
-          </div>
-
-          <div class="showcase-grid-3">
-            <div class="media-card">
-              <img src="assets/peer-sync-mobile-preview.jpg" alt="Transfer preview showing differences" onclick="openLightbox(this.src)">
-              <div class="media-caption">Transfer preview: visual status indicators (Up to date, Only here, Different versions) with Send/Receive direction toggles.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/peer-sync-mobile-transferred.jpg" alt="Transferring selected notes" onclick="openLightbox(this.src)">
-              <div class="media-caption">Transfer in progress: streaming encrypted note updates with live progress feedback.</div>
-            </div>
-            <div class="media-card">
-              <img src="assets/peer-sync-mobile-up-to-date.jpg" alt="All files caught up" onclick="openLightbox(this.src)">
-              <div class="media-caption">Transfer complete: all habit notes and settings successfully synchronized and verified.</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- User Guide -->
-        <section class="doc-section" id="user-guide">
-          <div class="section-header">
-            <div class="section-tag">Step-by-Step</div>
-            <h2 class="section-title">Getting Started Guide</h2>
-            <p class="section-desc">New to Obsidian or habit tracking? Follow this 6-step walkthrough to get up and running in minutes.</p>
-          </div>
-
-          <div class="user-guide-steps">
-            <div class="guide-step">
-              <div class="step-badge">1</div>
-              <div class="step-content">
-                <h3 class="step-title">Open Your Habit Dashboard</h3>
-                <p class="step-desc">
-                  After installing and enabling the plugin, click the <strong>chart icon</strong> in your Obsidian left ribbon, or press <code>Ctrl+P</code> / <code>Cmd+P</code> and search for <code>Temperans Habits: Open habit dashboard</code>. On mobile devices, access it quickly from the navigation drawer or command palette.
-                </p>
-                <div class="media-card" style="margin-top: 1rem; max-width: 480px;">
-                  <img src="assets/mobile-open-plugin-navigation.jpg" alt="Opening Temperans Habits on mobile" onclick="openLightbox(this.src)">
-                  <div class="media-caption">Access the Habit Dashboard and Habit Actions from the Obsidian navigation menu.</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-badge">2</div>
-              <div class="step-content">
-                <h3 class="step-title">Set Up Your Habits (Starter & Presets)</h3>
-                <p class="step-desc">
-                  Your vault initializes with a clean <strong>Reading</strong> starter habit. To add more habits, go to <strong>Settings → Temperans Habits → Configure habits → Create a new habit</strong>. You can click <strong>Browse presets</strong> to add pre-configured templates for <em>Sleep</em>, <em>Hydration</em>, <em>Daily steps</em>, or <em>Monkeytype</em> in a single click, or define custom <em>Build</em>, <em>Avoidance</em>, or <em>Tracker</em> habits.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-badge">3</div>
-              <div class="step-content">
-                <h3 class="step-title">Log Today's Habits in Seconds</h3>
-                <p class="step-desc">
-                  Click the prominent <strong>Log today</strong> button on the dashboard header (or use hotkey command <code>Log a habit today</code>). Use quick-entry pills, enter numbers, or type natural duration formats like <code>1h 30m</code>, <code>45m</code>, or <code>1:30</code>. For activities like books or workouts, log multi-entry sessions with custom notes.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-badge">4</div>
-              <div class="step-content">
-                <h3 class="step-title">Embed Heatmaps into Daily Notes</h3>
-                <p class="step-desc">
-                  Keep your routine visible by embedding live habit widgets directly into your daily journal notes or dashboard homepage using <code>```temperans-dashboard</code> codeblocks. Embed your full calendar or isolate specific habits like reading or workouts.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-badge">5</div>
-              <div class="step-content">
-                <h3 class="step-title">Connect Automated REST APIs (Monkeytype, etc.)</h3>
-                <p class="step-desc">
-                  Automate tracking without manual logging. Add the <strong>Typing practice</strong> preset, store your ApeKey in Obsidian secret storage, and configure the key in <strong>Settings → Automated API endpoints</strong>. Temperans imports past records without ever exposing secret tokens in Markdown notes.
-                </p>
-              </div>
-            </div>
-
-            <div class="guide-step">
-              <div class="step-badge">6</div>
-              <div class="step-content">
-                <h3 class="step-title">Companion App & One-Tap Peer Sync</h3>
-                <p class="step-desc">
-                  Track health metrics on mobile with the open-source Android companion app. Start the desktop peer host, point your phone's camera at the pairing QR code, and sync your dated Markdown logs wirelessly over your local Wi-Fi with authenticated AES-256-GCM encryption.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Data Schema -->
-        <section class="doc-section" id="data-schema">
-          <div class="section-header">
-            <div class="section-tag">File Format</div>
-            <h2 class="section-title">Clean Daily Markdown Format</h2>
-            <p class="section-desc">Each day is a standalone Markdown note with clean, human-readable YAML frontmatter.</p>
+            <div class="section-tag">Reference</div>
+            <h2 class="section-title">Markdown Data Schema</h2>
+            <p class="section-desc">Each day is stored as a standard Markdown file with clean YAML frontmatter. Body text and unrelated frontmatter properties are always preserved.</p>
           </div>
 
           <div class="code-block-wrapper">
@@ -1428,44 +1865,30 @@ Optional personal daily journal notes written in standard Markdown below frontma
           </div>
         </section>
 
-        <!-- Installation -->
-        <section class="doc-section" id="install">
-          <div class="section-header">
-            <div class="section-tag">Getting Started</div>
-            <h2 class="section-title">Installation</h2>
-            <p class="section-desc">Install Temperans Habits directly inside Obsidian or install manually from release assets.</p>
-          </div>
-
-          <ul class="feature-list">
-            <li class="feature-item">
-              <div class="feature-check">1</div>
-              <div>
-                <strong>Via Obsidian Community Plugins (Recommended)</strong>
-                <p>Open <strong>Settings → Community plugins → Browse</strong>, search for <code>Temperans Habits</code>, and click <strong>Install & Enable</strong>.</p>
-              </div>
-            </li>
-            <li class="feature-item">
-              <div class="feature-check">2</div>
-              <div>
-                <strong>Manual Installation</strong>
-                <p>Download <code>main.js</code>, <code>manifest.json</code>, and <code>styles.css</code> from the <a href="https://github.com/Adg0/temperans/releases" target="_blank" rel="noopener">latest GitHub Release</a> into <code>&lt;vault&gt;/.obsidian/plugins/temperans-habits/</code>.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
-
       </main>
 
       <!-- Footer -->
       <footer class="footer">
-        <div class="footer-links">
-          <a href="https://github.com/Adg0/temperans" target="_blank" rel="noopener">GitHub</a>
-          <span>•</span>
-          <a href="https://github.com/Adg0/temperans/releases" target="_blank" rel="noopener">Releases</a>
-          <span>•</span>
-          <a href="https://github.com/Adg0/temperans/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+        <div class="footer-inner">
+          <div class="footer-icons">
+            <a href="https://github.com/Adg0/temperans" class="icon-link" target="_blank" rel="noopener" title="GitHub Repository" aria-label="GitHub Repository">
+              <svg viewBox="0 0 24 24"><use href="#icon-github"/></svg>
+            </a>
+            <a href="https://f-droid.org/packages/com.temperance.companion/" class="icon-link" target="_blank" rel="noopener" title="Temperance Companion on F-Droid (v0.1.15)" aria-label="Temperance Companion on F-Droid (v0.1.15)">
+              <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
+            </a>
+          </div>
+          <div class="footer-links">
+            <a href="https://github.com/Adg0/temperans/releases" target="_blank" rel="noopener">Releases</a>
+            <span>•</span>
+            <a href="https://github.com/Adg0/temperans/tree/main/examples" target="_blank" rel="noopener">API Examples</a>
+            <span>•</span>
+            <a href="https://github.com/Adg0/android-companion" target="_blank" rel="noopener">Companion Repo</a>
+            <span>•</span>
+            <a href="https://github.com/Adg0/temperans/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+          </div>
+          <p>© 2026 ADGO. Built for the Obsidian community.</p>
         </div>
-        <p>© 2026 ADGO. Designed with love for the Obsidian community.</p>
       </footer>
     </div>
 
@@ -1487,10 +1910,10 @@ Optional personal daily journal notes written in standard Markdown below frontma
       const label = document.getElementById("themeLabel");
       if (theme === "dark") {
         icon.textContent = "☀️";
-        label.textContent = "Light Mode";
+        label.textContent = "Light";
       } else {
         icon.textContent = "🌙";
-        label.textContent = "Dark Mode";
+        label.textContent = "Dark";
       }
     }
 
@@ -1508,7 +1931,7 @@ Optional personal daily journal notes written in standard Markdown below frontma
     // Close mobile sidebar on navigation click
     document.querySelectorAll(".sidebar-nav a").forEach(link => {
       link.addEventListener("click", () => {
-        if (window.innerWidth <= 900) {
+        if (window.innerWidth <= 960) {
           document.getElementById("sidebar").classList.remove("is-open");
         }
       });
@@ -1549,9 +1972,9 @@ Optional personal daily journal notes written in standard Markdown below frontma
     const navLinks = document.querySelectorAll(".sidebar-nav a");
 
     window.addEventListener("scroll", () => {
-      let current = "";
+      let current = "overview";
       sections.forEach(section => {
-        const top = section.offsetTop - 120;
+        const top = section.offsetTop - 130;
         if (window.scrollY >= top) {
           current = section.getAttribute("id");
         }
