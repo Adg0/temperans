@@ -16,6 +16,7 @@ HTMLElement.prototype.removeClass = function (...names) { this.classList.remove(
 HTMLElement.prototype.toggleClass = function (name, enabled) { this.classList.toggle(name, enabled); };
 HTMLElement.prototype.setAttr = HTMLElement.prototype.setAttribute;
 HTMLElement.prototype.setText = function (value) { this.textContent = value; };
+HTMLElement.prototype.instanceOf = function (type) { return this instanceof type; };
 export function setIcon(el, name) { el.setAttribute('data-icon', name); el.textContent = '◇'; }
 export class Notice { constructor(message) { window.lastNotice = message; } }
 export const Platform = { isMobile: false, isMobileApp: false, isDesktopApp: true };

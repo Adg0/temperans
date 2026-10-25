@@ -4,6 +4,7 @@ import { StatsWidget } from "./widgets/stats-widget";
 import { PeriodGoalsWidget } from "./widgets/period-goals-widget";
 import { CalendarWidget } from "./widgets/calendar-widget";
 import { DayDetailWidget } from "./widgets/day-detail-widget";
+import { LoggerWidget } from "./widgets/logger-widget";
 
 export class DashboardWidgetRegistry {
   private widgets = new Map<string, DashboardWidget>();
@@ -16,6 +17,7 @@ export class DashboardWidgetRegistry {
     this.register(calendar);
     this.widgets.set("heatmap", calendar);
     this.register(new DayDetailWidget());
+    this.register(new LoggerWidget());
   }
 
   register(widget: DashboardWidget): void {

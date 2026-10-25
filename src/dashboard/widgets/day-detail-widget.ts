@@ -74,7 +74,12 @@ export class DayDetailWidget implements DashboardWidget {
       reading: []
     };
 
-    const targetHabitId = ctx.habitFilter !== "overall" ? ctx.habitFilter : undefined;
+    const filterSet = ctx.habitFilters && ctx.habitFilters.length > 0
+      ? new Set(ctx.habitFilters)
+      : ctx.habitFilter !== "overall"
+      ? new Set([ctx.habitFilter])
+      : undefined;
+    const targetHabitId = filterSet?.size === 1 ? [...filterSet][0] : undefined;
 
     header.createEl("h3", { text: formatDate(evaluation.date) });
     const editButton = header.createEl("button", {
@@ -86,7 +91,7 @@ export class DayDetailWidget implements DashboardWidget {
       ctx.app,
       ctx.host.store,
       evaluation.date,
-      ctx.settings.habits.filter((h) => h.enabled),
+      ctx.settings.habits.filter((h) => h.enabled && (!filterSet || filterSet.has(h.id))),
       targetHabitId,
       async () => refreshInBackground(ctx),
       async (habitId) => {
@@ -99,12 +104,12 @@ export class DayDetailWidget implements DashboardWidget {
     const daily = evaluation.habits.filter((item) =>
       item.habit.enabled &&
       item.habit.cadence === "daily" &&
-      (!targetHabitId || item.habit.id === targetHabitId)
+      (!filterSet || filterSet.has(item.habit.id))
     );
     const periodic = ctx.settings.habits.filter((h) =>
       h.enabled &&
       h.cadence !== "daily" &&
-      (!targetHabitId || h.id === targetHabitId)
+      (!filterSet || filterSet.has(h.id))
     );
 
     if (!daily.length && !periodic.length) {
@@ -161,7 +166,7 @@ export class DayDetailWidget implements DashboardWidget {
 
     for (const [habitId, sessions] of Object.entries(allSessions)) {
       if (!sessions || !sessions.length) continue;
-      if (targetHabitId && habitId !== targetHabitId) continue;
+      if (filterSet && !filterSet.has(habitId)) continue;
       const habitDef = ctx.settings.habits.find((h) => h.id === habitId);
       const habitName = habitDef?.name || (habitId === "reading" ? "Reading" : habitId);
       const sessionBlock = detail.createDiv({ cls: "temperans-reading" });

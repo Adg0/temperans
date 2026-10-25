@@ -3,7 +3,7 @@ import { operationFolder } from "./paths";
 import { healthConnectStagePath } from "./integrations/health-connect";
 import { HealthConnectPathControl } from "./integrations/health-connect-panel";
 import { NotePathSettings, noteFormat, restoreNotePath, validateNoteFormat } from "./note-paths";
-import { Notice, Plugin, TAbstractFile, TFile, TFolder, normalizePath, requestUrl } from "obsidian";
+import { MarkdownPostProcessorContext, Notice, Plugin, TAbstractFile, TFile, TFolder, normalizePath, requestUrl } from "obsidian";
 import { HabitStore } from "./data";
 import { DASHBOARD_VIEW_TYPE, HabitDashboardView } from "./dashboard";
 import { DASHBOARD_FILE, ensureDashboardFile } from "./dashboard/layout-loader";
@@ -104,11 +104,13 @@ export default class TemperansHabitsPlugin extends Plugin {
     this.addCommand({ id: "open-peer-sync", name: "Open local peer sync", callback: () => this.openPeerSync() });
     this.addSettingTab(new TemperansSettingTab(this.app, this));
 
-    this.registerMarkdownCodeBlockProcessor("temperans-dashboard", (source, el, ctx) => {
+    const codeblockHandler = (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
       const child = new TemperansCodeblockChild(this.app, this, source, el, (c) => this.unregisterCodeblockChild(c));
       this.registerCodeblockChild(child);
       ctx.addChild(child);
-    });
+    };
+    this.registerMarkdownCodeBlockProcessor("temperans", codeblockHandler);
+    this.registerMarkdownCodeBlockProcessor("temperans-dashboard", codeblockHandler);
 
     this.registerObsidianProtocolHandler("temperans-pair", async (params) => {
       let host = params.host;

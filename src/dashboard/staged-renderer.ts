@@ -19,7 +19,7 @@ export function widgetDates(id: string, ctx: WidgetContext, config?: Record<stri
   const selected = ctx.settings.habits.find(h => h.id === ctx.habitFilter);
   const periodic = ctx.settings.habits.filter(h => h.enabled && h.cadence !== "daily");
   if (id === "header") return [];
-  if (id === "day-detail") return ctx.selectedDate ? [ctx.selectedDate] : [];
+  if (id === "day-detail" || id === "logger") return ctx.selectedDate ? [ctx.selectedDate] : [];
   if (id === "day-periods") return ctx.selectedDate ? periodic.filter(h => ctx.habitFilter === "overall" || h.id === ctx.habitFilter)
     .flatMap(h => datesFromPeriodStart(ctx.selectedDate!, h.cadence)) : [];
   if (id === "period-goals") {
@@ -93,17 +93,18 @@ export class StagedDashboard {
   private placeholder(entry: WidgetEntry): void {
     entry.container.empty(); entry.container.addClass("is-loading");
     entry.container.setAttribute("aria-busy", "true");
-    const label = entry.widget.id === "stats" ? "Loading statistics…" : entry.widget.id === "calendar" ? "Loading calendar…" : entry.widget.id === "day-detail" ? "Loading selected day…" : "Loading goals…";
+    const label = entry.widget.id === "stats" ? "Loading statistics…" : entry.widget.id === "calendar" ? "Loading calendar…" : entry.widget.id === "day-detail" ? "Loading selected day…" : entry.widget.id === "logger" ? "Loading logger…" : "Loading goals…";
     entry.container.createDiv({ cls: "temperans-loading-status", text: label, attr: { role: "status" } });
   }
   private async day(includePeriods: boolean): Promise<void> {
-    const entries = this.entries.filter(e => e.widget.id === "day-detail");
+    const entries = this.entries.filter(e => e.widget.id === "day-detail" || e.widget.id === "logger");
     if (!entries.length) return;
     const signal = this.dayRequest.signal, date = this.ctx.selectedDate;
     try {
       await this.ensure(widgetDates("day-detail", this.ctx), signal);
-      const periods = widgetDates("day-periods", this.ctx);
-      if (includePeriods) await this.ensure(periods, signal);
+      const hasDetail = this.entries.some(e => e.widget.id === "day-detail");
+      const periods = hasDetail ? widgetDates("day-periods", this.ctx) : [];
+      if (includePeriods && periods.length) await this.ensure(periods, signal);
       checkAbort(signal);
       if (date !== this.ctx.selectedDate) return;
       this.ctx.periodsError = false;
@@ -120,7 +121,7 @@ export class StagedDashboard {
   async selectDay(date: string): Promise<void> {
     this.dayRequest.abort(); this.dayRequest = new AbortController();
     this.ctx.selectedDate = date; this.ctx.month = Number(date.slice(5, 7));
-    for (const entry of this.entries.filter(e => e.widget.id === "day-detail")) {
+    for (const entry of this.entries.filter(e => e.widget.id === "day-detail" || e.widget.id === "logger")) {
       if (!this.loaded.has(date)) { entry.ready = false; this.placeholder(entry); }
     }
     await this.day(false); await this.day(true);
@@ -138,7 +139,7 @@ export class StagedDashboard {
         await this.ensure(widgetDates("calendar", this.ctx, entry.config)); await this.paint(entry);
       }
       await this.day(true);
-      for (const entry of this.entries.filter(e => !["header", "day-detail", "calendar"].includes(e.widget.id))) {
+      for (const entry of this.entries.filter(e => !["header", "day-detail", "logger", "calendar"].includes(e.widget.id))) {
         await this.ensure(widgetDates(entry.widget.id, this.ctx, entry.config));
         if (entry.widget.id === "stats" && this.ctx.habitFilter !== "overall") this.ctx.analytics = await analyticsFor(this.ctx, this.signal, this.revision);
         await this.paint(entry);

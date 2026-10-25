@@ -26,6 +26,10 @@ export class TemperansCodeblockChild extends MarkdownRenderChild {
   }
   async render(): Promise<void> {
     if (this.disposed || this.visibility && !this.visibility.visible) return;
+    const activeEl = this.containerEl.ownerDocument?.activeElement;
+    if (activeEl && this.containerEl.contains(activeEl) && (activeEl.instanceOf(HTMLInputElement) || activeEl.instanceOf(HTMLTextAreaElement))) {
+      return;
+    }
     this.controller?.abort(); this.controller = new AbortController();
     try { await renderTemperansCodeblock(this.app, this.host, this.source, this.containerEl, this.controller.signal, () => this.render()); }
     catch (error) { if (!isAbort(error)) new Notice(error instanceof Error ? error.message : "Dashboard refresh failed."); }
@@ -47,18 +51,30 @@ export async function renderTemperansCodeblock(app: App, host: DashboardHost, so
   checkAbort(signal);
   el.empty(); el.addClass("temperans-dashboard", "temperans-embedded-dashboard");
   el.style.setProperty("--temperans-accent", host.state.heatmapColor);
-  const { habitFilter, year, widgets } = parseCodeblockConfig(source);
+  const { habitFilter, habitFilters, year, date: configuredDate, widgets } = parseCodeblockConfig(source);
+  el.toggleClass("is-logger-only", widgets.length === 1 && widgets[0].widget === "logger");
   const settings = await abortable(host.store.loadSettings(), signal);
   checkAbort(signal);
   const today = todayInZone(settings.timezone), dates = daysInYear(year);
-  const validHabit = habitFilter !== "overall" && !settings.habits.some(h => h.id === habitFilter && h.enabled) ? "overall" : habitFilter;
+  const enabledIds = new Set(settings.habits.filter(h => h.enabled).map(h => h.id));
+  const validFilters = habitFilters?.filter(id => enabledIds.has(id));
+  const validHabit = validFilters?.length === 1
+    ? validFilters[0]
+    : habitFilter !== "overall" && enabledIds.has(habitFilter)
+    ? habitFilter
+    : "overall";
   const eligible = dates.filter(date => date <= today);
-  const selectedDate = yearOf(today) === year ? today : eligible.at(-1) ?? null;
+  const selectedDate = configuredDate && yearOf(configuredDate) === year
+    ? configuredDate
+    : yearOf(today) === year
+    ? today
+    : eligible.at(-1) ?? null;
   const isCompact = el.clientWidth > 0 && el.clientWidth <= 720;
   const calendar = widgets.find(item => item.widget === "calendar" || item.widget === "heatmap");
   let staged: StagedDashboard;
   const ctx: WidgetContext = {
     app, host, container: el, year, month: selectedDate ? monthOf(selectedDate) : 1, selectedDate, habitFilter: validHabit,
+    ...(validFilters && validFilters.length > 0 ? { habitFilters: validFilters } : {}),
     settings, logs: new Map(), evaluations: new Map(), analytics: new Map(), dates, today, isCompact,
     calendarMode: calendarModeFor(isCompact, calendar?.config?.mode), dayButtons: new Map(),
     onSelectDay: date => {

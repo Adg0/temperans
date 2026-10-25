@@ -155,6 +155,18 @@ Displays detailed breakdown, logs, and multi-entry session cards for whichever h
 
 ---
 
+### 6. \`logger\`
+Embeds the full interactive **Log habits** modal interface (with habit stepper, hero card, status badge, quick-entry pills, session list, and autosave) directly inside a note or dashboard.
+- \`title\`: *(string, default: "Log habits" or "Log <Habit Name>" when filtered to a single habit)* Custom heading for the embedded logger.
+- \`habits\`: *(list of habit IDs or comma-separated string)* Filter the logger to a specific subset of habits.
+
+\`\`\`yaml
+  - widget: logger
+    habits: [reading, sleep, hydration]
+\`\`\`
+
+---
+
 ## Automated Endpoint Integrations (in Settings.md)
 
 Habits can be automatically populated from third-party APIs by configuring an \`endpoint:\` block inside any habit in \`Habit Logs/Settings.md\`. Secrets (API keys, personal access tokens) are stored securely in Obsidian secret storage and never written to plain Markdown.

@@ -52,6 +52,12 @@ it("loads a single daily detail without year-wide history", async () => {
   expect(f.store.logsForDates).toHaveBeenCalledTimes(1);
   expect(f.store.logsForDates.mock.calls[0][0]).toEqual(["2024-03-15"]);
 });
+it("loads an inline logger widget for the selected day without year-wide history", async () => {
+  const f = fixture(["logger"]); await f.renderer.run();
+  expect(f.store.logsForDates).toHaveBeenCalledTimes(1);
+  expect(f.store.logsForDates.mock.calls[0][0]).toEqual(["2024-03-15"]);
+  expect(f.widget("logger").render).toHaveBeenCalledOnce();
+});
 it("keeps yearly statistics yearly in month mode", async () => {
   const f = fixture(["stats"]); f.ctx.habitFilter = "a";
   const first = emptyDailyLog("2024-01-01"); first.metrics.a = 10;

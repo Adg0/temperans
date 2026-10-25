@@ -56,4 +56,45 @@ widgets:
       config: { showSessions: false }
     });
   });
+
+  it("parses custom date and logger widget for daily note embeds", () => {
+    const yaml = `
+habit: reading
+date: 2026-10-21
+widgets:
+  - widget: logger
+    title: "Daily Reading Log"
+  - day-detail
+`;
+    const config = parseCodeblockConfig(yaml);
+    expect(config.habitFilter).toBe("reading");
+    expect(config.habitFilters).toEqual(["reading"]);
+    expect(config.date).toBe("2026-10-21");
+    expect(config.year).toBe(2026);
+    expect(config.widgets).toEqual([
+      { widget: "logger", config: { title: "Daily Reading Log" } },
+      { widget: "day-detail" }
+    ]);
+  });
+
+  it("parses multiple habit filters via array or comma-separated string", () => {
+    const arrayConfig = parseCodeblockConfig(`
+habits:
+  - reading
+  - sleep
+  - hydration
+widgets:
+  - logger
+`);
+    expect(arrayConfig.habitFilter).toBe("overall");
+    expect(arrayConfig.habitFilters).toEqual(["reading", "sleep", "hydration"]);
+
+    const csvConfig = parseCodeblockConfig(`
+habit: reading, sleep, hydration
+widgets:
+  - logger
+`);
+    expect(csvConfig.habitFilter).toBe("overall");
+    expect(csvConfig.habitFilters).toEqual(["reading", "sleep", "hydration"]);
+  });
 });

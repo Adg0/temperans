@@ -31,6 +31,7 @@ export interface WidgetContext {
   month: number;
   selectedDate: string | null;
   habitFilter: HabitId;
+  habitFilters?: HabitId[];
   settings: HabitSettings;
   logs: Map<string, DailyLog>;
   evaluations: Map<string, DayEvaluation>;

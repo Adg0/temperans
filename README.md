@@ -3,7 +3,7 @@
 Bring habit data together from websites, APIs, and companion apps, alongside ordinary manual logging. Temperans keeps the combined history as readable Markdown in your configured operation folder (default: `Habit Logs`) and provides calendar views, targets, and analytics. Endpoint and companion imports are core features.
 
 - **Documentation & Live Guide**: [adg0.github.io/temperans](https://adg0.github.io/temperans/)
-- **Android Health Connect Bridge**: [Temperance Companion on F-Droid (v0.1.15)](https://f-droid.org/packages/com.temperance.companion/) · [Companion Source & Guide](https://github.com/Adg0/android-companion)
+- **Android Health Connect Bridge**: <a href="https://f-droid.org/packages/com.temperance.companion/"><img src="assets/get-it-on-fdroid.png" alt="Get it on F-Droid" height="28" align="center"></a> · [Companion Source & Guide](https://github.com/Adg0/android-companion)
 
 ![Temperans Habits Dashboard](assets/dashboard-main.png)
 
@@ -184,28 +184,37 @@ If you prefer to move `day-detail` above `calendar`, remove `period-goals`, show
 
 Custom JavaScript widgets are not part of this release. Old `script` entries in Dashboard.md are ignored; remove them from the layout. Declarative built-in widget customization remains supported.
 
-## Embedded Markdown Codeblocks (```temperans-dashboard)
+## Embedded Markdown Codeblocks (```temperans or ```temperans-dashboard)
 
-Because all widgets are modular components, you can embed live, interactive habit summaries directly into your journal, homepage, or project notes:
+Because all widgets are modular components, you can embed live, interactive habit summaries or an embedded logger directly into your daily notes, homepage, or project notes using either ````temperans```` or ````temperans-dashboard````:
 
 ````markdown
-```temperans-dashboard
+```temperans
+habits:
+  - reading
+  - sleep
+  - hydration
+date: 2026-10-21
+widgets:
+  - logger
+```
+````
+
+Both `habits` and `date` are optional filters. Omitting `habits` displays all your enabled habits from `Settings.md`, while omitting `date` automatically targets today.
+
+Clicking **Finish** inside an embedded logger automatically collapses it into a sleek, compact summary card showing your progress and status badges (`✓ Goal Met`, `✓ Clean Day`); clicking anywhere on the card expands it right back out anytime.
+
+![Embedded habit logger workflow](assets/embedded-logger.gif)
+
+Or embed a full live dashboard with heatmaps and statistics:
+
+````markdown
+```temperans
 habit: reading
 year: 2026
 widgets:
   - stats
   - calendar
-  - day-detail
-```
-````
-
-Or embed just a specific habit's streak and heat map:
-
-````markdown
-```temperans-dashboard
-habit: reading
-widgets:
-  - stats
   - day-detail
 ```
 ````
@@ -264,7 +273,9 @@ Use **Settings → Temperans Habits → Automated API endpoints** to store crede
 
 ## Third-party integrations
 
-[**Temperance Companion** (v0.1.15 on F-Droid)](https://f-droid.org/packages/com.temperance.companion/) reads permission-granted Android Health Connect metrics (sleep, hydration, steps, nutrition calories, exercise) and optional offline habit timers/counters, exporting them as `habit-sync-staging.json` or `habit-sync-staging.csv` into your chosen vault folder.
+<a href="https://f-droid.org/packages/com.temperance.companion/"><img src="assets/get-it-on-fdroid.png" alt="Get it on F-Droid" height="42"></a>
+
+The companion app reads permission-granted Android Health Connect metrics (sleep, hydration, steps, nutrition calories, exercise) and optional offline habit timers/counters, exporting them as `habit-sync-staging.json` or `habit-sync-staging.csv` into your chosen vault folder.
 
 In Obsidian (on either **mobile or desktop**, whenever the staging file is present in your operation folder), run **Companion data import → Import companion data** to ingest the staged records into your daily Markdown logs. See the [Temperance Companion repository and guide](https://github.com/Adg0/android-companion) for setup details.
 

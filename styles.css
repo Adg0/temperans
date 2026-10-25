@@ -1796,6 +1796,11 @@ button.temperans-stepper-dot {
   margin: 1rem 0;
 }
 
+.temperans-embedded-dashboard.is-logger-only {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
 
 
 
@@ -2132,3 +2137,112 @@ div.temperans-hidden { display: none; }
 .temperans-log-modal.is-keyboard-open .temperans-habit-log-body { overflow: visible; }
 .temperans-log-modal.is-keyboard-open .temperans-habit-stepper-footer { margin-top: .75rem; }
 .temperans-log-modal input, .temperans-log-modal textarea { scroll-margin-block: 16px; }
+
+/* Embedded Log Habits Modal Widget (logger) */
+.temperans-embedded-log-modal {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  background: var(--background-primary);
+  margin-bottom: 0.5rem;
+  container-type: inline-size;
+  container-name: habit-log;
+  box-sizing: border-box;
+}
+
+.temperans-embedded-log-modal.is-collapsed {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.temperans-embedded-log-modal .temperans-log-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.temperans-embedded-log-modal .temperans-log-modal-header h2 {
+  margin-right: auto;
+}
+
+.temperans-embedded-log-modal .setting-item {
+  border-top: 0;
+}
+
+.temperans-embedded-log-modal .temperans-habit-log-body {
+  overflow-y: visible;
+  padding-right: 0;
+  margin-bottom: 0.75rem;
+}
+
+/* Collapsed Logger Card on Finish */
+.temperans-collapsed-logger-card {
+  padding: 0.75rem 0.95rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  background: var(--background-primary);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  user-select: none;
+}
+
+.temperans-collapsed-logger-card:hover {
+  background: color-mix(in srgb, var(--background-primary) 94%, var(--interactive-accent));
+}
+
+.temperans-collapsed-logger-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.temperans-collapsed-logger-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.temperans-collapsed-logger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--background-modifier-border-hover);
+}
+
+.temperans-collapsed-logger-row:first-child {
+  border-top: none;
+}
+
+.temperans-collapsed-logger-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.temperans-collapsed-logger-title-group .temperans-hero-card-icon {
+  width: 1.85rem;
+  height: 1.85rem;
+  min-width: 1.85rem;
+  flex: 0 0 1.85rem;
+}
+
+.temperans-collapsed-logger-title-group .temperans-hero-card-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.temperans-collapsed-logger-progress {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  flex: 0 0 auto;
+}

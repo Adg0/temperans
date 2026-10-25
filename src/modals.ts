@@ -6,8 +6,8 @@ import { HabitStore } from "./data";
 import { formatDate, todayInZone } from "./date";
 import { formatTypingDuration, isTimeUnit, parseHabitAmount, parseTimeValue, parseSleepDuration, parseTypingDuration, sleepInputValue, typingInputValue } from "./durations";
 import { createTemperansDropdown } from "./dropdown";
-import { calculateGoalProgress, targetForDate } from "./evaluation";
-import { cadenceLabel, targetLabel } from "./dashboard/format";
+import { calculateGoalProgress, targetForDate, typingDurationSeconds, valueForHabit } from "./evaluation";
+import { cadenceLabel, formatValue, targetLabel } from "./dashboard/format";
 import { DailyLog, HabitCadence, HabitDefinition, HabitId, HabitSession, HabitType, ImportedTypingResult, QuickEntryConfig } from "./types";
 
 function getHabitIcon(habit: HabitDefinition): string {
@@ -37,6 +37,7 @@ export class HabitLogModal extends Modal {
   private saveStatus = "";
   private saveStatusEl: HTMLElement | undefined;
   private closing = false;
+  private isCollapsed = false;
   private stopFollowingViewport?: () => void;
 
   private reportSaveError(error: unknown): void {
@@ -56,11 +57,11 @@ export class HabitLogModal extends Modal {
       }
     }
   }
-  private queueSave(id: string, save: () => Promise<unknown>): void {
+  private queueSave(id: string, save: () => Promise<unknown>, delay = 800): void {
     this.pendingSaves.set(id, save);
     this.setSaveStatus("Saving…");
     if (this.saveTimer) this.contentEl.ownerDocument.defaultView?.clearTimeout(this.saveTimer);
-    this.saveTimer = this.contentEl.ownerDocument.defaultView?.setTimeout(() => { void this.flushSaves().catch(error => this.reportSaveError(error)); }, 250);
+    this.saveTimer = this.contentEl.ownerDocument.defaultView?.setTimeout(() => { void this.flushSaves().catch(error => this.reportSaveError(error)); }, delay);
   }
   private flushSaves(): Promise<void> {
     if (this.saveTimer) this.contentEl.ownerDocument.defaultView?.clearTimeout(this.saveTimer);
@@ -89,11 +90,24 @@ export class HabitLogModal extends Modal {
     private readonly habits: HabitDefinition[],
     selectedId?: HabitId,
     private readonly onSaved?: () => Promise<void>,
-    private readonly onEndpointSync?: (habitId: HabitId) => Promise<void>
+    private readonly onEndpointSync?: (habitId: HabitId) => Promise<void>,
+    private readonly isEmbedded = false,
+    private readonly customTitle?: string,
+    initialCollapsed = false,
+    private readonly onHabitChange?: (habitId: HabitId) => void,
+    private readonly onCollapseChange?: (collapsed: boolean) => void
   ) {
     super(app);
     const initialIndex = habits.findIndex((h) => h.id === selectedId);
     this.currentIndex = initialIndex >= 0 ? initialIndex : 0;
+    this.isCollapsed = initialCollapsed;
+  }
+
+  async mountInline(containerEl: HTMLElement): Promise<void> {
+    this.contentEl = containerEl;
+    containerEl.addClass("temperans-embedded-log-modal");
+    await this.initDrafts();
+    await this.render();
   }
 
   async onOpen(): Promise<void> {
@@ -241,6 +255,8 @@ export class HabitLogModal extends Modal {
     const nextIndex = this.currentIndex + delta;
     if (nextIndex < 0 || nextIndex >= this.habits.length) return;
     this.currentIndex = nextIndex;
+    const current = this.habits[this.currentIndex];
+    if (current) this.onHabitChange?.(current.id);
     this.logData = await this.store.getLog(this.date);
     await this.render();
     } catch (error) { this.reportSaveError(error); }
@@ -252,6 +268,8 @@ export class HabitLogModal extends Modal {
     const idx = this.habits.findIndex((h) => h.id === id);
     if (idx >= 0) {
       this.currentIndex = idx;
+      const current = this.habits[this.currentIndex];
+      if (current) this.onHabitChange?.(current.id);
       this.logData = await this.store.getLog(this.date);
       await this.render();
     }
@@ -266,8 +284,16 @@ export class HabitLogModal extends Modal {
     controls.forEach(control => { control.disabled = true; });
     try {
     await this.flushCurrentHabit();
-    await this.onSaved?.();
-    super.close();
+    if (!this.isEmbedded) {
+      await this.onSaved?.();
+      super.close();
+    } else {
+      this.isCollapsed = true;
+      this.onCollapseChange?.(true);
+      this.logData = await this.store.getLog(this.date);
+      await this.render();
+      await this.onSaved?.();
+    }
     } catch (error) { this.reportSaveError(error); }
     finally { controls.forEach((control, index) => { control.disabled = disabled[index]; }); this.closing = false; }
   }
@@ -324,12 +350,99 @@ export class HabitLogModal extends Modal {
     }
   }
 
+  private renderCollapsedSummary(contentEl: HTMLElement): void {
+    const card = contentEl.createDiv({ cls: "temperans-collapsed-logger-card" });
+
+    const header = card.createDiv({ cls: "temperans-collapsed-logger-header" });
+    const left = header.createDiv({ cls: "temperans-collapsed-logger-left" });
+    left.createSpan({ cls: "temperans-log-date-pill", text: `📅 ${formatDate(this.date)}` });
+
+    const expandBtn = header.createEl("button", {
+      cls: "temperans-edit-day",
+      attr: { type: "button", "aria-label": "Edit / log habits" }
+    });
+    setIcon(expandBtn, "square-pen");
+
+    const reOpen = () => {
+      this.isCollapsed = false;
+      this.onCollapseChange?.(false);
+      void this.render();
+    };
+    expandBtn.onclick = (e) => {
+      e.stopPropagation();
+      reOpen();
+    };
+
+    const list = card.createDiv({ cls: "temperans-collapsed-logger-list" });
+    for (const habit of this.habits) {
+      const row = list.createDiv({ cls: "temperans-collapsed-logger-row" });
+      const val = valueForHabit(this.logData, habit);
+      const target = targetForDate(habit, this.date);
+
+      const titleGroup = row.createDiv({ cls: "temperans-collapsed-logger-title-group" });
+      const icon = titleGroup.createSpan({ cls: "temperans-hero-card-icon" });
+      setIcon(icon, getHabitIcon(habit));
+      titleGroup.createSpan({ cls: "temperans-logger-habit-name", text: habit.name });
+
+      const progress = row.createDiv({ cls: "temperans-collapsed-logger-progress" });
+      const actual = habit.id === "typing"
+        ? formatTypingDuration(Math.round(typingDurationSeconds(this.logData)))
+        : formatValue(val, habit.unit, habit);
+      progress.createSpan({ cls: "temperans-detail-value", text: `${actual} / ${targetLabel(target, habit)}` });
+
+      const badge = row.createSpan({ cls: "temperans-hero-card-badge" });
+      if (habit.type === "avoidance") {
+        const maxLimit = target?.max ?? 0;
+        if (val <= maxLimit) {
+          badge.addClass("is-success");
+          badge.setText("✓ Clean Day");
+        } else {
+          badge.addClass("is-error");
+          badge.setText(`⚠ Slipped (+${val - maxLimit})`);
+        }
+      } else if (habit.type === "tracker") {
+        if (val > 0) {
+          badge.addClass("is-success");
+          badge.setText("✓ Logged");
+        } else {
+          badge.addClass("is-idle");
+          badge.setText("Not logged");
+        }
+      } else {
+        const goal = calculateGoalProgress(val, target, habit);
+        if (goal.progress >= 1.0) {
+          badge.addClass("is-success");
+          badge.setText("✓ Goal Met");
+        } else if (goal.progress > 0) {
+          badge.addClass("is-progress");
+          badge.setText(`${Math.round(goal.progress * 100)}% Done`);
+        } else {
+          badge.addClass("is-idle");
+          badge.setText("Pending");
+        }
+      }
+    }
+
+    card.onclick = (e) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      reOpen();
+    };
+  }
+
   private async render(): Promise<void> {
     const { contentEl } = this;
+    contentEl.toggleClass("is-collapsed", this.isEmbedded && this.isCollapsed);
     contentEl.empty();
 
+    if (this.isCollapsed && this.isEmbedded) {
+      this.renderCollapsedSummary(contentEl);
+      return;
+    }
+
+    const defaultHeading = this.habits.length === 1 ? `Log ${this.habits[0].name}` : "Log habits";
     const modalHeader = contentEl.createDiv({ cls: "temperans-log-modal-header" });
-    modalHeader.createEl("h2", { text: "Log habits" });
+    const hideSingleHabitHeading = this.isEmbedded && this.habits.length === 1 && !this.customTitle;
+    if (!hideSingleHabitHeading) modalHeader.createEl("h2", { text: this.customTitle || defaultHeading });
     const datePill = modalHeader.createSpan({ cls: "temperans-log-date-pill" });
     datePill.setText(`📅 ${formatDate(this.date)}`);
 
@@ -340,40 +453,45 @@ export class HabitLogModal extends Modal {
 
     const currentHabit = this.habits[this.currentIndex] ?? this.habits[0];
 
-    // Stepper header
-    const stepperContainer = contentEl.createDiv({ cls: "temperans-habit-stepper" });
+    if (this.habits.length > 1 || !this.isEmbedded) {
+      // Stepper header
+      const stepperContainer = contentEl.createDiv({ cls: "temperans-habit-stepper" });
 
-    // Previous button with sleek Lucide chevron-left
-    const prevBtn = stepperContainer.createEl("button", {
-      cls: "temperans-stepper-nav-btn",
-      attr: { type: "button", "aria-label": "Previous habit" }
-    });
-    setIcon(prevBtn, "chevron-left");
-    prevBtn.disabled = this.currentIndex === 0;
-    prevBtn.onclick = () => void this.navigate(-1);
+      // Previous button with sleek Lucide chevron-left
+      const prevBtn = stepperContainer.createEl("button", {
+        cls: "temperans-stepper-nav-btn",
+        attr: { type: "button", "aria-label": "Previous habit" }
+      });
+      setIcon(prevBtn, "chevron-left");
+      prevBtn.disabled = this.currentIndex === 0;
+      prevBtn.onclick = () => void this.navigate(-1);
 
-    const dropdownWrapper = stepperContainer.createDiv({ cls: "temperans-stepper-dropdown-wrapper" });
-    createTemperansDropdown(dropdownWrapper, {
-      value: currentHabit.id,
-      options: this.habits.map((h, i) => ({
-        value: h.id,
-        label: `${h.name} (${i + 1} of ${this.habits.length})`
-      })),
-      ariaLabel: "Switch habit",
-      onChange: (val) => void this.selectHabit(val)
-    });
+      const dropdownWrapper = stepperContainer.createDiv({ cls: "temperans-stepper-dropdown-wrapper" });
+      createTemperansDropdown(dropdownWrapper, {
+        value: currentHabit.id,
+        options: this.habits.map((h, i) => ({
+          value: h.id,
+          label: `${h.name} (${i + 1} of ${this.habits.length})`
+        })),
+        ariaLabel: "Switch habit",
+        onChange: (val) => void this.selectHabit(val)
+      });
 
-    this.saveStatusEl = stepperContainer.createSpan({ cls: "temperans-save-status", attr: { role: "status", "aria-live": "polite" } });
-    this.setSaveStatus(this.saveStatus);
+      this.saveStatusEl = stepperContainer.createSpan({ cls: "temperans-save-status", attr: { role: "status", "aria-live": "polite" } });
+      this.setSaveStatus(this.saveStatus);
 
-    // Next button with sleek Lucide chevron-right
-    const nextBtn = stepperContainer.createEl("button", {
-      cls: "temperans-stepper-nav-btn",
-      attr: { type: "button", "aria-label": "Next habit" }
-    });
-    setIcon(nextBtn, "chevron-right");
-    nextBtn.disabled = this.currentIndex === this.habits.length - 1;
-    nextBtn.onclick = () => void this.navigate(1);
+      // Next button with sleek Lucide chevron-right
+      const nextBtn = stepperContainer.createEl("button", {
+        cls: "temperans-stepper-nav-btn",
+        attr: { type: "button", "aria-label": "Next habit" }
+      });
+      setIcon(nextBtn, "chevron-right");
+      nextBtn.disabled = this.currentIndex === this.habits.length - 1;
+      nextBtn.onclick = () => void this.navigate(1);
+    } else {
+      this.saveStatusEl = modalHeader.createSpan({ cls: "temperans-save-status", attr: { role: "status", "aria-live": "polite" } });
+      this.setSaveStatus(this.saveStatus);
+    }
 
     // Habit form body
     const bodyContainer = contentEl.createDiv({ cls: "temperans-habit-log-body" });
@@ -395,27 +513,31 @@ export class HabitLogModal extends Modal {
     const footer = contentEl.createDiv({ cls: "temperans-habit-stepper-footer" });
 
     const leftControls = footer.createDiv({ cls: "temperans-stepper-footer-left" });
-    const backNav = leftControls.createEl("button", {
-      text: "‹ Previous",
-      attr: { type: "button" }
-    });
-    backNav.disabled = this.currentIndex === 0;
-    backNav.onclick = () => void this.navigate(-1);
+    if (this.habits.length > 1 || !this.isEmbedded) {
+      const backNav = leftControls.createEl("button", {
+        text: "‹ Previous",
+        attr: { type: "button" }
+      });
+      backNav.disabled = this.currentIndex === 0;
+      backNav.onclick = () => void this.navigate(-1);
+    }
 
     // Dot indicators row between Previous and Next
-    const dotsTrack = footer.createDiv({ cls: "temperans-stepper-dots" });
-    for (let i = 0; i < this.habits.length; i++) {
-      const h = this.habits[i];
-      const isActive = i === this.currentIndex;
-      const dot = dotsTrack.createEl("button", {
-        cls: `temperans-stepper-dot${isActive ? " is-active" : ""}`,
-        attr: {
-          type: "button",
-          "aria-label": h.name,
-          "data-tooltip-position": "top"
-        }
-      });
-      dot.onclick = () => void this.selectHabit(h.id);
+    if (this.habits.length > 1 || !this.isEmbedded) {
+      const dotsTrack = footer.createDiv({ cls: "temperans-stepper-dots" });
+      for (let i = 0; i < this.habits.length; i++) {
+        const h = this.habits[i];
+        const isActive = i === this.currentIndex;
+        const dot = dotsTrack.createEl("button", {
+          cls: `temperans-stepper-dot${isActive ? " is-active" : ""}`,
+          attr: {
+            type: "button",
+            "aria-label": h.name,
+            "data-tooltip-position": "top"
+          }
+        });
+        dot.onclick = () => void this.selectHabit(h.id);
+      }
     }
 
     const rightControls = footer.createDiv({ cls: "temperans-stepper-footer-right" });

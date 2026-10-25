@@ -1020,7 +1020,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
           Temperans
         </a>
-        <span class="version-pill">v0.0.6</span>
+        <span class="version-pill">v0.0.7</span>
       </div>
 
       <nav class="sidebar-nav">
@@ -1397,17 +1397,66 @@
           <div class="section-header">
             <div class="section-tag">Customization</div>
             <h2 class="section-title">Declarative Layouts &amp; Note Embeds</h2>
-            <p class="section-desc">Customize widget order in <code>Habit Logs/Dashboard.md</code> or embed live habit widgets inside any note with <code>```temperans-dashboard</code>.</p>
+            <p class="section-desc">Customize widget order in <code>Habit Logs/Dashboard.md</code> or embed live habit widgets and interactive loggers inside any note using <code>```temperans</code> or <code>```temperans-dashboard</code>.</p>
           </div>
 
+          <!-- Embedded Logger Demo Showcase -->
+          <div class="showcase-grid-2" style="align-items: start; margin-bottom: 2.25rem;">
+            <div>
+              <div class="code-block-wrapper" style="margin-top: 0;">
+                <div class="code-header">
+                  <span>Embedded Daily Note Logger</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>```temperans
+habits:
+  - reading
+  - sleep
+  - hydration
+date: 2026-10-21
+widgets:
+  - logger
+```</code></pre>
+              </div>
+              <ul class="feature-list" style="grid-template-columns: 1fr; margin-top: 1rem;">
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Optional Habit &amp; Date Filters</strong>
+                    <p>Omitting <code>habits</code> displays all enabled habits; omitting <code>date</code> automatically logs for today.</p>
+                  </div>
+                </li>
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Interactive Flow &amp; Auto-Collapse</strong>
+                    <p>Log sessions, quick-adjust values with pills, and click <strong>Finish</strong> to collapse into a clean summary card. Click anytime to re-expand.</p>
+                  </div>
+                </li>
+                <li class="feature-item">
+                  <div class="feature-check">✓</div>
+                  <div>
+                    <strong>Concise Tag (<code>```temperans</code>)</strong>
+                    <p>Use <code>```temperans</code> or legacy <code>```temperans-dashboard</code> interchangeably across your vault.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="media-card">
+              <img src="assets/embedded-logger.gif" alt="Interactive embedded habit logger flow in daily note" onclick="openLightbox(this.src)">
+              <div class="media-caption">Live recording: logging habits inside a note, switching tasks, and auto-collapsing to the summary card upon Finish.</div>
+            </div>
+          </div>
+
+          <!-- Full Dashboard Embed Showcase -->
           <div class="showcase-grid-2" style="align-items: start;">
             <div>
               <div class="code-block-wrapper" style="margin-top: 0;">
                 <div class="code-header">
-                  <span>Embedded Markdown Codeblock</span>
+                  <span>Full Dashboard Embed</span>
                   <button class="copy-btn" onclick="copyCode(this)">Copy</button>
                 </div>
-                <pre><code>```temperans-dashboard
+                <pre><code>```temperans
 habit: reading
 year: 2026
 widgets:
@@ -1416,33 +1465,13 @@ widgets:
   - day-detail
 ```</code></pre>
               </div>
-              <ul class="feature-list" style="grid-template-columns: 1fr; margin-top: 1rem;">
-                <li class="feature-item">
-                  <div class="feature-check">✓</div>
-                  <div>
-                    <strong>Single-Habit or Full Overview</strong>
-                    <p>Filter to any habit ID (e.g. <code>habit: reading</code>) or omit <code>habit</code> to embed your combined routine.</p>
-                  </div>
-                </li>
-                <li class="feature-item">
-                  <div class="feature-check">✓</div>
-                  <div>
-                    <strong>Modular Widget Stack</strong>
-                    <p>Pick any combination of <code>header</code>, <code>stats</code>, <code>calendar</code>, <code>period-goals</code>, and <code>day-detail</code>.</p>
-                  </div>
-                </li>
-                <li class="feature-item">
-                  <div class="feature-check">✓</div>
-                  <div>
-                    <strong>Live Reactive Updates</strong>
-                    <p>Embeds automatically refresh whenever you log a habit or edit a daily note.</p>
-                  </div>
-                </li>
-              </ul>
+              <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; margin-top: 0.75rem;">
+                Combine any widgets—including <code>header</code>, <code>stats</code>, <code>calendar</code>, <code>period-goals</code>, <code>day-detail</code>, and <code>logger</code>—to build custom dashboards right inside project notes, weekly reviews, or homepages.
+              </p>
             </div>
             <div class="media-card">
-              <img src="assets/embedded-codeblock-preview.png" alt="Live embedded temperans-dashboard codeblock inside a daily note" onclick="openLightbox(this.src)">
-              <div class="media-caption">Rendered <code>temperans-dashboard</code> codeblock showing stats, monthly calendar, and reading session notes.</div>
+              <img src="assets/embedded-codeblock-preview.png" alt="Live embedded temperans dashboard codeblock inside a note" onclick="openLightbox(this.src)">
+              <div class="media-caption">Rendered <code>temperans</code> codeblock showing stats, monthly calendar, and reading session notes.</div>
             </div>
           </div>
         </section>
@@ -1467,9 +1496,9 @@ widgets:
                 <p>Stages Health Connect data into JSON/CSV • 100% Offline • Optional timers &amp; counters</p>
               </div>
             </div>
-            <div class="companion-actions">
-              <a href="https://f-droid.org/packages/com.temperance.companion/" class="btn btn-icon-only" target="_blank" rel="noopener" title="Download Temperance Companion on F-Droid (v0.1.15)" aria-label="Download Temperance Companion on F-Droid (v0.1.15)">
-                <svg viewBox="0 0 24 24"><use href="#icon-fdroid"/></svg>
+            <div class="companion-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+              <a href="https://f-droid.org/packages/com.temperance.companion/" target="_blank" rel="noopener" title="Get it on F-Droid">
+                <img src="assets/get-it-on-fdroid.png" alt="Get it on F-Droid" style="height: 40px; display: block;">
               </a>
               <a href="https://github.com/Adg0/android-companion" class="btn btn-secondary" target="_blank" rel="noopener">
                 Companion Repo &amp; Guide
