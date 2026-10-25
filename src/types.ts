@@ -48,6 +48,9 @@ export type HabitDisplayFormat = "number" | "duration";
 
 export interface HabitSession {
   title: string;
+  id?: string;
+  values?: number[];
+  units?: string[];
   pages?: number;
   chapters?: number;
   minutes?: number;

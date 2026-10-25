@@ -61,8 +61,25 @@ function parseSessions(value: unknown): HabitSession[] {
     const reps = numberOrUndefined(raw.reps);
     const count = numberOrUndefined(raw.count);
     const note = typeof raw.note === "string" ? raw.note : undefined;
+    const id = typeof raw.id === "string" && raw.id.trim().length <= 200 ? raw.id.trim() : undefined;
+    const rawValues = Array.isArray(raw.values) && raw.values.length > 0 && raw.values.length <= 16
+      ? raw.values.map(numberOrUndefined)
+      : undefined;
+    const values = rawValues && rawValues.every((value) => value !== undefined && value >= 0)
+      ? rawValues as number[]
+      : undefined;
+    const rawUnits = Array.isArray(raw.units) && raw.units.length > 0 && raw.units.length <= 16
+      ? raw.units.map((unit) => typeof unit === "string" && unit.trim().length <= 64 ? unit.trim() : "")
+      : undefined;
+    const units = rawUnits && rawUnits.every((unit) => unit.length > 0)
+      && (!values || rawUnits.length === values.length)
+      ? rawUnits
+      : undefined;
     return [{
       title,
+      ...(id ? { id } : {}),
+      ...(values ? { values } : {}),
+      ...(units ? { units } : {}),
       ...(pages !== undefined ? { pages } : {}),
       ...(chapters !== undefined ? { chapters } : {}),
       ...(minutes !== undefined ? { minutes } : {}),

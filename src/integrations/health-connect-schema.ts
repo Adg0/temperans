@@ -16,6 +16,8 @@ export const HEALTH_CONNECT_INTEGRATION: IntegrationDescriptor = {
 
 export interface HealthConnectMetricSession {
   value: number;
+  id?: string;
+  values?: number[];
   note?: string;
   title?: string;
 }
@@ -23,6 +25,8 @@ export interface HealthConnectMetricSession {
 export interface HealthConnectMetricValue {
   value: number;
   unit: string;
+  values?: number[];
+  units?: string[];
   source?: string;
   sessions?: HealthConnectMetricSession[];
 }
@@ -59,6 +63,18 @@ function asFiniteNonNegativeNumber(value: unknown): number | null {
   return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
+function parseNumberVector(value: unknown): number[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 16) return undefined;
+  const values = value.map(asFiniteNonNegativeNumber);
+  return values.every((item): item is number => item !== null) ? values : undefined;
+}
+
+function parseUnitVector(value: unknown): string[] | undefined {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 16) return undefined;
+  const units = value.map((item) => typeof item === "string" ? item.trim() : "");
+  return units.every((item) => item.length > 0 && item.length <= 64) ? units : undefined;
+}
+
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const parsed = new Date(`${value}T12:00:00Z`);
@@ -87,6 +103,14 @@ function canonicalUnit(unit: string): string {
   return aliases[unit.trim()] ?? unit.trim();
 }
 
+export function canConvertUnit(source: string, destination: string): boolean {
+  source = canonicalUnit(source); destination = canonicalUnit(destination);
+  if (source === destination) return true;
+  const units: Record<string, [string, number]> = { seconds: ["time", 1], minutes: ["time", 60], hours: ["time", 3600], ml: ["volume", 1], L: ["volume", 1000], m: ["distance", 1], km: ["distance", 1000], miles: ["distance", 1609.344] };
+  const from = units[source], to = units[destination];
+  return Boolean(from && to && from[0] === to[0]);
+}
+
 function unitFactor(source: string, destination: string): number {
   source = canonicalUnit(source); destination = canonicalUnit(destination);
   if (source === destination) return 1;
@@ -110,10 +134,15 @@ function parseSessions(rawSessions: unknown): HealthConnectMetricSession[] | und
     const obj = item as Record<string, unknown>;
     const val = asFiniteNonNegativeNumber(obj.value);
     if (val === null) return undefined;
+    const values = obj.values === undefined ? undefined : parseNumberVector(obj.values);
+    if (obj.values !== undefined && (!values || values[0] !== val)) return undefined;
+    const id = typeof obj.id === "string" && obj.id.trim().length <= 200 ? obj.id.trim() : undefined;
     const note = typeof obj.note === "string" ? obj.note.trim() : undefined;
     const title = typeof obj.title === "string" ? obj.title.trim() : undefined;
     sessions.push({
       value: val,
+      ...(id ? { id } : {}),
+      ...(values ? { values } : {}),
       ...(note ? { note } : {}),
       ...(title ? { title } : {})
     });
@@ -129,13 +158,27 @@ function parseMetric(value: unknown, expectedUnit?: string): HealthConnectMetric
   const amount = asFiniteNonNegativeNumber(raw.value);
   if (amount === null) return null;
 
+  const values = raw.values === undefined ? undefined : parseNumberVector(raw.values);
+  const units = raw.units === undefined ? undefined : parseUnitVector(raw.units);
+  if (raw.values !== undefined && (!values || values[0] !== amount)) return null;
+  if (raw.units !== undefined && !units) return null;
+  if (values && units && values.length !== units.length) return null;
+  if (units && canonicalUnit(units[0]) !== canonicalUnit(unit)) return null;
+
   const source = typeof raw.source === "string" && raw.source.trim() ? raw.source.trim() : undefined;
   const sessions = parseSessions(raw.sessions);
   if (raw.sessions !== undefined && sessions === undefined) return null;
+  if (sessions?.some((session) => {
+    if (!session.values) return false;
+    return (units !== undefined && session.values.length !== units.length)
+      || (values !== undefined && session.values.length !== values.length);
+  })) return null;
 
   return {
     value: amount,
     unit: canonicalUnit(unit),
+    ...(values ? { values } : {}),
+    ...(units ? { units: units.map(canonicalUnit) } : {}),
     ...(source ? { source } : {}),
     ...(sessions ? { sessions } : {})
   };
@@ -194,9 +237,9 @@ export function validateHealthConnectStagingDocument(value: unknown, expectedTim
 }
 
 interface CsvFieldGroup {
-  unit: string;
+  units: string[];
   source: string;
-  rows: Array<{ value: number; note: string; kind?: "metric" | "session" }>;
+  rows: Array<{ values: number[]; note: string; kind?: "metric" | "session" }>;
 }
 
 function parseCsvRows(contents: string): string[][] {
@@ -264,10 +307,21 @@ export function parseHealthConnectCsv(contents: string, timezone: string, genera
   const rows = parseCsvRows(contents.replace(/^\uFEFF/, ""));
   const header = rows.shift()?.map((field) => field.trim().toLowerCase());
   const expectedHeader = ["date", "metric", "value", "unit", "source", "note"];
-  if (!header || (header.length !== 6 && header.length !== 7)
+  if (!header || header.length < 6
     || expectedHeader.some((name, index) => header[index] !== name)
-    || (header.length === 7 && header[6] !== "type")) {
+    || (header.length > 6 && header[6] !== "type")) {
     throw new Error("The companion CSV must use the Date, Metric, Value, Unit, Source, Note columns, with an optional Type column.");
+  }
+  const dimensionStart = header.length > 6 ? 7 : 6;
+  const extraColumns = header.length - dimensionStart;
+  if (extraColumns < 0 || extraColumns % 2 !== 0) {
+    throw new Error("The companion CSV has incomplete value and unit columns.");
+  }
+  for (let index = 0; index < extraColumns / 2; index += 1) {
+    if (header[dimensionStart + index * 2] !== `value ${index + 2}`
+      || header[dimensionStart + index * 2 + 1] !== `unit ${index + 2}`) {
+      throw new Error("The companion CSV has unexpected dimension column names.");
+    }
   }
   if (rows.length > 10000) throw new Error("The companion CSV contains too many rows.");
 
@@ -288,19 +342,36 @@ export function parseHealthConnectCsv(contents: string, timezone: string, genera
     if (!unit || !source || !/^[A-Za-z0-9._-]{1,200}$/.test(source)) {
       throw new Error(`The companion CSV contains an invalid unit or source for ${metricId} on ${date}.`);
     }
-    const kindText = header.length === 7 ? (row[6] ?? "").trim().toLowerCase() : "";
-    const kind = kindText ? (kindText === "metric" || kindText === "session" ? kindText : null) : undefined;
+    const kindTextWithDimensions = header.length > 6 ? (row[6] ?? "").trim().toLowerCase() : "";
+    const kind = kindTextWithDimensions ? (kindTextWithDimensions === "metric" || kindTextWithDimensions === "session" ? kindTextWithDimensions : null) : undefined;
     if (kind === null) throw new Error(`The companion CSV contains an unsupported row type for ${metricId} on ${date}.`);
+    const values = [amount];
+    const units = [canonicalUnit(unit)];
+    let blankDimensionSeen = false;
+    for (let index = 0; index < extraColumns / 2; index += 1) {
+      const valueText = row[dimensionStart + index * 2].trim();
+      const unitText = row[dimensionStart + index * 2 + 1].trim();
+      if (!valueText && !unitText) {
+        blankDimensionSeen = true;
+        continue;
+      }
+      const dimensionValue = asFiniteNonNegativeNumber(valueText);
+      if (blankDimensionSeen || dimensionValue === null || !unitText) {
+        throw new Error(`The companion CSV contains an invalid dimension for ${metricId} on ${date}.`);
+      }
+      values.push(dimensionValue);
+      units.push(canonicalUnit(unitText));
+    }
     const byMetric = grouped.get(date) ?? new Map<string, CsvFieldGroup>();
     const existing = byMetric.get(metricId);
     if (existing) {
-      if (existing.unit !== unit || existing.source !== source) {
+      if (JSON.stringify(existing.units) !== JSON.stringify(units) || existing.source !== source) {
         throw new Error(`The companion CSV mixes units or sources for ${metricId} on ${date}.`);
       }
       if (existing.rows.length >= 1000) throw new Error(`The companion CSV contains too many sessions for ${metricId} on ${date}.`);
-      existing.rows.push({ value: amount, note: row[5], ...(kind ? { kind } : {}) });
+      existing.rows.push({ values, note: row[5], ...(kind ? { kind } : {}) });
     } else {
-      byMetric.set(metricId, { unit, source, rows: [{ value: amount, note: row[5], ...(kind ? { kind } : {}) }] });
+      byMetric.set(metricId, { units, source, rows: [{ values, note: row[5], ...(kind ? { kind } : {}) }] });
     }
     grouped.set(date, byMetric);
     sourceIds.add(source);
@@ -313,13 +384,22 @@ export function parseHealthConnectCsv(contents: string, timezone: string, genera
       if (explicitKinds.size > 1) throw new Error(`The companion CSV mixes aggregate and session rows for ${metricId} on ${date}.`);
       const isSession = explicitKinds.has("session") || (explicitKinds.size === 0 && group.source === "companion");
       if (!isSession && group.rows.length > 1) throw new Error(`The companion CSV repeats aggregate metric ${metricId} on ${date}.`);
-      const value = group.rows.reduce((total, item) => total + item.value, 0);
+      const values = group.units.map((_, dimension) =>
+        group.rows.reduce((total, item) => total + (item.values[dimension] ?? 0), 0)
+      );
+      const value = values[0] ?? 0;
       const sessions = isSession
-        ? group.rows.map((item) => ({ value: item.value, ...(item.note.trim() ? { note: item.note.trim() } : {}) }))
+        ? group.rows.map((item) => ({
+          value: item.values[0],
+          values: item.values,
+          ...(item.note.trim() ? { note: item.note.trim() } : {})
+        }))
         : undefined;
       record[metricId] = {
         value,
-        unit: group.unit,
+        unit: group.units[0],
+        values,
+        units: group.units,
         source: group.source,
         ...(sessions ? { sessions } : {})
       };
@@ -351,20 +431,42 @@ export function normalizeHealthConnectRecord(
     if (val && typeof val === "object" && typeof val.value === "number") {
       const metricVal = val;
       const habitDef = habits?.find((h) => h.id === key);
-      const factor = habitDef ? unitFactor(metricVal.unit, habitDef.unit) : 1;
-      metrics[key] = convertAmount(metricVal.value, factor);
+
+      let matchedDimension = 0;
+      let matchedSourceUnit = metricVal.unit;
+      if (habitDef) {
+        if (canConvertUnit(metricVal.unit, habitDef.unit)) {
+          matchedDimension = 0;
+          matchedSourceUnit = metricVal.unit;
+        } else if (metricVal.units && metricVal.values && metricVal.units.length > 1) {
+          const fallbackIndex = metricVal.units.findIndex((u) => canConvertUnit(u, habitDef.unit));
+          if (fallbackIndex >= 0) {
+            matchedDimension = fallbackIndex;
+            matchedSourceUnit = metricVal.units[fallbackIndex];
+          }
+        }
+      }
+
+      const factor = habitDef ? unitFactor(matchedSourceUnit, habitDef.unit) : 1;
+      const baseValue = (matchedDimension > 0 && metricVal.values && metricVal.values[matchedDimension] !== undefined)
+        ? metricVal.values[matchedDimension]
+        : metricVal.value;
+      metrics[key] = convertAmount(baseValue, factor);
 
       if (metricVal.source) {
         metricSources[key] = metricVal.source;
       }
 
       if (Array.isArray(metricVal.sessions) && metricVal.sessions.length > 0) {
-        const unit = canonicalUnit(habitDef?.unit ?? metricVal.unit);
-        if (habitDef && unit === "count" && (metricVal.value !== metricVal.sessions.length || metricVal.sessions.some(session => session.value !== 1))) {
+        const unit = canonicalUnit(habitDef?.unit ?? matchedSourceUnit);
+        if (habitDef && unit === "count" && (baseValue !== metricVal.sessions.length || metricVal.sessions.some(session => session.value !== 1))) {
           throw new Error("This Obsidian habit counts sessions. Use a quantity unit such as reps for multi-amount counter sessions. The staging file was kept.");
         }
 
-        if (metricVal.sessions.length === 1 && key !== "reading") {
+        const hasMultipleDimensions = (metricVal.units?.length ?? 0) > 1
+          || (metricVal.values?.length ?? 0) > 1
+          || metricVal.sessions.some((session) => (session.values?.length ?? 0) > 1);
+        if (metricVal.sessions.length === 1 && key !== "reading" && !hasMultipleDimensions) {
           const single = metricVal.sessions[0];
           const sessionNote = single.note?.trim();
           if (sessionNote) {
@@ -372,11 +474,21 @@ export function normalizeHealthConnectRecord(
           }
         } else {
           sessions[key] = metricVal.sessions.map((s) => {
-            const valNum = convertAmount(s.value, factor);
+            const rawSessionVal = (matchedDimension > 0 && s.values && s.values[matchedDimension] !== undefined)
+              ? s.values[matchedDimension]
+              : s.value;
+            const valNum = convertAmount(rawSessionVal, factor);
             const noteText = s.note?.trim();
             const title = s.title?.trim() || noteText || `${habitDef?.name ?? key} session`;
+            const sessionValues = s.values ?? [s.value];
+            const sessionUnits = metricVal.units?.length === sessionValues.length ? metricVal.units : undefined;
             return {
               title,
+              ...(s.id ? { id: s.id } : {}),
+              ...(hasMultipleDimensions ? {
+                values: sessionValues,
+                ...(sessionUnits ? { units: sessionUnits } : {})
+              } : {}),
               ...(unit === "minutes" || unit === "hours" || unit === "seconds" ? { minutes: convertAmount(valNum, unit === "hours" ? 60 : unit === "seconds" ? 1 / 60 : 1) }
                 : unit === "reps" ? { reps: valNum }
                 : unit === "pages" ? { pages: valNum }

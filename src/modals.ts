@@ -382,9 +382,11 @@ export class HabitLogModal extends Modal {
       const titleGroup = row.createDiv({ cls: "temperans-collapsed-logger-title-group" });
       const icon = titleGroup.createSpan({ cls: "temperans-hero-card-icon" });
       setIcon(icon, getHabitIcon(habit));
-      titleGroup.createSpan({ cls: "temperans-logger-habit-name", text: habit.name });
 
-      const progress = row.createDiv({ cls: "temperans-collapsed-logger-progress" });
+      const textGroup = titleGroup.createDiv({ cls: "temperans-collapsed-logger-text" });
+      textGroup.createSpan({ cls: "temperans-logger-habit-name", text: habit.name });
+
+      const progress = textGroup.createDiv({ cls: "temperans-collapsed-logger-progress" });
       const actual = habit.id === "typing"
         ? formatTypingDuration(Math.round(typingDurationSeconds(this.logData)))
         : formatValue(val, habit.unit, habit);

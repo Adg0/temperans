@@ -172,7 +172,11 @@ export class DayDetailWidget implements DashboardWidget {
       const sessionBlock = detail.createDiv({ cls: "temperans-reading" });
       sessionBlock.createEl("strong", { text: `${habitName} sessions` });
       for (const session of sessions) {
-        const parts = [
+        const dimensions = session.values?.map((value, index) => {
+          const unit = session.units?.[index];
+          return `${value}${unit ? ` ${unit}` : ""}`;
+        }).filter(Boolean) ?? [];
+        const parts = dimensions.length > 0 ? dimensions : [
           session.pages ? `${session.pages} pages` : "",
           session.chapters ? `${session.chapters} chapters` : "",
           session.minutes ? `${session.minutes} min` : "",

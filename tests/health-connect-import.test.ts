@@ -115,3 +115,46 @@ it("identifies staged metrics that are not configured in settings", async () => 
   const summary = await importHealthConnectStaging(host);
   expect(summary.unconfiguredMetrics).toEqual(["hydration"]);
 });
+
+it("falls back to secondary dimension when primary unit does not match habit unit", () => {
+  const record = {
+    date: "2026-09-26",
+    running: {
+      value: 5,
+      unit: "km",
+      values: [5, 45],
+      units: ["km", "minutes"],
+      sessions: [
+        { value: 5, values: [5, 45], note: "Morning run" }
+      ]
+    }
+  };
+  const habits = [
+    { id: "running", name: "Running", unit: "hours", cadence: "daily" as const, enabled: true, targetHistory: [] }
+  ];
+
+  const result = normalizeHealthConnectRecord(record, habits);
+  // 45 minutes converted to hours = 0.75
+  expect(result.metrics.running).toBe(0.75);
+  expect(result.sessions?.running).toBeDefined();
+  expect(result.sessions?.running?.[0]?.minutes).toBe(45);
+  expect(result.sessions?.running?.[0]?.values).toEqual([5, 45]);
+  expect(result.sessions?.running?.[0]?.units).toEqual(["km", "minutes"]);
+});
+
+it("rejects when neither primary nor secondary dimensions can convert to habit unit", () => {
+  const record = {
+    date: "2026-09-26",
+    workout: {
+      value: 10,
+      unit: "km",
+      values: [10, 5],
+      units: ["km", "miles"]
+    }
+  };
+  const habits = [
+    { id: "workout", name: "Workout", unit: "minutes", cadence: "daily" as const, enabled: true, targetHistory: [] }
+  ];
+
+  expect(() => normalizeHealthConnectRecord(record, habits)).toThrow("Cannot import km as minutes");
+});

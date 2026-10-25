@@ -1,6 +1,6 @@
 {
   "name": "temperans-habits",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Track habits in Markdown with manual logging, API integrations, and Health Connect metrics. Review progress in a customizable dashboard and sync across devices.",
   "private": true,
   "scripts": {
