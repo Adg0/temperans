@@ -3,7 +3,6 @@
 Bring habit data together from websites, APIs, and companion apps, alongside ordinary manual logging. Temperans keeps the combined history as readable Markdown in your configured operation folder (default: `Habit Logs`) and provides calendar views, targets, and analytics. Endpoint and companion imports are core features.
 
 - **Documentation & Live Guide**: [adg0.github.io/temperans](https://adg0.github.io/temperans/)
-- **Android Health Connect Bridge**: <a href="https://f-droid.org/packages/com.temperance.companion/"><img src="assets/get-it-on-fdroid.png" alt="Get it on F-Droid" height="28" align="center"></a> · [Companion Source & Guide](https://github.com/Adg0/android-companion)
 
 ![Temperans Habits Dashboard](assets/dashboard-main.png)
 
