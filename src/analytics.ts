@@ -18,8 +18,6 @@ export interface HabitAnalytics {
   peakDate: string | null;
   currentStreak: number;
   bestStreak: number;
-  totalSessions?: number;
-  averagePerSession?: number;
   totalPeriods?: number;
   completedPeriods?: number;
   elapsedPeriods?: number;
@@ -59,7 +57,6 @@ export function calculateHabitAnalytics(
   let totalVolume = 0;
   let peakValue = 0;
   let peakDate: string | null = null;
-  let totalSessions = 0;
 
   const dayComplete = new Map<string, boolean>();
 
@@ -101,11 +98,6 @@ export function calculateHabitAnalytics(
       peakValue = value;
       peakDate = date;
     }
-
-    const sessions = log.sessions?.[habit.id] ?? (habit.id === "reading" ? log.reading : undefined);
-    if (sessions && sessions.length > 0) {
-      totalSessions += sessions.length;
-    }
   }
 
   // Calculate best streak for this habit
@@ -136,7 +128,6 @@ export function calculateHabitAnalytics(
   const averageAllDays = totalDays > 0 ? Math.round((totalVolume / totalDays) * 100) / 100 : 0;
   const averageActiveDays = activeDays > 0 ? Math.round((totalVolume / activeDays) * 100) / 100 : 0;
   const consistencyRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) / 100 : 0;
-  const averagePerSession = totalSessions > 0 ? Math.round((totalVolume / totalSessions) * 100) / 100 : undefined;
 
   const result: HabitAnalytics = {
     habit,
@@ -152,8 +143,7 @@ export function calculateHabitAnalytics(
     peakValue: Math.round(peakValue * 100) / 100,
     peakDate,
     currentStreak,
-    bestStreak,
-    ...(habit.type === "session" || totalSessions > 0 ? { totalSessions, averagePerSession } : {})
+    bestStreak
   };
 
   // Evaluate each period once, at its latest eligible date.
@@ -193,6 +183,34 @@ export function calculateHabitAnalytics(
     result.activePeriodCompleted = activePeriodCompleted;
     result.periodAverage = periodCount > 0 ? Math.round((totalVolume / periodCount) * 100) / 100 : 0;
     result.bestPeriodValue = Math.round(bestPeriodValue * 100) / 100;
+
+    // Periodic habits streak on their own cadence, not on individual days.
+    const periodCompletion = [...periods.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([, latestDate]) => {
+        const evaluation = evaluatePeriodGoal(habit, latestDate, logs);
+        return {
+          endDate: evaluation.endDate,
+          complete: evaluation.status === "complete"
+        };
+      });
+    let bestPeriodStreak = 0;
+    let consecutivePeriods = 0;
+    for (const period of periodCompletion) {
+      consecutivePeriods = period.complete ? consecutivePeriods + 1 : 0;
+      if (consecutivePeriods > bestPeriodStreak) bestPeriodStreak = consecutivePeriods;
+    }
+
+    let currentPeriodIndex = periodCompletion.length - 1;
+    const latestPeriod = periodCompletion[currentPeriodIndex];
+    if (latestPeriod && latestPeriod.endDate >= today && !latestPeriod.complete) currentPeriodIndex -= 1;
+    let currentPeriodStreak = 0;
+    while (currentPeriodIndex >= 0 && periodCompletion[currentPeriodIndex].complete) {
+      currentPeriodStreak += 1;
+      currentPeriodIndex -= 1;
+    }
+    result.currentStreak = currentPeriodStreak;
+    result.bestStreak = bestPeriodStreak;
 
     if (elapsedPeriods > 0) {
       result.consistencyRate = Math.round((completedElapsedPeriods / elapsedPeriods) * 100) / 100;

@@ -1,5 +1,6 @@
 import { ActionCard, renderActionCard, renderSubpageHeader } from "./ui";
-import { renderAnalyticsPanel } from "./analytics-panel";
+import { loadAnalyticsSummaryData, renderAnalyticsPanel } from "./analytics-panel";
+import { renderAnalyticsShareActions } from "./analytics-share";
 import { PeerSyncService } from "./peer-sync/service";
 import { HealthConnectImportSummary } from "./integrations/health-connect";
 import { renderAddHabitForm } from "./habit-form";
@@ -66,8 +67,8 @@ export class DashboardActionsModal extends Modal {
     }
   }
 
-  private renderSubpageHeader(container: HTMLElement, title: string, subtitle?: string): void {
-    renderSubpageHeader(container, title, subtitle, "Back to actions", () => {
+  private renderSubpageHeader(container: HTMLElement, title: string, subtitle?: string): HTMLDivElement {
+    return renderSubpageHeader(container, title, subtitle, "Back to actions", () => {
       this.currentView = "menu";
       this.render();
     });
@@ -212,13 +213,15 @@ export class DashboardActionsModal extends Modal {
 
   private async renderAnalytics(container: HTMLElement): Promise<void> {
     const year = new Date().getFullYear();
-    this.renderSubpageHeader(
+    const header = this.renderSubpageHeader(
       container,
       `Habit analytics — ${year}`,
       "Comprehensive consistency rates, volume, averages, and streaks across all enabled habits."
     );
 
-    await renderAnalyticsPanel(container, this.host.store, year, false);
+    const summary = await loadAnalyticsSummaryData(this.host.store, year);
+    if (summary.habits.length) renderAnalyticsShareActions(header, this.app, this.host.store, summary);
+    renderAnalyticsPanel(container, summary, false);
   }
 
   private async renderAddHabit(container: HTMLElement): Promise<void> {

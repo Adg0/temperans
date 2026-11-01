@@ -806,6 +806,72 @@ button.temperans-edit-day:focus-visible {
 .temperans-analytics-modal .modal-content {
   max-width: 52rem;
 }
+.temperans-analytics-share {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.temperans-analytics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.temperans-analytics-header h2 {
+  margin: 0;
+}
+.temperans-analytics-share-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+}
+.temperans-analytics-share-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 50;
+  display: none;
+  min-width: 12rem;
+  padding: 0.35rem;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-s);
+}
+.temperans-analytics-share.is-open .temperans-analytics-share-menu {
+  display: grid;
+  gap: 0.15rem;
+}
+.temperans-analytics-share-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  color: var(--text-normal);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-s);
+  box-shadow: none;
+}
+.temperans-analytics-share-option:hover,
+.temperans-analytics-share-option:focus-visible {
+  background: var(--background-modifier-hover);
+}
+.temperans-clipboard-fallback {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
 .temperans-analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));

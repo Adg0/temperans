@@ -77,7 +77,7 @@ describe("generic habit analytics engine", () => {
     expect(stats.consistencyRate).toBeCloseTo(0.67, 2); // 2 / 3
   });
 
-  it("computes session counts and session averages for session-based habits", () => {
+  it("computes active-day averages for session-based habits", () => {
     const habit: HabitDefinition = {
       id: "workouts",
       name: "Workouts",
@@ -111,8 +111,8 @@ describe("generic habit analytics engine", () => {
     const stats = calculateHabitAnalytics(habit, dates, logs, "2026-08-25");
 
     expect(stats.totalVolume).toBe(100); // 60 + 40
-    expect(stats.totalSessions).toBe(3);
-    expect(stats.averagePerSession).toBeCloseTo(33.33, 1);
+    expect(stats.activeDays).toBe(2);
+    expect(stats.averageActiveDays).toBe(50); // 100 reps across 2 active days
     expect(stats.completedDays).toBe(1); // Aug 24: 60 >= 50
   });
 

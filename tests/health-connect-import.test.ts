@@ -116,7 +116,7 @@ it("identifies staged metrics that are not configured in settings", async () => 
   expect(summary.unconfiguredMetrics).toEqual(["hydration"]);
 });
 
-it("falls back to secondary dimension when primary unit does not match habit unit", () => {
+it("falls back to a matching secondary dimension and keeps a single hybrid entry as a note", () => {
   const record = {
     date: "2026-09-26",
     running: {
@@ -136,10 +136,8 @@ it("falls back to secondary dimension when primary unit does not match habit uni
   const result = normalizeHealthConnectRecord(record, habits);
   // 45 minutes converted to hours = 0.75
   expect(result.metrics.running).toBe(0.75);
-  expect(result.sessions?.running).toBeDefined();
-  expect(result.sessions?.running?.[0]?.minutes).toBe(45);
-  expect(result.sessions?.running?.[0]?.values).toEqual([5, 45]);
-  expect(result.sessions?.running?.[0]?.units).toEqual(["km", "minutes"]);
+  expect(result.metricNotes?.running).toBe("Morning run · Also tracked: 5 km");
+  expect(result.sessions?.running).toBeUndefined();
 });
 
 it("rejects when neither primary nor secondary dimensions can convert to habit unit", () => {

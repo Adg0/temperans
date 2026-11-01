@@ -61,12 +61,14 @@ export function formatSleepDuration(totalMinutes: number): string {
   const remainingMinutes = minutes % 60;
   if (hours === 0) return `${remainingMinutes} min`;
   const hourLabel = hours === 1 ? "hr" : "hrs";
-  return remainingMinutes === 0 ? `${hours} ${hourLabel}` : `${hours} ${hourLabel} ${remainingMinutes} min`;
+  const formattedHours = new Intl.NumberFormat("en-US").format(hours);
+  return remainingMinutes === 0 ? `${formattedHours} ${hourLabel}` : `${formattedHours} ${hourLabel} ${remainingMinutes} min`;
 }
 
 export function formatTypingDuration(totalSeconds: number): string {
   const seconds = nonNegativeWhole(totalSeconds);
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  return remainingSeconds === 0 ? `${minutes} min` : `${minutes} min ${remainingSeconds} sec`;
+  const formattedMinutes = new Intl.NumberFormat("en-US").format(minutes);
+  return remainingSeconds === 0 ? `${formattedMinutes} min` : `${formattedMinutes} min ${remainingSeconds} sec`;
 }

@@ -829,6 +829,7 @@ endpoint:
       await this.updateLog(update.date, log => {
         counts = { metricsImported: 0, metricsUpdated: 0, metricsProtected: 0, metricsSkipped: 0 };
         const metrics = { ...log.metrics }, metricSources = { ...log.metricSources }, metricNotes = { ...log.metricNotes }, sessions = { ...log.sessions };
+        let reading = log.reading;
         let changed = false;
         for (const [id, value] of Object.entries(update.metrics)) {
           if (value === undefined || !Number.isFinite(value) || value < 0 || !configured.has(id)) { counts.metricsSkipped++; continue; }
@@ -852,13 +853,15 @@ endpoint:
           }
           if (update.sessions?.[id] && (decision !== "skip" || ownedSessions)) {
             sessions[id] = update.sessions[id];
+            if (id === "reading") reading = update.sessions[id];
             changed = true;
           } else if (ownedSessions && !update.sessions?.[id] && sessions[id]) {
             delete sessions[id];
+            if (id === "reading") reading = [];
             changed = true;
           }
         }
-        return changed ? { ...log, metrics, metricSources, metricNotes, sessions, reading: sessions.reading ?? log.reading } : log;
+        return changed ? { ...log, metrics, metricSources, metricNotes, sessions, reading: sessions.reading ?? reading } : log;
       });
       for (const key of Object.keys(result) as Array<keyof typeof result>) result[key] += counts[key];
     }

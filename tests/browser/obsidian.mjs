@@ -18,6 +18,7 @@ HTMLElement.prototype.setAttr = HTMLElement.prototype.setAttribute;
 HTMLElement.prototype.setText = function (value) { this.textContent = value; };
 HTMLElement.prototype.instanceOf = function (type) { return this instanceof type; };
 export function setIcon(el, name) { el.setAttribute('data-icon', name); el.textContent = '◇'; }
+export function setTooltip(el, text) { el.setAttribute('aria-label', text); el.setAttribute('title', text); }
 export class Notice { constructor(message) { window.lastNotice = message; } }
 export const Platform = { isMobile: false, isMobileApp: false, isDesktopApp: true };
 export class TFile {}

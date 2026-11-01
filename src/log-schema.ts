@@ -150,6 +150,8 @@ function parseUnifiedDailyLog(raw: Record<string, unknown>, date: string): Daily
   const readingSource = sourceOrUndefined(reading.source);
   if (readingSource) metricSources.reading = readingSource;
   if (numberOrUndefined(reading.value) !== undefined) metrics.reading = positiveNumber(reading.value);
+  const readingNote = optionalNote(reading.note);
+  if (readingNote) metricNotes.reading = readingNote;
   const typingImported = parseImportedTyping(typing.imported);
   if (typingSourceVal || positiveNumber(typing.value) || typingImported.length) {
     metrics.typing = numberOrUndefined(typing.metric_value) ?? Math.round((positiveNumber(typing.value) + typingImported.reduce((sum, item) => sum + item.durationSeconds, 0)) / 60);
@@ -284,9 +286,11 @@ export function serializeDailyLog(log: DailyLog, existing: Record<string, unknow
     imported: log.typing.imported
   };
   const readingSessions = log.sessions?.reading ?? log.reading;
+  const readingNote = optionalNote(log.metricNotes.reading);
   habits.reading = {
     sessions: readingSessions,
     ...(log.metrics.reading !== undefined ? { value: log.metrics.reading } : {}),
+    ...(readingNote ? { note: readingNote } : {}),
     ...(log.metricSources.reading || readingSessions.length ? { source: log.metricSources.reading ?? "manual" } : {})
   };
 

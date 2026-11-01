@@ -1,6 +1,7 @@
 import { App, Modal } from "obsidian";
-import { HabitStore } from "./data";
-import { renderAnalyticsPanel } from "./analytics-panel";
+import type { HabitStore } from "./data";
+import { loadAnalyticsSummaryData, renderAnalyticsPanel } from "./analytics-panel";
+import { renderAnalyticsShareActions } from "./analytics-share";
 
 export class HabitAnalyticsModal extends Modal {
   constructor(
@@ -19,12 +20,14 @@ export class HabitAnalyticsModal extends Modal {
   private async render(): Promise<void> {
     const { contentEl } = this;
     contentEl.empty();
-    contentEl.createEl("h2", { text: `Habit analytics — ${this.year}` });
+    const summary = await loadAnalyticsSummaryData(this.store, this.year);
+    const header = contentEl.createDiv({ cls: "temperans-analytics-header" });
+    header.createEl("h2", { text: `Habit analytics — ${this.year}` });
+    if (summary.habits.length) renderAnalyticsShareActions(header, this.app, this.store, summary);
     contentEl.createEl("p", {
       text: "Comprehensive performance metrics, volume, consistency, and streaks across all configured tasks."
     });
-
-    await renderAnalyticsPanel(contentEl, this.store, this.year);
+    renderAnalyticsPanel(contentEl, summary);
   }
 
   onClose(): void {

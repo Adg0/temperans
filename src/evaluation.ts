@@ -26,6 +26,9 @@ export function valueForHabit(log: DailyLog, habit: HabitDefinition): number {
   const sessions = log.sessions?.[habit.id] ?? (habit.id === "reading" ? log.reading : undefined);
   if (habit.type === "session" || (sessions && sessions.length > 0)) {
     const list = sessions ?? [];
+    // Single imported sessions may be normalized to a metric plus a note.
+    // Preserve their value for session-type habits when no session rows remain.
+    if (list.length === 0) return log.metrics[habit.id] ?? 0;
     if (habit.unit === "count") return list.length;
     const safeNum = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0);
     return list.reduce((sum, session) => {

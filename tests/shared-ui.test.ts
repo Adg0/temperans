@@ -16,7 +16,7 @@ import { DashboardActionsModal } from "../src/dashboard-actions-modal";
 import { renderAddHabitForm } from "../src/habit-form";
 import { renderHealthConnectPanel } from "../src/integrations/health-connect-panel";
 import { renderPeerSyncSettings } from "../src/peer-sync/settings-panel";
-import { renderAnalyticsPanel } from "../src/analytics-panel";
+import { loadAnalyticsSummaryData, renderAnalyticsPanel } from "../src/analytics-panel";
 import { emptyDailyLog } from "../src/log-schema";
 
 const makeStore = () => ({
@@ -152,7 +152,8 @@ describe("shared sync and analytics panels", () => {
     };
     for (const showDate of [true, false]) {
       const root = new Element();
-      await renderAnalyticsPanel(root.element(), store as unknown as HabitStore, 2025, showDate);
+      const summary = await loadAnalyticsSummaryData(store as unknown as HabitStore, 2025);
+      renderAnalyticsPanel(root.element(), summary, showDate);
       const row = root.find(node => node.children.some(child => child.textContent === "Single-day peak"));
       expect(row.children[1].textContent.startsWith("25 pages")).toBe(true);
       expect(row.children[1].textContent.includes("2025")).toBe(showDate);

@@ -45,20 +45,20 @@ export class StatsWidget implements DashboardWidget {
     if (selectedHabit) {
       const analytics = ctx.analytics.get(selectedHabit.id) ?? calculateHabitAnalytics(selectedHabit, ctx.dates, ctx.logs, ctx.today);
       if (selectedHabit.cadence !== "daily") {
+        const cadenceUnit = selectedHabit.cadence === "weekly" ? "week"
+          : selectedHabit.cadence === "monthly" ? "month"
+          : selectedHabit.cadence === "quarterly" ? "quarter"
+          : "year";
         availableCards["consistency"] = { label: `${cadenceLabel(selectedHabit.cadence)} consistency`, value: `${Math.round(analytics.consistencyRate * 100)}%` };
         availableCards["completed-days"] = { label: "Completed periods", value: `${analytics.completedPeriods ?? 0} / ${analytics.totalPeriods ?? 0}` };
         availableCards["total-volume"] = { label: "Total volume", value: formatStatValue(analytics.totalVolume, selectedHabit.unit, selectedHabit) };
-        availableCards["active-average"] = { label: `Average / ${selectedHabit.cadence === "weekly" ? "week" : "month"}`, value: formatStatValue(analytics.periodAverage ?? 0, selectedHabit.unit, selectedHabit) };
+        availableCards["active-average"] = {
+          label: `Avg / ${cadenceUnit}`,
+          value: formatStatValue(analytics.periodAverage ?? 0, selectedHabit.unit, selectedHabit)
+        };
         availableCards["best-streak"] = { label: "Best period peak", value: formatStatValue(analytics.bestPeriodValue ?? 0, selectedHabit.unit, selectedHabit) };
         availableCards["peak-day"] = { label: "Single-day peak", value: formatStatValue(analytics.peakValue, selectedHabit.unit, selectedHabit) };
       } else {
-        const avgLabel = analytics.averagePerSession !== undefined
-          ? `Avg / session (${analytics.totalSessions ?? 0})`
-          : "Avg / active day";
-        const avgVal = analytics.averagePerSession !== undefined
-          ? formatStatValue(analytics.averagePerSession, selectedHabit.unit, selectedHabit)
-          : formatStatValue(analytics.averageActiveDays, selectedHabit.unit, selectedHabit);
-
         const isAvoidance = selectedHabit.type === "avoidance";
         const isTracker = selectedHabit.type === "tracker";
 
@@ -79,7 +79,7 @@ export class StatsWidget implements DashboardWidget {
           label: isAvoidance ? "Total slips" : isTracker ? "Total tracked" : "Total volume",
           value: formatStatValue(analytics.totalVolume, selectedHabit.unit, selectedHabit)
         };
-        availableCards["active-average"] = { label: avgLabel, value: avgVal };
+        availableCards["active-average"] = { label: "Avg / active day", value: formatStatValue(analytics.averageActiveDays, selectedHabit.unit, selectedHabit) };
         availableCards["peak-day"] = { label: "Single-day peak", value: formatStatValue(analytics.peakValue, selectedHabit.unit, selectedHabit) };
         availableCards["current-streak"] = {
           label: isTracker ? "Logging streak" : isAvoidance ? "Clean streak" : "Habit current streak",

@@ -11,6 +11,9 @@ import { TemperansCodeblockChild } from "./dashboard/codeblock";
 import { todayInZone } from "./date";
 import { HabitLogModal } from "./modals";
 import { HabitAnalyticsModal } from "./analytics-modal";
+import { loadAnalyticsSummaryData } from "./analytics-panel";
+import { copyAnalyticsSummary } from "./analytics-share";
+import { saveAnalyticsExport } from "./analytics-export";
 import { HealthConnectImportSummary, importHealthConnectStaging, openThirdPartySyncHub } from "./integrations";
 import { syncHabitFromEndpoint, testEndpointConnection } from "./integrations/endpoint-runner";
 import { PeerSyncModal } from "./peer-sync/modal";
@@ -98,6 +101,9 @@ export default class TemperansHabitsPlugin extends Plugin {
     this.addCommand({ id: "migrate-habit-log-format", name: "Migrate habit-log format", callback: () => void this.migrateHabitLogFormat() });
     this.addCommand({ id: "sync-all-endpoints", name: "Sync all external endpoints", callback: () => void this.syncAllEndpoints() });
     this.addCommand({ id: "open-analytics-summary", name: "Open habit analytics summary", callback: () => this.openAnalyticsSummary() });
+    this.addCommand({ id: "copy-analytics-summary", name: "Copy analytics summary", icon: "share", callback: () => void this.copyCurrentAnalyticsSummary() });
+    this.addCommand({ id: "save-analytics-summary-json", name: "Save analytics summary as JSON", icon: "file-json", callback: () => void this.saveCurrentAnalyticsSummary("json") });
+    this.addCommand({ id: "save-analytics-summary-csv", name: "Save analytics summary as csv", icon: "file-spreadsheet", callback: () => void this.saveCurrentAnalyticsSummary("csv") });
     this.addCommand({ id: "customize-dashboard-layout", name: "Customize dashboard layout (Dashboard.md)", callback: () => void this.openDashboardConfig() });
     this.addCommand({ id: "open-third-party-sync", name: "Open third-party sync", callback: () => this.openThirdPartySync() });
     this.addCommand({ id: "import-health-connect", name: "Import companion data", callback: () => void this.importHealthConnect() });
@@ -403,6 +409,34 @@ export default class TemperansHabitsPlugin extends Plugin {
 
   openAnalyticsSummary(): void {
     new HabitAnalyticsModal(this.app, this.store).open();
+  }
+
+  private async copyCurrentAnalyticsSummary(): Promise<void> {
+    try {
+      const summary = await loadAnalyticsSummaryData(this.store);
+      if (!summary.habits.length) {
+        new Notice("No enabled habits to share.");
+        return;
+      }
+      await copyAnalyticsSummary(summary);
+      new Notice("Summary copied to clipboard.");
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : "Could not copy the analytics summary.");
+    }
+  }
+
+  private async saveCurrentAnalyticsSummary(format: "json" | "csv"): Promise<void> {
+    try {
+      const summary = await loadAnalyticsSummaryData(this.store);
+      if (!summary.habits.length) {
+        new Notice("No enabled habits to share.");
+        return;
+      }
+      const path = await saveAnalyticsExport(this.app, this.store, summary, format);
+      new Notice(format === "csv" ? `Saved CSV and period metadata: ${path}` : `Saved JSON summary: ${path}`);
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : `Could not save the ${format.toUpperCase()} summary.`);
+    }
   }
 
   getSecretValue(secretName: string): string | null {

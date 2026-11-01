@@ -60,7 +60,7 @@ export function renderActionCard(container: HTMLElement, card: ActionCard): { se
   return { setBadge: (text) => { if (badge) badge.textContent = text; } };
 }
 
-export function renderSubpageHeader(container: HTMLElement, title: string, subtitle: string | undefined, backLabel: string, onBack: () => void): void {
+export function renderSubpageHeader(container: HTMLElement, title: string, subtitle: string | undefined, backLabel: string, onBack: () => void): HTMLDivElement {
   const header = container.createDiv({ cls: "temperans-sub-settings-header" });
   const back = header.createEl("button", {
     cls: "temperans-sub-settings-back-btn",
@@ -70,6 +70,7 @@ export function renderSubpageHeader(container: HTMLElement, title: string, subti
   back.onclick = onBack;
   header.createEl("h2", { text: title });
   if (subtitle) container.createEl("p", { cls: "temperans-sub-settings-desc", text: subtitle });
+  return header;
 }
 
 export function createSubpageCard(container: HTMLElement, icon: string, title: string): { card: HTMLElement; header: HTMLElement } {

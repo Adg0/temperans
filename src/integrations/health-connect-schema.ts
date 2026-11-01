@@ -466,9 +466,19 @@ export function normalizeHealthConnectRecord(
         const hasMultipleDimensions = (metricVal.units?.length ?? 0) > 1
           || (metricVal.values?.length ?? 0) > 1
           || metricVal.sessions.some((session) => (session.values?.length ?? 0) > 1);
-        if (metricVal.sessions.length === 1 && key !== "reading" && !hasMultipleDimensions) {
+        if (metricVal.sessions.length === 1) {
           const single = metricVal.sessions[0];
-          const sessionNote = single.note?.trim();
+          const sessionValues = single.values ?? metricVal.values ?? [single.value];
+          const additionalDimensions = hasMultipleDimensions
+            ? sessionValues
+              .map((value, index) => ({ value, unit: metricVal.units?.[index], index }))
+              .filter((dimension) => dimension.index !== matchedDimension)
+              .map((dimension) => `${dimension.value} ${dimension.unit ?? `dimension ${dimension.index + 1}`}`)
+            : [];
+          const sessionNote = [
+            single.note?.trim(),
+            ...(additionalDimensions.length > 0 ? [`Also tracked: ${additionalDimensions.join(", ")}`] : [])
+          ].filter(Boolean).join(" · ");
           if (sessionNote) {
             metricNotes[key] = sessionNote;
           }
