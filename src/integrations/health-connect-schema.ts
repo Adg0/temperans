@@ -417,6 +417,8 @@ export function parseHealthConnectCsv(contents: string, timezone: string, genera
   };
 }
 
+export const SINGLE_SESSION_NOTE_MAX_LENGTH = 80;
+
 export function normalizeHealthConnectRecord(
   record: HealthConnectDailyRecord,
   habits?: HabitDefinition[]
@@ -466,21 +468,24 @@ export function normalizeHealthConnectRecord(
         const hasMultipleDimensions = (metricVal.units?.length ?? 0) > 1
           || (metricVal.values?.length ?? 0) > 1
           || metricVal.sessions.some((session) => (session.values?.length ?? 0) > 1);
-        if (metricVal.sessions.length === 1) {
-          const single = metricVal.sessions[0];
-          const sessionValues = single.values ?? metricVal.values ?? [single.value];
-          const additionalDimensions = hasMultipleDimensions
-            ? sessionValues
-              .map((value, index) => ({ value, unit: metricVal.units?.[index], index }))
-              .filter((dimension) => dimension.index !== matchedDimension)
-              .map((dimension) => `${dimension.value} ${dimension.unit ?? `dimension ${dimension.index + 1}`}`)
-            : [];
-          const sessionNote = [
-            single.note?.trim(),
-            ...(additionalDimensions.length > 0 ? [`Also tracked: ${additionalDimensions.join(", ")}`] : [])
-          ].filter(Boolean).join(" · ");
-          if (sessionNote) {
-            metricNotes[key] = sessionNote;
+        const single = metricVal.sessions.length === 1 ? metricVal.sessions[0] : undefined;
+        const singleNoteText = single?.note?.trim() ?? "";
+        const singleSessionValues = single ? (single.values ?? metricVal.values ?? [single.value]) : [];
+        const additionalDimensions = (single && hasMultipleDimensions)
+          ? singleSessionValues
+            .map((value, index) => ({ value, unit: metricVal.units?.[index], index }))
+            .filter((dimension) => dimension.index !== matchedDimension && dimension.value > 0)
+            .map((dimension) => `${dimension.value} ${dimension.unit ?? `dimension ${dimension.index + 1}`}`)
+          : [];
+        const singleCombinedNote = [
+          singleNoteText,
+          ...additionalDimensions
+        ].filter(Boolean).join(" · ");
+        const promoteSingleToSession = single !== undefined && singleCombinedNote.length > SINGLE_SESSION_NOTE_MAX_LENGTH;
+
+        if (single && !promoteSingleToSession) {
+          if (singleCombinedNote) {
+            metricNotes[key] = singleCombinedNote;
           }
         } else {
           sessions[key] = metricVal.sessions.map((s) => {
@@ -489,9 +494,27 @@ export function normalizeHealthConnectRecord(
               : s.value;
             const valNum = convertAmount(rawSessionVal, factor);
             const noteText = s.note?.trim();
-            const title = s.title?.trim() || noteText || `${habitDef?.name ?? key} session`;
+            const isLongNote = Boolean(noteText && noteText.length > SINGLE_SESSION_NOTE_MAX_LENGTH && !s.title?.trim());
+            const title = s.title?.trim() || (isLongNote ? `${habitDef?.name ?? key} session` : noteText) || `${habitDef?.name ?? key} session`;
             const sessionValues = s.values ?? [s.value];
             const sessionUnits = metricVal.units?.length === sessionValues.length ? metricVal.units : undefined;
+            const dimensionFields: Partial<HabitSession> = {};
+            if (sessionUnits) {
+              sessionUnits.forEach((rawUnit, idx) => {
+                const dimUnit = canonicalUnit(rawUnit);
+                const dimVal = sessionValues[idx];
+                if (dimVal === undefined || dimVal <= 0) return;
+                if (dimUnit === "minutes" || dimUnit === "hours" || dimUnit === "seconds") {
+                  dimensionFields.minutes = convertAmount(dimVal, dimUnit === "hours" ? 60 : dimUnit === "seconds" ? 1 / 60 : 1);
+                } else if (dimUnit === "pages") {
+                  dimensionFields.pages = dimVal;
+                } else if (dimUnit === "chapters") {
+                  dimensionFields.chapters = dimVal;
+                } else if (dimUnit === "reps") {
+                  dimensionFields.reps = dimVal;
+                }
+              });
+            }
             return {
               title,
               ...(s.id ? { id: s.id } : {}),
@@ -499,12 +522,15 @@ export function normalizeHealthConnectRecord(
                 values: sessionValues,
                 ...(sessionUnits ? { units: sessionUnits } : {})
               } : {}),
-              ...(unit === "minutes" || unit === "hours" || unit === "seconds" ? { minutes: convertAmount(valNum, unit === "hours" ? 60 : unit === "seconds" ? 1 / 60 : 1) }
+              ...dimensionFields,
+              ...(valNum > 0 ? (
+                unit === "minutes" || unit === "hours" || unit === "seconds" ? { minutes: convertAmount(valNum, unit === "hours" ? 60 : unit === "seconds" ? 1 / 60 : 1) }
                 : unit === "reps" ? { reps: valNum }
                 : unit === "pages" ? { pages: valNum }
                 : unit === "chapters" ? { chapters: valNum }
-                : { count: valNum }),
-              ...(s.title && noteText && noteText !== title ? { note: noteText } : {})
+                : { count: valNum }
+              ) : {}),
+              ...((s.title || isLongNote) && noteText && noteText !== title ? { note: noteText } : {})
             };
           });
         }

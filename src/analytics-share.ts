@@ -103,20 +103,12 @@ function createMenuAction(parent: HTMLElement, label: string, icon: string, aria
 
 export async function copyAnalyticsSummary(summary: AnalyticsSummaryData): Promise<void> {
   const value = buildAnalyticsShareText(summary);
-  if (navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(value);
-      return;
-    } catch {
-      // Try the webview-compatible fallback below.
-    }
+  if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+    throw new Error("Clipboard access is unavailable in this app context.");
   }
-
-  const input = document.body.createEl("textarea", { cls: "temperans-clipboard-fallback" });
-  input.value = value;
-  input.setAttribute("readonly", "true");
-  input.select();
-  const copied = document.execCommand("copy");
-  input.remove();
-  if (!copied) throw new Error("Could not copy the share summary. Select and copy the text manually.");
+  try {
+    await navigator.clipboard.writeText(value);
+  } catch {
+    throw new Error("Could not copy the summary. Clipboard access may be blocked.");
+  }
 }

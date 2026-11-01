@@ -174,7 +174,7 @@ export class DayDetailWidget implements DashboardWidget {
       for (const session of sessions) {
         const dimensions = session.values?.map((value, index) => {
           const unit = session.units?.[index];
-          return `${value}${unit ? ` ${unit}` : ""}`;
+          return value > 0 ? `${value}${unit ? ` ${unit}` : ""}` : "";
         }).filter(Boolean) ?? [];
         const parts = dimensions.length > 0 ? dimensions : [
           session.pages ? `${session.pages} pages` : "",
@@ -183,7 +183,7 @@ export class DayDetailWidget implements DashboardWidget {
           session.reps ? `${session.reps} reps` : "",
           session.count ? `${session.count}` : ""
         ].filter(Boolean);
-        const details = parts.length > 0 ? ` — ${parts.join(", ")}` : "";
+        const details = parts.length > 0 ? ` — ${parts.join(" · ")}` : "";
         sessionBlock.createDiv({ text: `${session.title}${details}${session.note ? ` · ${session.note}` : ""}` });
       }
     }

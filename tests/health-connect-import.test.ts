@@ -136,8 +136,59 @@ it("falls back to a matching secondary dimension and keeps a single hybrid entry
   const result = normalizeHealthConnectRecord(record, habits);
   // 45 minutes converted to hours = 0.75
   expect(result.metrics.running).toBe(0.75);
-  expect(result.metricNotes?.running).toBe("Morning run · Also tracked: 5 km");
+  expect(result.metricNotes?.running).toBe("Morning run · 5 km");
   expect(result.sessions?.running).toBeUndefined();
+});
+
+it("drops zero-valued extra dimensions and promotes long single-entry notes to sessions", () => {
+  const zeroDimensionRecord = {
+    date: "2026-09-26",
+    reading: {
+      value: 0,
+      unit: "minutes",
+      values: [0, 15],
+      units: ["minutes", "pages"],
+      sessions: [
+        { value: 0, values: [0, 15], note: "Quick chapter" }
+      ]
+    }
+  };
+  const habits = [
+    { id: "reading", name: "Daily Reading", unit: "pages", type: "session" as const, cadence: "daily" as const, enabled: true, targetHistory: [] }
+  ];
+
+  const shortResult = normalizeHealthConnectRecord(zeroDimensionRecord, habits);
+  expect(shortResult.metrics.reading).toBe(15);
+  expect(shortResult.metricNotes?.reading).toBe("Quick chapter");
+  expect(shortResult.sessions?.reading).toBeUndefined();
+
+  const longNote = "Finished the entire opening sequence of Book Two, taking detailed margin notes on the ecological themes and appendices.";
+  const longNoteRecord = {
+    date: "2026-09-26",
+    reading: {
+      value: 35,
+      unit: "minutes",
+      values: [35, 22],
+      units: ["minutes", "pages"],
+      sessions: [
+        { value: 35, values: [35, 22], note: longNote }
+      ]
+    }
+  };
+
+  const promotedResult = normalizeHealthConnectRecord(longNoteRecord, habits);
+  expect(promotedResult.metrics.reading).toBe(22);
+  expect(promotedResult.metricNotes?.reading).toBeUndefined();
+  expect(promotedResult.sessions?.reading).toEqual([
+    expect.objectContaining({
+      title: "Daily Reading session",
+      note: longNote,
+      pages: 22,
+      minutes: 35,
+      values: [35, 22],
+      units: ["minutes", "pages"]
+    })
+  ]);
 });
 
 it("rejects when neither primary nor secondary dimensions can convert to habit unit", () => {
@@ -156,3 +207,34 @@ it("rejects when neither primary nor secondary dimensions can convert to habit u
 
   expect(() => normalizeHealthConnectRecord(record, habits)).toThrow("Cannot import km as minutes");
 });
+
+it("imports multiple hybrid sessions with populated dimension fields and values/units arrays", () => {
+  const record = {
+    date: "2026-09-26",
+    reading: {
+      value: 45,
+      unit: "minutes",
+      values: [45, 30],
+      units: ["minutes", "pages"],
+      sessions: [
+        { value: 25, values: [25, 18], note: "Dune Ch. 1" },
+        { value: 20, values: [20, 12], note: "Dune Ch. 2" }
+      ]
+    }
+  };
+  const habits = [
+    { id: "reading", name: "Daily Reading", unit: "pages", type: "session" as const, cadence: "daily" as const, enabled: true, targetHistory: [] }
+  ];
+
+  const result = normalizeHealthConnectRecord(record, habits);
+  expect(result.metrics.reading).toBe(30);
+  expect(result.sessions?.reading).toHaveLength(2);
+  expect(result.sessions?.reading[0]).toEqual(expect.objectContaining({
+    title: "Dune Ch. 1",
+    pages: 18,
+    minutes: 25,
+    values: [25, 18],
+    units: ["minutes", "pages"]
+  }));
+});
+

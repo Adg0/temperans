@@ -777,6 +777,16 @@ export class HabitLogModal extends Modal {
 
   private async renderSession(container: HTMLElement, habit: HabitDefinition): Promise<void> {
     const sessions: HabitSession[] = this.logData.sessions?.[habit.id] ?? (habit.id === "reading" ? this.logData.reading ?? [] : []);
+    const habitNote = this.logData.metricNotes?.[habit.id]?.trim();
+    const currentVal = valueForHabit(this.logData, habit);
+
+    const heroCard = container.createDiv({ cls: "temperans-hero-card" });
+    this.renderHeroHeader(heroCard, habit, currentVal);
+
+    if (habitNote && sessions.length === 0) {
+      const noteBanner = heroCard.createDiv({ cls: "temperans-endpoint-synced-hint" });
+      noteBanner.setText(`Imported session note: ${habitNote}`);
+    }
 
     // Existing sessions list
     if (sessions.length > 0) {
@@ -789,12 +799,18 @@ export class HabitLogModal extends Modal {
         const textInfo = item.createDiv({ cls: "temperans-session-info" });
         textInfo.createSpan({ cls: "temperans-session-item-title", text: session.title });
 
-        const parts: string[] = [];
-        if (session.pages !== undefined) parts.push(`${session.pages} pages`);
-        if (session.chapters !== undefined) parts.push(`${session.chapters} ch`);
-        if (session.minutes !== undefined) parts.push(`${session.minutes} min`);
-        if (session.reps !== undefined) parts.push(`${session.reps} reps`);
-        if (session.count !== undefined) parts.push(`${session.count} ${habit.unit}`);
+        const dimensions = session.values?.map((value, index) => {
+          const unit = session.units?.[index];
+          return value > 0 ? `${value}${unit ? ` ${unit}` : ""}` : "";
+        }).filter(Boolean) ?? [];
+        const parts: string[] = dimensions.length > 0 ? dimensions : [];
+        if (parts.length === 0) {
+          if (session.pages !== undefined) parts.push(`${session.pages} pages`);
+          if (session.chapters !== undefined) parts.push(`${session.chapters} ch`);
+          if (session.minutes !== undefined) parts.push(`${session.minutes} min`);
+          if (session.reps !== undefined) parts.push(`${session.reps} reps`);
+          if (session.count !== undefined) parts.push(`${session.count} ${habit.unit}`);
+        }
 
         if (parts.length > 0) {
           textInfo.createSpan({ cls: "temperans-session-item-badge", text: parts.join(" · ") });

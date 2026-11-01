@@ -864,14 +864,6 @@ button.temperans-edit-day:focus-visible {
 .temperans-analytics-share-option:focus-visible {
   background: var(--background-modifier-hover);
 }
-.temperans-clipboard-fallback {
-  position: fixed;
-  top: 0;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
 .temperans-analytics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));

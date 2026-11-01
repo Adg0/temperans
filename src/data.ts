@@ -838,24 +838,33 @@ endpoint:
           const decision = hasProtectedHabitEntries(log, id, source)
             ? "protect" : decideHealthConnectWrite(log.metrics[id], log.metricSources[id], value, source);
           if (decision === "protect") { counts.metricsProtected++; continue; }
-          if (decision === "import") counts.metricsImported++;
-          else if (decision === "update") counts.metricsUpdated++;
+          const nextNote = update.metricNotes?.[id];
+          const prevNote = log.metricNotes[id];
+          const noteChanged = (nextNote ?? undefined) !== (prevNote ?? undefined);
+          const nextSessions = update.sessions?.[id];
+          const prevSessions = log.sessions?.[id] ?? (id === "reading" ? log.reading : undefined);
+          const sessionsChanged = JSON.stringify(nextSessions ?? undefined) !== JSON.stringify(prevSessions?.length ? prevSessions : undefined);
+          const effectiveDecision = decision === "skip" && ownedSessions && (noteChanged || sessionsChanged)
+            ? "update"
+            : decision;
+          if (effectiveDecision === "import") counts.metricsImported++;
+          else if (effectiveDecision === "update") counts.metricsUpdated++;
           else counts.metricsSkipped++;
-          if (decision !== "skip") {
+          if (effectiveDecision !== "skip") {
             metrics[id] = value;
             metricSources[id] = source;
-            if (update.metricNotes?.[id]) {
-              metricNotes[id] = update.metricNotes[id];
+            if (nextNote) {
+              metricNotes[id] = nextNote;
             } else if (ownedSessions && metricNotes[id]) {
               delete metricNotes[id];
             }
             changed = true;
           }
-          if (update.sessions?.[id] && (decision !== "skip" || ownedSessions)) {
-            sessions[id] = update.sessions[id];
-            if (id === "reading") reading = update.sessions[id];
+          if (nextSessions && (effectiveDecision !== "skip" || ownedSessions)) {
+            sessions[id] = nextSessions;
+            if (id === "reading") reading = nextSessions;
             changed = true;
-          } else if (ownedSessions && !update.sessions?.[id] && sessions[id]) {
+          } else if (ownedSessions && !nextSessions && sessions[id]) {
             delete sessions[id];
             if (id === "reading") reading = [];
             changed = true;
